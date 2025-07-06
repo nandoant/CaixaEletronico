@@ -32,6 +32,9 @@ public class CommandManagerService {
     private br.com.caixaeletronico.repository.ContaRepository contaRepository;
     
     @Autowired
+    private br.com.caixaeletronico.repository.EstoqueGlobalRepository estoqueGlobalRepository;
+    
+    @Autowired
     private UsuarioRepository usuarioRepository;
     
     @Autowired
@@ -194,10 +197,40 @@ public class CommandManagerService {
     }
     
     private OperacaoCommand criarCommandoDesfazer(Operacao operacaoOriginal, OperationMemento memento) {
-        // Aqui seria implementada a lógica específica para criar comando de desfazer
-        // Por simplicidade, vamos retornar um comando básico
-        return commandFactory.criarCommand(operacaoOriginal.getTipo(), 
-            operacaoOriginal.getContaOrigem().getId(), 
-            operacaoOriginal.getValor());
+        // Para desfazer, precisamos restaurar o estado anterior usando o memento
+        // Vamos criar um comando especial que restaura o estado
+        return new OperacaoCommand() {
+            @Override
+            public void executar() {
+                // Não implementado - usado apenas para desfazer
+                throw new UnsupportedOperationException("Este comando é usado apenas para desfazer");
+            }
+            
+            @Override
+            public void desfazer() {
+                // Restaurar saldos das contas
+                memento.getSaldosAntes().forEach((contaId, saldoAnterior) -> {
+                    br.com.caixaeletronico.model.Conta conta = contaRepository.findById(contaId)
+                        .orElseThrow(() -> new RuntimeException("Conta não encontrada: " + contaId));
+                    conta.setSaldo(saldoAnterior);
+                    contaRepository.save(conta);
+                });
+                
+                // Restaurar estoque global
+                memento.getEstoquesAntes().forEach(estoqueSnapshot -> {
+                    br.com.caixaeletronico.model.EstoqueGlobal estoque = estoqueGlobalRepository
+                        .findByValorCedula(estoqueSnapshot.getValorCedula())
+                        .orElseThrow(() -> new RuntimeException("Estoque não encontrado para cédula: " + estoqueSnapshot.getValorCedula()));
+                    estoque.setQuantidade(estoqueSnapshot.getQuantidade());
+                    estoqueGlobalRepository.save(estoque);
+                });
+            }
+            
+            @Override
+            public OperationMemento gerarMemento() {
+                // Não implementado para comando de desfazer
+                return null;
+            }
+        };
     }
 }
