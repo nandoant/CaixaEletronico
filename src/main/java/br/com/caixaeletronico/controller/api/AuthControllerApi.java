@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
  * do sistema de caixa eletrônico.
  */
 @Tag(name = "Autenticação", description = "Operações de autenticação e autorização")
-public interface AuthControllerApi {
+public interface eAuthControllerApi {
 
     @Operation(
         summary = "Registrar novo usuário",
