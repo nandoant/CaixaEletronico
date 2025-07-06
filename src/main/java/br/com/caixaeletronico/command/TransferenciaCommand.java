@@ -28,10 +28,10 @@ public class TransferenciaCommand implements OperacaoCommand {
     
     @Override
     public void executar() {
-        Conta contaOrigem = contaRepository.findByIdWithSlots(contaOrigemId)
+        Conta contaOrigem = contaRepository.findById(contaOrigemId)
             .orElseThrow(() -> new RuntimeException("Conta origem não encontrada"));
         
-        Conta contaDestino = contaRepository.findByIdWithSlots(contaDestinoId)
+        Conta contaDestino = contaRepository.findById(contaDestinoId)
             .orElseThrow(() -> new RuntimeException("Conta destino não encontrada"));
         
         // Verifica se há saldo suficiente
@@ -56,10 +56,10 @@ public class TransferenciaCommand implements OperacaoCommand {
             throw new IllegalStateException("Memento não disponível para desfazer operação");
         }
         
-        Conta contaOrigem = contaRepository.findByIdWithSlots(contaOrigemId)
+        Conta contaOrigem = contaRepository.findById(contaOrigemId)
             .orElseThrow(() -> new RuntimeException("Conta origem não encontrada"));
         
-        Conta contaDestino = contaRepository.findByIdWithSlots(contaDestinoId)
+        Conta contaDestino = contaRepository.findById(contaDestinoId)
             .orElseThrow(() -> new RuntimeException("Conta destino não encontrada"));
         
         // Restaura saldos
@@ -75,34 +75,19 @@ public class TransferenciaCommand implements OperacaoCommand {
     
     @Override
     public OperationMemento gerarMemento() {
-        Conta contaOrigem = contaRepository.findByIdWithSlots(contaOrigemId)
+        Conta contaOrigem = contaRepository.findById(contaOrigemId)
             .orElseThrow(() -> new RuntimeException("Conta origem não encontrada"));
         
-        Conta contaDestino = contaRepository.findByIdWithSlots(contaDestinoId)
+        Conta contaDestino = contaRepository.findById(contaDestinoId)
             .orElseThrow(() -> new RuntimeException("Conta destino não encontrada"));
         
         Map<Long, BigDecimal> saldosAntes = new HashMap<>();
         saldosAntes.put(contaOrigemId, contaOrigem.getSaldo());
         saldosAntes.put(contaDestinoId, contaDestino.getSaldo());
         
-        Map<Long, List<OperationMemento.SlotCedulaSnapshot>> slotsAntes = new HashMap<>();
+        // Para transferências, não precisamos de snapshot do estoque global
+        List<OperationMemento.EstoqueGlobalSnapshot> estoquesAntes = new ArrayList<>();
         
-        // Snapshots conta origem
-        List<OperationMemento.SlotCedulaSnapshot> snapshotsOrigem = new ArrayList<>();
-        for (SlotCedula slot : contaOrigem.getSlotsCedulas()) {
-            snapshotsOrigem.add(new OperationMemento.SlotCedulaSnapshot(
-                slot.getId(), slot.getValorCedula(), slot.getQuantidade()));
-        }
-        slotsAntes.put(contaOrigemId, snapshotsOrigem);
-        
-        // Snapshots conta destino
-        List<OperationMemento.SlotCedulaSnapshot> snapshotsDestino = new ArrayList<>();
-        for (SlotCedula slot : contaDestino.getSlotsCedulas()) {
-            snapshotsDestino.add(new OperationMemento.SlotCedulaSnapshot(
-                slot.getId(), slot.getValorCedula(), slot.getQuantidade()));
-        }
-        slotsAntes.put(contaDestinoId, snapshotsDestino);
-        
-        return new OperationMemento(saldosAntes, slotsAntes);
+        return new OperationMemento(saldosAntes, estoquesAntes);
     }
 }

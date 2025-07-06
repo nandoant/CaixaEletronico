@@ -7,8 +7,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "contas")
@@ -26,9 +24,6 @@ public class Conta {
     @DecimalMin(value = "0.0", inclusive = true, message = "Saldo não pode ser negativo")
     @Column(precision = 10, scale = 2)
     private BigDecimal saldo;
-    
-    @OneToMany(mappedBy = "conta", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<SlotCedula> slotsCedulas = new ArrayList<>();
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id")
@@ -68,30 +63,11 @@ public class Conta {
         this.saldo = saldo;
     }
     
-    public List<SlotCedula> getSlotsCedulas() {
-        return slotsCedulas;
-    }
-    
-    public void setSlotsCedulas(List<SlotCedula> slotsCedulas) {
-        this.slotsCedulas = slotsCedulas;
-    }
-    
     public Usuario getUsuario() {
         return usuario;
     }
     
     public void setUsuario(Usuario usuario) {
         this.usuario = usuario;
-    }
-    
-    // Helper methods
-    public void adicionarSlotCedula(SlotCedula slot) {
-        slotsCedulas.add(slot);
-        slot.setConta(this);
-    }
-    
-    public void removerSlotCedula(SlotCedula slot) {
-        slotsCedulas.remove(slot);
-        slot.setConta(null);
     }
 }

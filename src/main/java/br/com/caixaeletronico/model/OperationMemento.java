@@ -7,14 +7,14 @@ import java.util.Map;
 public class OperationMemento {
     
     private Map<Long, BigDecimal> saldosAntes;
-    private Map<Long, List<SlotCedulaSnapshot>> slotsAntes;
+    private List<EstoqueGlobalSnapshot> estoquesAntes;
     
     // Constructors
     public OperationMemento() {}
     
-    public OperationMemento(Map<Long, BigDecimal> saldosAntes, Map<Long, List<SlotCedulaSnapshot>> slotsAntes) {
+    public OperationMemento(Map<Long, BigDecimal> saldosAntes, List<EstoqueGlobalSnapshot> estoquesAntes) {
         this.saldosAntes = saldosAntes;
-        this.slotsAntes = slotsAntes;
+        this.estoquesAntes = estoquesAntes;
     }
     
     // Getters and Setters
@@ -26,37 +26,27 @@ public class OperationMemento {
         this.saldosAntes = saldosAntes;
     }
     
-    public Map<Long, List<SlotCedulaSnapshot>> getSlotsAntes() {
-        return slotsAntes;
+    public List<EstoqueGlobalSnapshot> getEstoquesAntes() {
+        return estoquesAntes;
     }
     
-    public void setSlotsAntes(Map<Long, List<SlotCedulaSnapshot>> slotsAntes) {
-        this.slotsAntes = slotsAntes;
+    public void setEstoquesAntes(List<EstoqueGlobalSnapshot> estoquesAntes) {
+        this.estoquesAntes = estoquesAntes;
     }
     
-    // Inner class for slot snapshot
-    public static class SlotCedulaSnapshot {
-        private Long slotId;
+    // Inner class for estoque global snapshot
+    public static class EstoqueGlobalSnapshot {
         private ValorCedula valorCedula;
         private Integer quantidade;
         
-        public SlotCedulaSnapshot() {}
+        public EstoqueGlobalSnapshot() {}
         
-        public SlotCedulaSnapshot(Long slotId, ValorCedula valorCedula, Integer quantidade) {
-            this.slotId = slotId;
+        public EstoqueGlobalSnapshot(ValorCedula valorCedula, Integer quantidade) {
             this.valorCedula = valorCedula;
             this.quantidade = quantidade;
         }
         
         // Getters and Setters
-        public Long getSlotId() {
-            return slotId;
-        }
-        
-        public void setSlotId(Long slotId) {
-            this.slotId = slotId;
-        }
-        
         public ValorCedula getValorCedula() {
             return valorCedula;
         }

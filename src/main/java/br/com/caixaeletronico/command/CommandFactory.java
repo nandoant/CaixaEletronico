@@ -3,8 +3,8 @@ package br.com.caixaeletronico.command;
 import br.com.caixaeletronico.model.TipoOperacao;
 import br.com.caixaeletronico.model.ValorCedula;
 import br.com.caixaeletronico.repository.ContaRepository;
+import br.com.caixaeletronico.repository.EstoqueGlobalRepository;
 import br.com.caixaeletronico.repository.PagamentoAgendadoRepository;
-import br.com.caixaeletronico.repository.SlotCedulaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +18,7 @@ public class CommandFactory {
     private ContaRepository contaRepository;
     
     @Autowired
-    private SlotCedulaRepository slotCedulaRepository;
+    private EstoqueGlobalRepository estoqueGlobalRepository;
     
     @Autowired
     private PagamentoAgendadoRepository pagamentoAgendadoRepository;
@@ -48,7 +48,7 @@ public class CommandFactory {
         @SuppressWarnings("unchecked")
         Map<ValorCedula, Integer> cedulasDeposito = (Map<ValorCedula, Integer>) parametros[2];
         
-        return new DepositoCommand(contaRepository, slotCedulaRepository, 
+        return new DepositoCommand(contaRepository, estoqueGlobalRepository, 
                                   contaId, valor, cedulasDeposito);
     }
     
@@ -62,7 +62,7 @@ public class CommandFactory {
         @SuppressWarnings("unchecked")
         Map<ValorCedula, Integer> cedulasSaque = (Map<ValorCedula, Integer>) parametros[2];
         
-        return new SaqueCommand(contaRepository, slotCedulaRepository, 
+        return new SaqueCommand(contaRepository, estoqueGlobalRepository, 
                                contaId, valor, cedulasSaque);
     }
     

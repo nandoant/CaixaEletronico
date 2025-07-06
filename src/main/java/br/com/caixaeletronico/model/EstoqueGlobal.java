@@ -5,8 +5,8 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
-@Table(name = "slots_cedulas")
-public class SlotCedula implements ICedula {
+@Table(name = "estoque_global")
+public class EstoqueGlobal implements ICedula {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,9 +22,9 @@ public class SlotCedula implements ICedula {
     private Integer quantidade;
     
     // Constructors
-    public SlotCedula() {}
+    public EstoqueGlobal() {}
     
-    public SlotCedula(ValorCedula valorCedula, Integer quantidade) {
+    public EstoqueGlobal(ValorCedula valorCedula, Integer quantidade) {
         this.valorCedula = valorCedula;
         this.quantidade = quantidade;
     }

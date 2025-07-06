@@ -1,10 +1,8 @@
 package br.com.caixaeletronico.service;
 
 import br.com.caixaeletronico.model.CombinacaoCedulas;
-import br.com.caixaeletronico.model.Conta;
-import br.com.caixaeletronico.model.SlotCedula;
-import br.com.caixaeletronico.repository.ContaRepository;
-import br.com.caixaeletronico.repository.SlotCedulaRepository;
+import br.com.caixaeletronico.model.EstoqueGlobal;
+import br.com.caixaeletronico.repository.EstoqueGlobalRepository;
 import br.com.caixaeletronico.strategy.NotesDispenseStrategy;
 import br.com.caixaeletronico.strategy.NotesStrategyFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +15,7 @@ import java.util.stream.Collectors;
 public class SaqueOptionService {
     
     @Autowired
-    private ContaRepository contaRepository;
-    
-    @Autowired
-    private SlotCedulaRepository slotCedulaRepository;
+    private EstoqueGlobalRepository estoqueGlobalRepository;
     
     @Autowired
     private NotesStrategyFactory strategyFactory;
@@ -31,23 +26,20 @@ public class SaqueOptionService {
     private final long CACHE_TTL = 30000; // 30 segundos
     
     public List<CombinacaoCedulas> obterOpcoesRaques(Long contaId, int valor) {
-        String cacheKey = contaId + "_" + valor;
+        String cacheKey = "global_" + valor;
         
         // Verifica cache
         if (isCacheValid(cacheKey)) {
             return cache.get(cacheKey);
         }
         
-        Conta conta = contaRepository.findById(contaId)
-            .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
-        
-        List<SlotCedula> slots = slotCedulaRepository.findByContaAndQuantidadeGreaterThan(conta, 0);
+        List<EstoqueGlobal> estoques = estoqueGlobalRepository.findByQuantidadeGreaterThan(0);
         
         List<CombinacaoCedulas> todasCombinacoes = new ArrayList<>();
         
         // Aplica todas as estratégias
         for (NotesDispenseStrategy strategy : strategyFactory.getAllStrategies()) {
-            List<CombinacaoCedulas> combinacoes = strategy.generateCombinations(valor, slots);
+            List<CombinacaoCedulas> combinacoes = strategy.generateCombinations(valor, estoques);
             todasCombinacoes.addAll(combinacoes);
         }
         

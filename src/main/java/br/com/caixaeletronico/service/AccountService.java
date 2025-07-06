@@ -1,10 +1,10 @@
 package br.com.caixaeletronico.service;
 
 import br.com.caixaeletronico.model.Conta;
-import br.com.caixaeletronico.model.SlotCedula;
+import br.com.caixaeletronico.model.EstoqueGlobal;
 import br.com.caixaeletronico.model.ValorCedula;
 import br.com.caixaeletronico.repository.ContaRepository;
-import br.com.caixaeletronico.repository.SlotCedulaRepository;
+import br.com.caixaeletronico.repository.EstoqueGlobalRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +20,7 @@ public class AccountService {
     private ContaRepository contaRepository;
     
     @Autowired
-    private SlotCedulaRepository slotCedulaRepository;
+    private EstoqueGlobalRepository estoqueGlobalRepository;
     
     public void creditarConta(Long contaId, BigDecimal valor) {
         Conta conta = contaRepository.findById(contaId)
@@ -42,33 +42,24 @@ public class AccountService {
         contaRepository.save(conta);
     }
     
-    public void adicionarCedulas(Long contaId, ValorCedula valorCedula, int quantidade) {
-        Conta conta = contaRepository.findByIdWithSlots(contaId)
-            .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+    public void adicionarCedulas(ValorCedula valorCedula, int quantidade) {
+        EstoqueGlobal estoque = estoqueGlobalRepository.findByValorCedula(valorCedula)
+            .orElse(new EstoqueGlobal(valorCedula, 0));
         
-        SlotCedula slot = slotCedulaRepository.findByContaAndValorCedula(conta, valorCedula)
-            .orElse(new SlotCedula(conta, valorCedula, 0));
-        
-        slot.adicionarQuantidade(quantidade);
-        slotCedulaRepository.save(slot);
+        estoque.adicionarQuantidade(quantidade);
+        estoqueGlobalRepository.save(estoque);
     }
     
-    public void removerCedulas(Long contaId, ValorCedula valorCedula, int quantidade) {
-        Conta conta = contaRepository.findByIdWithSlots(contaId)
-            .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+    public void removerCedulas(ValorCedula valorCedula, int quantidade) {
+        EstoqueGlobal estoque = estoqueGlobalRepository.findByValorCedula(valorCedula)
+            .orElseThrow(() -> new RuntimeException("Estoque não encontrado"));
         
-        SlotCedula slot = slotCedulaRepository.findByContaAndValorCedula(conta, valorCedula)
-            .orElseThrow(() -> new RuntimeException("Slot não encontrado"));
-        
-        slot.removerQuantidade(quantidade);
-        slotCedulaRepository.save(slot);
+        estoque.removerQuantidade(quantidade);
+        estoqueGlobalRepository.save(estoque);
     }
     
-    public List<SlotCedula> obterSlotsCedulas(Long contaId) {
-        Conta conta = contaRepository.findById(contaId)
-            .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
-        
-        return slotCedulaRepository.findByContaOrderByValorCedulaDesc(conta);
+    public List<EstoqueGlobal> obterEstoqueGlobal() {
+        return estoqueGlobalRepository.findAllByOrderByValorCedulaDesc();
     }
     
     public BigDecimal obterSaldo(Long contaId) {

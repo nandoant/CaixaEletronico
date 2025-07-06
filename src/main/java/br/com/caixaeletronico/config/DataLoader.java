@@ -19,7 +19,7 @@ public class DataLoader implements CommandLineRunner {
     private ContaRepository contaRepository;
     
     @Autowired
-    private SlotCedulaRepository slotCedulaRepository;
+    private EstoqueGlobalRepository estoqueGlobalRepository;
     
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -55,15 +55,6 @@ public class DataLoader implements CommandLineRunner {
         conta.setUsuario(cliente);
         contaRepository.save(conta);
         
-        // Criar slots de cédulas com estoque inicial
-        criarSlotCedula(conta, ValorCedula.DUZENTOS, 50);
-        criarSlotCedula(conta, ValorCedula.CEM, 100);
-        criarSlotCedula(conta, ValorCedula.CINQUENTA, 200);
-        criarSlotCedula(conta, ValorCedula.VINTE, 500);
-        criarSlotCedula(conta, ValorCedula.DEZ, 1000);
-        criarSlotCedula(conta, ValorCedula.CINCO, 2000);
-        criarSlotCedula(conta, ValorCedula.DOIS, 5000);
-        
         // Criar segunda conta para testes de transferência
         Conta conta2 = new Conta();
         conta2.setTitular("Maria Santos");
@@ -71,27 +62,27 @@ public class DataLoader implements CommandLineRunner {
         conta2.setUsuario(cliente);
         contaRepository.save(conta2);
         
-        // Criar slots de cédulas para segunda conta
-        criarSlotCedula(conta2, ValorCedula.DUZENTOS, 25);
-        criarSlotCedula(conta2, ValorCedula.CEM, 50);
-        criarSlotCedula(conta2, ValorCedula.CINQUENTA, 100);
-        criarSlotCedula(conta2, ValorCedula.VINTE, 250);
-        criarSlotCedula(conta2, ValorCedula.DEZ, 500);
-        criarSlotCedula(conta2, ValorCedula.CINCO, 1000);
-        criarSlotCedula(conta2, ValorCedula.DOIS, 2500);
+        // Criar estoque global de cédulas
+        criarEstoqueGlobal(ValorCedula.DUZENTOS, 100);
+        criarEstoqueGlobal(ValorCedula.CEM, 200);
+        criarEstoqueGlobal(ValorCedula.CINQUENTA, 400);
+        criarEstoqueGlobal(ValorCedula.VINTE, 1000);
+        criarEstoqueGlobal(ValorCedula.DEZ, 2000);
+        criarEstoqueGlobal(ValorCedula.CINCO, 4000);
+        criarEstoqueGlobal(ValorCedula.DOIS, 10000);
         
         System.out.println("Dados iniciais criados:");
         System.out.println("- Admin: login=admin, senha=admin123");
         System.out.println("- Cliente: login=cliente, senha=cliente123");
         System.out.println("- Conta 1: ID=1, Titular=João Silva, Saldo=R$ 5.000,00");
         System.out.println("- Conta 2: ID=2, Titular=Maria Santos, Saldo=R$ 3.000,00");
+        System.out.println("- Estoque global de cédulas criado");
     }
     
-    private void criarSlotCedula(Conta conta, ValorCedula valorCedula, int quantidade) {
-        SlotCedula slot = new SlotCedula();
-        slot.setConta(conta);
-        slot.setValorCedula(valorCedula);
-        slot.setQuantidade(quantidade);
-        slotCedulaRepository.save(slot);
+    private void criarEstoqueGlobal(ValorCedula valorCedula, int quantidade) {
+        EstoqueGlobal estoque = new EstoqueGlobal();
+        estoque.setValorCedula(valorCedula);
+        estoque.setQuantidade(quantidade);
+        estoqueGlobalRepository.save(estoque);
     }
 }

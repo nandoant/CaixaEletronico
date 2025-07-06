@@ -1,7 +1,7 @@
 package br.com.caixaeletronico.strategy;
 
 import br.com.caixaeletronico.model.CombinacaoCedulas;
-import br.com.caixaeletronico.model.SlotCedula;
+import br.com.caixaeletronico.model.ICedula;
 import br.com.caixaeletronico.model.ValorCedula;
 import org.springframework.stereotype.Component;
 
@@ -11,28 +11,28 @@ import java.util.*;
 public class BigNotesFirstStrategy implements NotesDispenseStrategy {
     
     @Override
-    public List<CombinacaoCedulas> generateCombinations(int valor, List<SlotCedula> slots) {
+    public List<CombinacaoCedulas> generateCombinations(int valor, List<? extends ICedula> cedulas) {
         List<CombinacaoCedulas> combinacoes = new ArrayList<>();
         
-        // Ordena slots por valor decrescente
-        List<SlotCedula> slotsOrdenados = new ArrayList<>(slots);
-        slotsOrdenados.sort((a, b) -> Integer.compare(b.getValorCedula().getValor(), a.getValorCedula().getValor()));
+        // Ordena cedulas por valor decrescente
+        List<? extends ICedula> cedulasOrdenadas = new ArrayList<>(cedulas);
+        cedulasOrdenadas.sort((a, b) -> Integer.compare(b.getValorCedula().getValor(), a.getValorCedula().getValor()));
         
-        // Filtra apenas slots com quantidade > 0
-        slotsOrdenados = slotsOrdenados.stream()
-            .filter(slot -> slot.getQuantidade() > 0)
+        // Filtra apenas cedulas com quantidade > 0
+        cedulasOrdenadas = cedulasOrdenadas.stream()
+            .filter(cedula -> cedula.getQuantidade() > 0)
             .toList();
         
         Map<ValorCedula, Integer> combinacao = new HashMap<>();
         int valorRestante = valor;
         
         // Algoritmo guloso - sempre pega a maior nota possível
-        for (SlotCedula slot : slotsOrdenados) {
-            int valorNota = slot.getValorCedula().getValor();
-            int quantidadeMaxima = Math.min(slot.getQuantidade(), valorRestante / valorNota);
+        for (ICedula cedula : cedulasOrdenadas) {
+            int valorNota = cedula.getValorCedula().getValor();
+            int quantidadeMaxima = Math.min(cedula.getQuantidade(), valorRestante / valorNota);
             
             if (quantidadeMaxima > 0) {
-                combinacao.put(slot.getValorCedula(), quantidadeMaxima);
+                combinacao.put(cedula.getValorCedula(), quantidadeMaxima);
                 valorRestante -= quantidadeMaxima * valorNota;
             }
         }

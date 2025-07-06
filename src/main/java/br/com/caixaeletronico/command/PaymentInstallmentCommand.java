@@ -35,7 +35,7 @@ public class PaymentInstallmentCommand implements OperacaoCommand {
             throw new RuntimeException("Pagamento não está ativo");
         }
         
-        Conta conta = contaRepository.findByIdWithSlots(pagamento.getContaOrigem().getId())
+        Conta conta = contaRepository.findById(pagamento.getContaOrigem().getId())
             .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
         
         BigDecimal valorParcela = pagamento.getValorParcela();
@@ -65,7 +65,7 @@ public class PaymentInstallmentCommand implements OperacaoCommand {
         PagamentoAgendado pagamento = pagamentoAgendadoRepository.findById(pagamentoAgendadoId)
             .orElseThrow(() -> new RuntimeException("Pagamento agendado não encontrado"));
         
-        Conta conta = contaRepository.findByIdWithSlots(pagamento.getContaOrigem().getId())
+        Conta conta = contaRepository.findById(pagamento.getContaOrigem().getId())
             .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
         
         // Restaura saldo
@@ -89,22 +89,15 @@ public class PaymentInstallmentCommand implements OperacaoCommand {
         PagamentoAgendado pagamento = pagamentoAgendadoRepository.findById(pagamentoAgendadoId)
             .orElseThrow(() -> new RuntimeException("Pagamento agendado não encontrado"));
         
-        Conta conta = contaRepository.findByIdWithSlots(pagamento.getContaOrigem().getId())
+        Conta conta = contaRepository.findById(pagamento.getContaOrigem().getId())
             .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
         
         Map<Long, BigDecimal> saldosAntes = new HashMap<>();
         saldosAntes.put(conta.getId(), conta.getSaldo());
         
-        Map<Long, List<OperationMemento.SlotCedulaSnapshot>> slotsAntes = new HashMap<>();
-        List<OperationMemento.SlotCedulaSnapshot> snapshots = new ArrayList<>();
+        // Para pagamentos, não precisamos de snapshot do estoque global
+        List<OperationMemento.EstoqueGlobalSnapshot> estoquesAntes = new ArrayList<>();
         
-        for (SlotCedula slot : conta.getSlotsCedulas()) {
-            snapshots.add(new OperationMemento.SlotCedulaSnapshot(
-                slot.getId(), slot.getValorCedula(), slot.getQuantidade()));
-        }
-        
-        slotsAntes.put(conta.getId(), snapshots);
-        
-        return new OperationMemento(saldosAntes, slotsAntes);
+        return new OperationMemento(saldosAntes, estoquesAntes);
     }
 }

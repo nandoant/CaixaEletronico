@@ -1,7 +1,7 @@
 package br.com.caixaeletronico.strategy;
 
 import br.com.caixaeletronico.model.CombinacaoCedulas;
-import br.com.caixaeletronico.model.SlotCedula;
+import br.com.caixaeletronico.model.ICedula;
 import br.com.caixaeletronico.model.ValorCedula;
 import org.springframework.stereotype.Component;
 
@@ -11,15 +11,15 @@ import java.util.*;
 public class IntermediateNotesStrategy implements NotesDispenseStrategy {
     
     @Override
-    public List<CombinacaoCedulas> generateCombinations(int valor, List<SlotCedula> slots) {
+    public List<CombinacaoCedulas> generateCombinations(int valor, List<? extends ICedula> cedulas) {
         List<CombinacaoCedulas> combinacoes = new ArrayList<>();
         
-        // Filtra apenas slots com quantidade > 0
-        List<SlotCedula> slotsDisponiveis = slots.stream()
-            .filter(slot -> slot.getQuantidade() > 0)
+        // Filtra apenas cedulas com quantidade > 0
+        List<? extends ICedula> cedulasDisponiveis = cedulas.stream()
+            .filter(cedula -> cedula.getQuantidade() > 0)
             .toList();
         
-        if (slotsDisponiveis.isEmpty()) {
+        if (cedulasDisponiveis.isEmpty()) {
             return combinacoes;
         }
         
@@ -27,34 +27,34 @@ public class IntermediateNotesStrategy implements NotesDispenseStrategy {
         Map<ValorCedula, Integer> combinacao = new HashMap<>();
         
         // Ordena por valor e encontra a nota intermediária como ponto de partida
-        List<SlotCedula> slotsOrdenados = new ArrayList<>(slotsDisponiveis);
-        slotsOrdenados.sort((a, b) -> Integer.compare(a.getValorCedula().getValor(), b.getValorCedula().getValor()));
+        List<? extends ICedula> cedulasOrdenadas = new ArrayList<>(cedulasDisponiveis);
+        cedulasOrdenadas.sort((a, b) -> Integer.compare(a.getValorCedula().getValor(), b.getValorCedula().getValor()));
         
         int valorRestante = valor;
         
         // Começa do meio da lista (estratégia balanceada)
-        int meioIndice = slotsOrdenados.size() / 2;
+        int meioIndice = cedulasOrdenadas.size() / 2;
         
         // Primeiro, tenta usar notas do meio para cima
-        for (int i = meioIndice; i < slotsOrdenados.size(); i++) {
-            SlotCedula slot = slotsOrdenados.get(i);
-            int valorNota = slot.getValorCedula().getValor();
-            int quantidadeMaxima = Math.min(slot.getQuantidade(), valorRestante / valorNota);
+        for (int i = meioIndice; i < cedulasOrdenadas.size(); i++) {
+            ICedula cedula = cedulasOrdenadas.get(i);
+            int valorNota = cedula.getValorCedula().getValor();
+            int quantidadeMaxima = Math.min(cedula.getQuantidade(), valorRestante / valorNota);
             
             if (quantidadeMaxima > 0) {
-                combinacao.put(slot.getValorCedula(), quantidadeMaxima);
+                combinacao.put(cedula.getValorCedula(), quantidadeMaxima);
                 valorRestante -= quantidadeMaxima * valorNota;
             }
         }
         
         // Depois, completa com notas menores se necessário
         for (int i = meioIndice - 1; i >= 0 && valorRestante > 0; i--) {
-            SlotCedula slot = slotsOrdenados.get(i);
-            int valorNota = slot.getValorCedula().getValor();
-            int quantidadeMaxima = Math.min(slot.getQuantidade(), valorRestante / valorNota);
+            ICedula cedula = cedulasOrdenadas.get(i);
+            int valorNota = cedula.getValorCedula().getValor();
+            int quantidadeMaxima = Math.min(cedula.getQuantidade(), valorRestante / valorNota);
             
             if (quantidadeMaxima > 0) {
-                combinacao.put(slot.getValorCedula(), quantidadeMaxima);
+                combinacao.put(cedula.getValorCedula(), quantidadeMaxima);
                 valorRestante -= quantidadeMaxima * valorNota;
             }
         }
