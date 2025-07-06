@@ -1,0 +1,125 @@
+package br.com.caixaeletronico.controller;
+
+import br.com.caixaeletronico.controller.api.AuthControllerApi;
+import br.com.caixaeletronico.model.PerfilUsuario;
+import br.com.caixaeletronico.model.Usuario;
+import br.com.caixaeletronico.service.AuthenticationService;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/auth")
+public class AuthController implements AuthControllerApi {
+    
+    @Autowired
+    private AuthenticationService authenticationService;
+    
+    @PostMapping("/register")
+    public ResponseEntity<?> registrar(@Valid @RequestBody RegistroRequest request) {
+        try {
+            Usuario usuario = authenticationService.registrarUsuario(
+                request.getLogin(), 
+                request.getEmail(), 
+                request.getSenha(),
+                request.getPerfil() != null ? request.getPerfil() : PerfilUsuario.CLIENTE
+            );
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Usuário registrado com sucesso");
+            response.put("userId", usuario.getId());
+            response.put("login", usuario.getLogin());
+            response.put("email", usuario.getEmail());
+            response.put("perfil", usuario.getPerfil());
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+    
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
+        try {
+            String token = authenticationService.autenticar(request.getLogin(), request.getSenha());
+            Usuario usuario = authenticationService.obterUsuarioPorLogin(request.getLogin());
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", token);
+            response.put("type", "Bearer");
+            response.put("userId", usuario.getId());
+            response.put("login", usuario.getLogin());
+            response.put("email", usuario.getEmail());
+            response.put("perfil", usuario.getPerfil());
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+    
+    @GetMapping("/me")
+    public ResponseEntity<?> obterUsuarioLogado(@RequestHeader("Authorization") String token) {
+        try {
+            String jwt = token.substring(7); // Remove "Bearer "
+            Usuario usuario = authenticationService.obterUsuarioDoToken(jwt)
+                .orElseThrow(() -> new RuntimeException("Token inválido"));
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("userId", usuario.getId());
+            response.put("login", usuario.getLogin());
+            response.put("email", usuario.getEmail());
+            response.put("perfil", usuario.getPerfil());
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+    
+    // DTOs
+    public static class RegistroRequest {
+        private String login;
+        private String email;
+        private String senha;
+        private PerfilUsuario perfil;
+        
+        // Getters and Setters
+        public String getLogin() { return login; }
+        public void setLogin(String login) { this.login = login; }
+        
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        
+        public String getSenha() { return senha; }
+        public void setSenha(String senha) { this.senha = senha; }
+        
+        public PerfilUsuario getPerfil() { return perfil; }
+        public void setPerfil(PerfilUsuario perfil) { this.perfil = perfil; }
+    }
+    
+    public static class LoginRequest {
+        private String login;
+        private String senha;
+        
+        // Getters and Setters
+        public String getLogin() { return login; }
+        public void setLogin(String login) { this.login = login; }
+        
+        public String getSenha() { return senha; }
+        public void setSenha(String senha) { this.senha = senha; }
+    }
+}
