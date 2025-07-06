@@ -1,5 +1,6 @@
 package br.com.caixaeletronico.controller;
 
+import br.com.caixaeletronico.config.CustomUserDetailsService;
 import br.com.caixaeletronico.controller.api.AuthControllerApi;
 import br.com.caixaeletronico.model.PerfilUsuario;
 import br.com.caixaeletronico.model.Usuario;
@@ -7,6 +8,7 @@ import br.com.caixaeletronico.service.AuthenticationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -80,6 +82,34 @@ public class AuthController implements AuthControllerApi {
             response.put("login", usuario.getLogin());
             response.put("email", usuario.getEmail());
             response.put("perfil", usuario.getPerfil());
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+    
+    @GetMapping("/test")
+    public ResponseEntity<?> testeAutenticacao(Authentication authentication) {
+        try {
+            if (authentication == null) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Authentication is null");
+                return ResponseEntity.status(401).body(error);
+            }
+            
+            CustomUserDetailsService.CustomUserPrincipal principal = 
+                (CustomUserDetailsService.CustomUserPrincipal) authentication.getPrincipal();
+            Usuario usuario = principal.getUsuario();
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Autenticação funcionando!");
+            response.put("usuario", usuario.getLogin());
+            response.put("perfil", usuario.getPerfil());
+            response.put("authorities", authentication.getAuthorities());
             
             return ResponseEntity.ok(response);
             

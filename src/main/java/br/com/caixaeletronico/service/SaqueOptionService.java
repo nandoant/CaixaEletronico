@@ -30,11 +30,8 @@ public class SaqueOptionService {
         
         // Verifica cache
         if (isCacheValid(cacheKey)) {
-            System.out.println("DEBUG: Usando cache para valor: " + valor);
             return cache.get(cacheKey);
         }
-        
-        System.out.println("DEBUG: Cache inválido ou não encontrado, gerando novas combinações para valor: " + valor);
         
         List<EstoqueGlobal> estoques = estoqueGlobalRepository.findByQuantidadeGreaterThan(0);
         
@@ -52,8 +49,6 @@ public class SaqueOptionService {
         // Armazena no cache
         cache.put(cacheKey, resultado);
         cacheTimestamps.put(cacheKey, System.currentTimeMillis());
-        
-        System.out.println("DEBUG: Cache atualizado com " + resultado.size() + " combinações");
         
         return resultado;
     }
@@ -90,12 +85,6 @@ public class SaqueOptionService {
     
     public CombinacaoCedulas obterCombinacaoPorId(UUID idOpcao, Long contaId, int valor) {
         List<CombinacaoCedulas> opcoes = obterOpcoesRaques(contaId, valor);
-        
-        System.out.println("DEBUG: Buscando idOpcao: " + idOpcao);
-        System.out.println("DEBUG: Opções disponíveis:");
-        for (CombinacaoCedulas opcao : opcoes) {
-            System.out.println("  - ID: " + opcao.getIdOpcao() + " | Descrição: " + opcao.getDescricaoLegivel());
-        }
         
         return opcoes.stream()
             .filter(combinacao -> combinacao.getIdOpcao().equals(idOpcao))
