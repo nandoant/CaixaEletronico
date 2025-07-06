@@ -23,15 +23,18 @@ public class SaqueOptionService {
     // Cache simples em memória
     private Map<String, List<CombinacaoCedulas>> cache = new HashMap<>();
     private Map<String, Long> cacheTimestamps = new HashMap<>();
-    private final long CACHE_TTL = 30000; // 30 segundos
+    private final long CACHE_TTL = 300000; // 5 minutos (300 segundos)
     
     public List<CombinacaoCedulas> obterOpcoesRaques(Long contaId, int valor) {
         String cacheKey = "global_" + valor;
         
         // Verifica cache
         if (isCacheValid(cacheKey)) {
+            System.out.println("DEBUG: Usando cache para valor: " + valor);
             return cache.get(cacheKey);
         }
+        
+        System.out.println("DEBUG: Cache inválido ou não encontrado, gerando novas combinações para valor: " + valor);
         
         List<EstoqueGlobal> estoques = estoqueGlobalRepository.findByQuantidadeGreaterThan(0);
         
@@ -49,6 +52,8 @@ public class SaqueOptionService {
         // Armazena no cache
         cache.put(cacheKey, resultado);
         cacheTimestamps.put(cacheKey, System.currentTimeMillis());
+        
+        System.out.println("DEBUG: Cache atualizado com " + resultado.size() + " combinações");
         
         return resultado;
     }
@@ -68,12 +73,14 @@ public class SaqueOptionService {
     
     private List<CombinacaoCedulas> consolidarEOrdenar(List<CombinacaoCedulas> combinacoes) {
         // Remove duplicatas baseado na descrição legível
-        Map<String, CombinacaoCedulas> combinacoesUnicas = combinacoes.stream()
-            .collect(Collectors.toMap(
-                CombinacaoCedulas::getDescricaoLegivel,
-                combinacao -> combinacao,
-                (existing, replacement) -> existing
-            ));
+        Map<String, CombinacaoCedulas> combinacoesUnicas = new LinkedHashMap<>();
+        
+        for (CombinacaoCedulas combinacao : combinacoes) {
+            String descricao = combinacao.getDescricaoLegivel();
+            if (!combinacoesUnicas.containsKey(descricao)) {
+                combinacoesUnicas.put(descricao, combinacao);
+            }
+        }
         
         // Ordena por quantidade total de notas (menor número de notas primeiro)
         return combinacoesUnicas.values().stream()
@@ -83,6 +90,12 @@ public class SaqueOptionService {
     
     public CombinacaoCedulas obterCombinacaoPorId(UUID idOpcao, Long contaId, int valor) {
         List<CombinacaoCedulas> opcoes = obterOpcoesRaques(contaId, valor);
+        
+        System.out.println("DEBUG: Buscando idOpcao: " + idOpcao);
+        System.out.println("DEBUG: Opções disponíveis:");
+        for (CombinacaoCedulas opcao : opcoes) {
+            System.out.println("  - ID: " + opcao.getIdOpcao() + " | Descrição: " + opcao.getDescricaoLegivel());
+        }
         
         return opcoes.stream()
             .filter(combinacao -> combinacao.getIdOpcao().equals(idOpcao))

@@ -2,6 +2,8 @@ package br.com.caixaeletronico.model;
 
 import java.util.Map;
 import java.util.UUID;
+import java.security.MessageDigest;
+import java.nio.charset.StandardCharsets;
 
 public class CombinacaoCedulas {
     
@@ -16,10 +18,10 @@ public class CombinacaoCedulas {
     }
     
     public CombinacaoCedulas(Map<ValorCedula, Integer> mapaCedulas) {
-        this();
         this.mapaCedulas = mapaCedulas;
         this.quantidadeTotalDeNotas = mapaCedulas.values().stream().mapToInt(Integer::intValue).sum();
         this.descricaoLegivel = gerarDescricaoLegivel();
+        this.idOpcao = gerarUUIDDeterministico();
     }
     
     // Getters and Setters
@@ -80,5 +82,46 @@ public class CombinacaoCedulas {
         return mapaCedulas.entrySet().stream()
             .mapToInt(entry -> entry.getKey().getValor() * entry.getValue())
             .sum();
+    }
+    
+    private UUID gerarUUIDDeterministico() {
+        try {
+            String conteudo = gerarConteudoParaHash();
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            byte[] hash = digest.digest(conteudo.getBytes(StandardCharsets.UTF_8));
+            
+            // Converte os primeiros 16 bytes do hash em UUID
+            long mostSigBits = 0;
+            long leastSigBits = 0;
+            
+            for (int i = 0; i < 8; i++) {
+                mostSigBits = (mostSigBits << 8) | (hash[i] & 0xFF);
+            }
+            
+            for (int i = 8; i < 16; i++) {
+                leastSigBits = (leastSigBits << 8) | (hash[i] & 0xFF);
+            }
+            
+            return new UUID(mostSigBits, leastSigBits);
+        } catch (Exception e) {
+            // Fallback para UUID aleatório em caso de erro
+            return UUID.randomUUID();
+        }
+    }
+    
+    private String gerarConteudoParaHash() {
+        StringBuilder sb = new StringBuilder();
+        
+        // Ordena as entradas por valor da cédula para garantir consistência
+        mapaCedulas.entrySet().stream()
+            .sorted((e1, e2) -> Integer.compare(e1.getKey().getValor(), e2.getKey().getValor()))
+            .forEach(entry -> {
+                sb.append(entry.getKey().getValor())
+                  .append(":")
+                  .append(entry.getValue())
+                  .append(";");
+            });
+        
+        return sb.toString();
     }
 }
