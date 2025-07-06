@@ -16,6 +16,7 @@ public class TransferenciaCommand implements OperacaoCommand {
     private final Long contaOrigemId;
     private final Long contaDestinoId;
     private final BigDecimal valor;
+    private final Usuario usuarioLogado;
     private OperationMemento memento;
     
     public TransferenciaCommand(ContaRepository contaRepository, 
@@ -24,6 +25,16 @@ public class TransferenciaCommand implements OperacaoCommand {
         this.contaOrigemId = contaOrigemId;
         this.contaDestinoId = contaDestinoId;
         this.valor = valor;
+        this.usuarioLogado = null; // Será passado posteriormente
+    }
+    
+    public TransferenciaCommand(ContaRepository contaRepository, 
+                               Long contaOrigemId, Long contaDestinoId, BigDecimal valor, Usuario usuarioLogado) {
+        this.contaRepository = contaRepository;
+        this.contaOrigemId = contaOrigemId;
+        this.contaDestinoId = contaDestinoId;
+        this.valor = valor;
+        this.usuarioLogado = usuarioLogado;
     }
     
     @Override
@@ -33,6 +44,13 @@ public class TransferenciaCommand implements OperacaoCommand {
         
         Conta contaDestino = contaRepository.findById(contaDestinoId)
             .orElseThrow(() -> new RuntimeException("Conta destino não encontrada"));
+        
+        // Validação: apenas o proprietário da conta origem ou admin pode fazer transferência
+        if (usuarioLogado != null && 
+            !contaOrigem.getUsuario().getId().equals(usuarioLogado.getId()) && 
+            !PerfilUsuario.ADMIN.equals(usuarioLogado.getPerfil())) {
+            throw new RuntimeException("Você não tem permissão para transferir desta conta");
+        }
         
         // Verifica se há saldo suficiente
         if (contaOrigem.getSaldo().compareTo(valor) < 0) {

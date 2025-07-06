@@ -18,6 +18,7 @@ public class DepositoCommand implements OperacaoCommand {
     private final Long contaId;
     private final BigDecimal valor;
     private final Map<ValorCedula, Integer> cedulasDeposito;
+    private final Usuario usuarioLogado;
     private OperationMemento memento;
     
     public DepositoCommand(ContaRepository contaRepository, EstoqueGlobalRepository estoqueGlobalRepository, 
@@ -28,12 +29,31 @@ public class DepositoCommand implements OperacaoCommand {
         this.contaId = contaId;
         this.valor = valor;
         this.cedulasDeposito = cedulasDeposito;
+        this.usuarioLogado = null; // Será passado posteriormente
+    }
+    
+    public DepositoCommand(ContaRepository contaRepository, EstoqueGlobalRepository estoqueGlobalRepository, 
+                          Long contaId, BigDecimal valor, 
+                          Map<ValorCedula, Integer> cedulasDeposito, Usuario usuarioLogado) {
+        this.contaRepository = contaRepository;
+        this.estoqueGlobalRepository = estoqueGlobalRepository;
+        this.contaId = contaId;
+        this.valor = valor;
+        this.cedulasDeposito = cedulasDeposito;
+        this.usuarioLogado = usuarioLogado;
     }
     
     @Override
     public void executar() {
         Conta conta = contaRepository.findById(contaId)
             .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+        
+        // Validação: apenas o proprietário da conta ou admin pode fazer depósito
+        if (usuarioLogado != null && 
+            !conta.getUsuario().getId().equals(usuarioLogado.getId()) && 
+            !PerfilUsuario.ADMIN.equals(usuarioLogado.getPerfil())) {
+            throw new RuntimeException("Você não tem permissão para depositar nesta conta");
+        }
         
         // Gera memento antes da operação
         memento = gerarMemento();

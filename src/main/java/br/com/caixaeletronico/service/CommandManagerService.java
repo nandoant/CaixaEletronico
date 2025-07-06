@@ -38,7 +38,7 @@ public class CommandManagerService {
     public Operacao executarComando(TipoOperacao tipo, Usuario usuario, String emailUsuario, Object... parametros) {
         try {
             // Cria e executa comando
-            OperacaoCommand command = commandFactory.criarCommand(tipo, parametros);
+            OperacaoCommand command = commandFactory.criarCommand(tipo, usuario, parametros);
             OperationMemento memento = command.gerarMemento();
             
             command.executar();

@@ -42,6 +42,23 @@ public class CommandFactory {
         }
     }
     
+    public OperacaoCommand criarCommand(TipoOperacao tipo, br.com.caixaeletronico.model.Usuario usuarioLogado, Object... parametros) {
+        switch (tipo) {
+            case DEPOSITO:
+                return criarDepositoCommand(usuarioLogado, parametros);
+            case SAQUE:
+                return criarSaqueCommand(usuarioLogado, parametros);
+            case TRANSFERENCIA:
+                return criarTransferenciaCommand(usuarioLogado, parametros);
+            case PAGAMENTO_PARCELA:
+                return criarPaymentInstallmentCommand(parametros);
+            case PAGAMENTO_IMEDIATO:
+                return criarImmediatePaymentCommand(parametros);
+            default:
+                throw new IllegalArgumentException("Tipo de operação não suportado: " + tipo);
+        }
+    }
+    
     private OperacaoCommand criarDepositoCommand(Object... parametros) {
         if (parametros.length < 3) {
             throw new IllegalArgumentException("Parâmetros insuficientes para criar comando de depósito");
@@ -54,6 +71,20 @@ public class CommandFactory {
         
         return new DepositoCommand(contaRepository, estoqueGlobalRepository, 
                                   contaId, valor, cedulasDeposito);
+    }
+    
+    private OperacaoCommand criarDepositoCommand(br.com.caixaeletronico.model.Usuario usuarioLogado, Object... parametros) {
+        if (parametros.length < 3) {
+            throw new IllegalArgumentException("Parâmetros insuficientes para criar comando de depósito");
+        }
+        
+        Long contaId = (Long) parametros[0];
+        BigDecimal valor = (BigDecimal) parametros[1];
+        @SuppressWarnings("unchecked")
+        Map<ValorCedula, Integer> cedulasDeposito = (Map<ValorCedula, Integer>) parametros[2];
+        
+        return new DepositoCommand(contaRepository, estoqueGlobalRepository, 
+                                  contaId, valor, cedulasDeposito, usuarioLogado);
     }
     
     private OperacaoCommand criarSaqueCommand(Object... parametros) {
@@ -70,6 +101,20 @@ public class CommandFactory {
                                contaId, valor, cedulasSaque);
     }
     
+    private OperacaoCommand criarSaqueCommand(br.com.caixaeletronico.model.Usuario usuarioLogado, Object... parametros) {
+        if (parametros.length < 3) {
+            throw new IllegalArgumentException("Parâmetros insuficientes para criar comando de saque");
+        }
+        
+        Long contaId = (Long) parametros[0];
+        BigDecimal valor = (BigDecimal) parametros[1];
+        @SuppressWarnings("unchecked")
+        Map<ValorCedula, Integer> cedulasSaque = (Map<ValorCedula, Integer>) parametros[2];
+        
+        return new SaqueCommand(contaRepository, estoqueGlobalRepository, 
+                               contaId, valor, cedulasSaque, usuarioLogado);
+    }
+    
     private OperacaoCommand criarTransferenciaCommand(Object... parametros) {
         if (parametros.length < 3) {
             throw new IllegalArgumentException("Parâmetros insuficientes para criar comando de transferência");
@@ -81,6 +126,19 @@ public class CommandFactory {
         
         return new TransferenciaCommand(contaRepository, 
                                        contaOrigemId, contaDestinoId, valor);
+    }
+    
+    private OperacaoCommand criarTransferenciaCommand(br.com.caixaeletronico.model.Usuario usuarioLogado, Object... parametros) {
+        if (parametros.length < 3) {
+            throw new IllegalArgumentException("Parâmetros insuficientes para criar comando de transferência");
+        }
+        
+        Long contaOrigemId = (Long) parametros[0];
+        Long contaDestinoId = (Long) parametros[1];
+        BigDecimal valor = (BigDecimal) parametros[2];
+        
+        return new TransferenciaCommand(contaRepository, 
+                                       contaOrigemId, contaDestinoId, valor, usuarioLogado);
     }
     
     private OperacaoCommand criarPaymentInstallmentCommand(Object... parametros) {
