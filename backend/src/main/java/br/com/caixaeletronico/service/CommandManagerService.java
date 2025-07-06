@@ -185,9 +185,6 @@ public class CommandManagerService {
             case PAGAMENTO_PARCELA:
                 // Lógica específica para pagamento de parcela pode ser adicionada aqui
                 break;
-            case PAGAMENTO_IMEDIATO:
-                // Lógica específica para pagamento imediato pode ser adicionada aqui
-                break;
             case DESFAZER:
                 // Lógica específica para desfazer pode ser adicionada aqui
                 break;

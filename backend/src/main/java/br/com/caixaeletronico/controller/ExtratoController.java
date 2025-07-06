@@ -1,6 +1,7 @@
 package br.com.caixaeletronico.controller;
 
 import br.com.caixaeletronico.config.CustomUserDetailsService;
+import br.com.caixaeletronico.controller.api.ExtratoControllerApi;
 import br.com.caixaeletronico.dto.OperacaoDto;
 import br.com.caixaeletronico.model.Conta;
 import br.com.caixaeletronico.model.Operacao;
@@ -24,7 +25,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/contas")
-public class ExtratoController {
+public class ExtratoController implements ExtratoControllerApi {
     
     @Autowired
     private ExtractService extractService;

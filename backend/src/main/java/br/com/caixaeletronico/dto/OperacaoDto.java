@@ -90,8 +90,6 @@ public class OperacaoDto {
                 return "Saque no caixa eletrônico";
             case TRANSFERENCIA:
                 return "Transferência entre contas";
-            case PAGAMENTO_IMEDIATO:
-                return "Pagamento imediato";
             case PAGAMENTO_PARCELA:
                 return "Pagamento de parcela";
             case DESFAZER:

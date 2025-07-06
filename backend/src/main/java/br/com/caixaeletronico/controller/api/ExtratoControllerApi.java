@@ -9,12 +9,9 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
 
 /**
  * Interface documentada para operações de extrato
@@ -102,11 +99,11 @@ public interface ExtratoControllerApi {
         @Parameter(description = "ID da conta para consulta do extrato", required = true)
         @PathVariable Long id,
         
-        @Parameter(description = "Data de início para filtro (formato ISO: 2024-01-01T00:00:00)")
-        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dataInicio,
+        @Parameter(description = "Data de início para filtro (formato: YYYY-MM-DD, YYYY-MM-DDTHH:mm:ss ou dd/MM/yyyy)")
+        @RequestParam(required = false) String dataInicio,
         
-        @Parameter(description = "Data de fim para filtro (formato ISO: 2024-01-31T23:59:59)")
-        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dataFim,
+        @Parameter(description = "Data de fim para filtro (formato: YYYY-MM-DD, YYYY-MM-DDTHH:mm:ss ou dd/MM/yyyy)")
+        @RequestParam(required = false) String dataFim,
         
         @Parameter(description = "Número máximo de operações a retornar (padrão: 50)")
         @RequestParam(required = false, defaultValue = "50") int limite,
@@ -226,4 +223,74 @@ public interface ExtratoControllerApi {
     })
     @GetMapping("/minhas-contas")
     ResponseEntity<?> listarMinhasContas(Authentication authentication);
+
+    @Operation(
+        summary = "Listar todas as contas (Admin)",
+        description = "Retorna todas as contas bancárias do sistema. " +
+                     "Apenas usuários com perfil de administrador podem acessar este endpoint.",
+        tags = {"Extrato"}
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Contas listadas com sucesso",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = Object.class),
+                examples = @ExampleObject(
+                    value = """
+                    {
+                        "usuario": "admin",
+                        "perfil": "ADMIN",
+                        "totalContas": 5,
+                        "contas": [
+                            {
+                                "id": 1,
+                                "titular": "João Silva",
+                                "saldo": 1250.50,
+                                "proprietario": "cliente1"
+                            },
+                            {
+                                "id": 2,
+                                "titular": "Maria Santos",
+                                "saldo": 800.00,
+                                "proprietario": "cliente2"
+                            }
+                        ]
+                    }
+                    """
+                )
+            )
+        ),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Acesso negado - apenas administradores",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    value = """
+                    {
+                        "error": "Acesso negado: apenas administradores podem listar todas as contas"
+                    }
+                    """
+                )
+            )
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Token de autenticação inválido",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    value = """
+                    {
+                        "error": "Acesso negado"
+                    }
+                    """
+                )
+            )
+        )
+    })
+    @GetMapping("/todas-contas")
+    ResponseEntity<?> listarTodasContas(Authentication authentication);
 }

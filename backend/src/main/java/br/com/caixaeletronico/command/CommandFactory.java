@@ -1,7 +1,6 @@
 package br.com.caixaeletronico.command;
 
 import br.com.caixaeletronico.model.TipoOperacao;
-import br.com.caixaeletronico.model.TipoPagamento;
 import br.com.caixaeletronico.model.ValorCedula;
 import br.com.caixaeletronico.repository.ContaRepository;
 import br.com.caixaeletronico.repository.EstoqueGlobalRepository;
@@ -10,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.Map;
 import java.util.Map;
 
 @Component
@@ -35,8 +33,6 @@ public class CommandFactory {
                 return criarTransferenciaCommand(parametros);
             case PAGAMENTO_PARCELA:
                 return criarPaymentInstallmentCommand(parametros);
-            case PAGAMENTO_IMEDIATO:
-                return criarImmediatePaymentCommand(parametros);
             default:
                 throw new IllegalArgumentException("Tipo de operação não suportado: " + tipo);
         }
@@ -52,8 +48,6 @@ public class CommandFactory {
                 return criarTransferenciaCommand(usuarioLogado, parametros);
             case PAGAMENTO_PARCELA:
                 return criarPaymentInstallmentCommand(parametros);
-            case PAGAMENTO_IMEDIATO:
-                return criarImmediatePaymentCommand(parametros);
             default:
                 throw new IllegalArgumentException("Tipo de operação não suportado: " + tipo);
         }
@@ -150,19 +144,5 @@ public class CommandFactory {
         
         return new PaymentInstallmentCommand(contaRepository, pagamentoAgendadoRepository, 
                                            pagamentoAgendadoId);
-    }
-    
-    private OperacaoCommand criarImmediatePaymentCommand(Object... parametros) {
-        if (parametros.length < 5) {
-            throw new IllegalArgumentException("Parâmetros insuficientes para criar comando de pagamento imediato");
-        }
-        
-        Long contaOrigemId = (Long) parametros[0];
-        Long contaDestinoId = (Long) parametros[1];
-        BigDecimal valor = (BigDecimal) parametros[2];
-        String descricao = (String) parametros[3];
-        TipoPagamento tipo = (TipoPagamento) parametros[4];
-        
-        return new ImmediatePaymentCommand(contaRepository, contaOrigemId, contaDestinoId, valor, descricao, tipo);
     }
 }
