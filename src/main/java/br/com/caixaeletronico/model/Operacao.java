@@ -44,9 +44,19 @@ public class Operacao {
     @Size(max = 100, message = "Usuário responsável deve ter no máximo 100 caracteres")
     private String usuarioResponsavel;
     
+    @Column(name = "desfeita")
+    private Boolean desfeita = false;
+    
+    @Column(name = "admin_responsavel_desfazer")
+    private String adminResponsavelDesfazer;
+    
+    @Column(name = "data_hora_desfazer")
+    private LocalDateTime dataHoraDesfazer;
+    
     // Constructors
     public Operacao() {
         this.dataHora = LocalDateTime.now();
+        this.desfeita = false;
     }
     
     public Operacao(TipoOperacao tipo, BigDecimal valor, Conta contaOrigem, String usuarioResponsavel) {
@@ -120,5 +130,29 @@ public class Operacao {
     
     public void setUsuarioResponsavel(String usuarioResponsavel) {
         this.usuarioResponsavel = usuarioResponsavel;
+    }
+    
+    public Boolean getDesfeita() {
+        return desfeita;
+    }
+    
+    public void setDesfeita(Boolean desfeita) {
+        this.desfeita = desfeita;
+    }
+    
+    public String getAdminResponsavelDesfazer() {
+        return adminResponsavelDesfazer;
+    }
+    
+    public void setAdminResponsavelDesfazer(String adminResponsavelDesfazer) {
+        this.adminResponsavelDesfazer = adminResponsavelDesfazer;
+    }
+    
+    public LocalDateTime getDataHoraDesfazer() {
+        return dataHoraDesfazer;
+    }
+    
+    public void setDataHoraDesfazer(LocalDateTime dataHoraDesfazer) {
+        this.dataHoraDesfazer = dataHoraDesfazer;
     }
 }

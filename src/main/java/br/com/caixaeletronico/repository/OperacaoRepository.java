@@ -30,4 +30,12 @@ public interface OperacaoRepository extends JpaRepository<Operacao, Long> {
     );
     
     List<Operacao> findByTipoAndMementoJsonIsNotNull(TipoOperacao tipo);
+    
+    List<Operacao> findByUsuarioResponsavelOrderByDataHoraDesc(String usuarioResponsavel);
+    
+    @Query("SELECT o FROM Operacao o WHERE o.usuarioResponsavel = :usuarioResponsavel AND o.desfeita = false ORDER BY o.dataHora DESC")
+    List<Operacao> findByUsuarioResponsavelAndNaoDesfeita(@Param("usuarioResponsavel") String usuarioResponsavel);
+    
+    @Query("SELECT o FROM Operacao o WHERE o.id = :operacaoId AND o.usuarioResponsavel = :usuarioResponsavel AND o.desfeita = false")
+    Operacao findByIdAndUsuarioResponsavelAndNaoDesfeita(@Param("operacaoId") Long operacaoId, @Param("usuarioResponsavel") String usuarioResponsavel);
 }

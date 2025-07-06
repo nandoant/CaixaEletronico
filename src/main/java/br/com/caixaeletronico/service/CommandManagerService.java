@@ -5,16 +5,18 @@ import br.com.caixaeletronico.command.OperacaoCommand;
 import br.com.caixaeletronico.event.OperationCompletedEvent;
 import br.com.caixaeletronico.model.Operacao;
 import br.com.caixaeletronico.model.OperationMemento;
+import br.com.caixaeletronico.model.PerfilUsuario;
 import br.com.caixaeletronico.model.TipoOperacao;
 import br.com.caixaeletronico.model.Usuario;
 import br.com.caixaeletronico.repository.OperacaoRepository;
+import br.com.caixaeletronico.repository.UsuarioRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Stack;
+import java.time.LocalDateTime;
 
 @Service
 @Transactional
@@ -30,13 +32,13 @@ public class CommandManagerService {
     private br.com.caixaeletronico.repository.ContaRepository contaRepository;
     
     @Autowired
+    private UsuarioRepository usuarioRepository;
+    
+    @Autowired
     private ApplicationEventPublisher eventPublisher;
     
     @Autowired
     private ObjectMapper objectMapper;
-    
-    // Pilha para controle de undo (simplificado - em produção seria mais sofisticado)
-    private Stack<Long> undoStack = new Stack<>();
     
     public Operacao executarComando(TipoOperacao tipo, Usuario usuario, String emailUsuario, Object... parametros) {
         try {
@@ -50,9 +52,6 @@ public class CommandManagerService {
             Operacao operacao = criarOperacao(tipo, usuario, memento, parametros);
             operacao = operacaoRepository.save(operacao);
             
-            // Adiciona à pilha de undo
-            undoStack.push(operacao.getId());
-            
             // Publica evento
             eventPublisher.publishEvent(new OperationCompletedEvent(this, operacao, emailUsuario));
             
@@ -63,17 +62,31 @@ public class CommandManagerService {
         }
     }
     
-    public void desfazerUltimaOperacao(Usuario usuario) {
-        if (undoStack.isEmpty()) {
-            throw new RuntimeException("Nenhuma operação para desfazer");
+    public void desfazerOperacaoEspecifica(Long operacaoId, Long usuarioId, Usuario admin) {
+        // Validar se o admin tem as permissões necessárias
+        if (!admin.getPerfil().equals(PerfilUsuario.ADMIN)) {
+            throw new RuntimeException("Apenas administradores podem desfazer operações específicas");
         }
         
-        Long operacaoId = undoStack.pop();
-        Operacao operacaoOriginal = operacaoRepository.findById(operacaoId)
-            .orElseThrow(() -> new RuntimeException("Operação não encontrada"));
+        // Buscar o usuário alvo
+        Usuario usuarioAlvo = usuarioRepository.findById(usuarioId)
+            .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
         
+        // Buscar a operação específica
+        Operacao operacaoOriginal = operacaoRepository.findByIdAndUsuarioResponsavelAndNaoDesfeita(
+            operacaoId, usuarioAlvo.getLogin());
+        
+        if (operacaoOriginal == null) {
+            throw new RuntimeException("Operação não encontrada ou já foi desfeita");
+        }
+        
+        // Verificar se a operação pode ser desfeita
         if (operacaoOriginal.getMementoJson() == null) {
             throw new RuntimeException("Operação não pode ser desfeita - memento não disponível");
+        }
+        
+        if (operacaoOriginal.getDesfeita()) {
+            throw new RuntimeException("Operação já foi desfeita anteriormente");
         }
         
         try {
@@ -84,22 +97,41 @@ public class CommandManagerService {
             OperacaoCommand command = criarCommandoDesfazer(operacaoOriginal, memento);
             command.desfazer();
             
+            // Marcar a operação original como desfeita
+            operacaoOriginal.setDesfeita(true);
+            operacaoOriginal.setAdminResponsavelDesfazer(admin.getLogin());
+            operacaoOriginal.setDataHoraDesfazer(LocalDateTime.now());
+            operacaoRepository.save(operacaoOriginal);
+            
             // Persiste operação de desfazer
             Operacao operacaoDesfazer = new Operacao();
             operacaoDesfazer.setTipo(TipoOperacao.DESFAZER);
             operacaoDesfazer.setValor(operacaoOriginal.getValor());
             operacaoDesfazer.setContaOrigem(operacaoOriginal.getContaOrigem());
             operacaoDesfazer.setContaDestino(operacaoOriginal.getContaDestino());
-            operacaoDesfazer.setUsuarioResponsavel(usuario.getLogin());
+            operacaoDesfazer.setUsuarioResponsavel(admin.getLogin());
             
             operacaoRepository.save(operacaoDesfazer);
             
             // Publica evento
-            eventPublisher.publishEvent(new OperationCompletedEvent(this, operacaoDesfazer, usuario.getEmail()));
+            eventPublisher.publishEvent(new OperationCompletedEvent(this, operacaoDesfazer, admin.getEmail()));
             
         } catch (Exception e) {
             throw new RuntimeException("Erro ao desfazer operação: " + e.getMessage(), e);
         }
+    }
+    
+    public java.util.List<Operacao> listarOperacoesUsuario(Long usuarioId, Usuario admin) {
+        // Validar se o admin tem as permissões necessárias
+        if (!admin.getPerfil().equals(PerfilUsuario.ADMIN)) {
+            throw new RuntimeException("Apenas administradores podem listar operações de outros usuários");
+        }
+        
+        // Buscar o usuário alvo
+        Usuario usuarioAlvo = usuarioRepository.findById(usuarioId)
+            .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        
+        return operacaoRepository.findByUsuarioResponsavelOrderByDataHoraDesc(usuarioAlvo.getLogin());
     }
     
     private Operacao criarOperacao(TipoOperacao tipo, Usuario usuario, OperationMemento memento, Object... parametros) {
