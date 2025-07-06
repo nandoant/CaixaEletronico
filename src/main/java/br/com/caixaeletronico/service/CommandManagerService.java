@@ -27,6 +27,9 @@ public class CommandManagerService {
     private OperacaoRepository operacaoRepository;
     
     @Autowired
+    private br.com.caixaeletronico.repository.ContaRepository contaRepository;
+    
+    @Autowired
     private ApplicationEventPublisher eventPublisher;
     
     @Autowired
@@ -116,16 +119,39 @@ public class CommandManagerService {
             case DEPOSITO:
             case SAQUE:
                 if (parametros.length >= 2) {
-                    operacao.setValor((java.math.BigDecimal) parametros[1]);
+                    Long contaId = (Long) parametros[0];
+                    java.math.BigDecimal valor = (java.math.BigDecimal) parametros[1];
+                    
+                    // Busca e associa a conta
+                    br.com.caixaeletronico.model.Conta conta = contaRepository.findById(contaId)
+                        .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+                    
+                    operacao.setValor(valor);
+                    operacao.setContaOrigem(conta);
                 }
                 break;
             case TRANSFERENCIA:
                 if (parametros.length >= 3) {
-                    operacao.setValor((java.math.BigDecimal) parametros[2]);
+                    Long contaOrigemId = (Long) parametros[0];
+                    Long contaDestinoId = (Long) parametros[1];
+                    java.math.BigDecimal valor = (java.math.BigDecimal) parametros[2];
+                    
+                    // Busca e associa as contas
+                    br.com.caixaeletronico.model.Conta contaOrigem = contaRepository.findById(contaOrigemId)
+                        .orElseThrow(() -> new RuntimeException("Conta origem não encontrada"));
+                    br.com.caixaeletronico.model.Conta contaDestino = contaRepository.findById(contaDestinoId)
+                        .orElseThrow(() -> new RuntimeException("Conta destino não encontrada"));
+                    
+                    operacao.setValor(valor);
+                    operacao.setContaOrigem(contaOrigem);
+                    operacao.setContaDestino(contaDestino);
                 }
                 break;
             case PAGAMENTO_PARCELA:
                 // Lógica específica para pagamento de parcela pode ser adicionada aqui
+                break;
+            case PAGAMENTO_IMEDIATO:
+                // Lógica específica para pagamento imediato pode ser adicionada aqui
                 break;
             case DESFAZER:
                 // Lógica específica para desfazer pode ser adicionada aqui

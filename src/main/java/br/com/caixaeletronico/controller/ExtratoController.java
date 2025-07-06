@@ -1,6 +1,7 @@
 package br.com.caixaeletronico.controller;
 
 import br.com.caixaeletronico.config.CustomUserDetailsService;
+import br.com.caixaeletronico.dto.OperacaoDto;
 import br.com.caixaeletronico.model.Conta;
 import br.com.caixaeletronico.model.Operacao;
 import br.com.caixaeletronico.model.Usuario;
@@ -19,6 +20,7 @@ import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/contas")
@@ -65,12 +67,23 @@ public class ExtratoController {
                 operacoes = extractService.obterUltimasOperacoes(conta, limite);
             }
             
+            // Converte operações para DTOs para evitar problemas de serialização com proxies do Hibernate
+            List<OperacaoDto> operacoesDtos = operacoes.stream()
+                .map(operacao -> new OperacaoDto(
+                    operacao.getId(),
+                    operacao.getTipo(),
+                    operacao.getDataHora(),
+                    operacao.getValor(),
+                    operacao.getUsuarioResponsavel()
+                ))
+                .collect(Collectors.toList());
+            
             Map<String, Object> response = new HashMap<>();
             response.put("contaId", conta.getId());
             response.put("titular", conta.getTitular());
             response.put("saldoAtual", conta.getSaldo());
-            response.put("operacoes", operacoes);
-            response.put("totalOperacoes", operacoes.size());
+            response.put("operacoes", operacoesDtos);
+            response.put("totalOperacoes", operacoesDtos.size());
             
             return ResponseEntity.ok(response);
             
