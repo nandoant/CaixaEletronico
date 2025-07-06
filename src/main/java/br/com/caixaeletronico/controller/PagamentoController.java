@@ -47,7 +47,8 @@ public class PagamentoController implements PagamentoControllerApi {
                 request.getValorTotal(),
                 request.getQuantidadeParcelas(),
                 request.getPeriodicidadeDias(),
-                request.getDataInicio()
+                request.getDataInicio(),
+                request.isDebitarPrimeiraParcela()
             );
             
             Map<String, Object> response = new HashMap<>();
@@ -58,6 +59,12 @@ public class PagamentoController implements PagamentoControllerApi {
             response.put("quantidadeParcelas", pagamento.getQuantidadeParcelas());
             response.put("dataProximaExecucao", pagamento.getDataProximaExecucao());
             response.put("status", pagamento.getStatus());
+            response.put("primeiraParcelaDebitada", request.isDebitarPrimeiraParcela());
+            
+            if (request.isDebitarPrimeiraParcela()) {
+                response.put("valorDebitadoAgora", pagamento.getValorParcela());
+                response.put("novoSaldo", conta.getSaldo());
+            }
             
             return ResponseEntity.ok(response);
             
@@ -166,6 +173,7 @@ public class PagamentoController implements PagamentoControllerApi {
         private BigDecimal valorTotal;
         private Integer quantidadeParcelas;
         private Integer periodicidadeDias;
+        private boolean debitarPrimeiraParcela = false; // Default false para compatibilidade
         
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         private LocalDate dataInicio;
@@ -185,5 +193,8 @@ public class PagamentoController implements PagamentoControllerApi {
         
         public LocalDate getDataInicio() { return dataInicio; }
         public void setDataInicio(LocalDate dataInicio) { this.dataInicio = dataInicio; }
+        
+        public boolean isDebitarPrimeiraParcela() { return debitarPrimeiraParcela; }
+        public void setDebitarPrimeiraParcela(boolean debitarPrimeiraParcela) { this.debitarPrimeiraParcela = debitarPrimeiraParcela; }
     }
 }

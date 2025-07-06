@@ -5,5 +5,6 @@ public enum TipoOperacao {
     SAQUE,
     TRANSFERENCIA,
     PAGAMENTO_PARCELA,
+    PAGAMENTO_IMEDIATO,
     DESFAZER
 }
