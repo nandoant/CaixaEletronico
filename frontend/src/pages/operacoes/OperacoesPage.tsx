@@ -12,7 +12,7 @@ const OperacoesPage: React.FC = () => {
       </Typography>
 
       <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={3}>
           <Paper sx={{ p: 3, textAlign: "center" }}>
             <Typography variant="h6" gutterBottom>
               Saque
@@ -30,7 +30,7 @@ const OperacoesPage: React.FC = () => {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={3}>
           <Paper sx={{ p: 3, textAlign: "center" }}>
             <Typography variant="h6" gutterBottom>
               Depósito
@@ -48,7 +48,7 @@ const OperacoesPage: React.FC = () => {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={3}>
           <Paper sx={{ p: 3, textAlign: "center" }}>
             <Typography variant="h6" gutterBottom>
               Transferência
@@ -62,6 +62,24 @@ const OperacoesPage: React.FC = () => {
               onClick={() => navigate("/operacoes/transferencia")}
             >
               Fazer Transferência
+            </Button>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={3}>
+          <Paper sx={{ p: 3, textAlign: "center" }}>
+            <Typography variant="h6" gutterBottom>
+              Agendamento
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              Agendar pagamentos únicos ou parcelados
+            </Typography>
+            <Button
+              variant="contained"
+              fullWidth
+              onClick={() => navigate("/operacoes/agendamento")}
+            >
+              Agendar Pagamento
             </Button>
           </Paper>
         </Grid>

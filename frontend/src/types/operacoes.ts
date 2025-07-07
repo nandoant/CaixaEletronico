@@ -182,6 +182,69 @@ export interface TransferenciaResponse {
   timestamp: string;
 }
 
+// Request para agendamento de pagamento
+export interface AgendamentoRequest {
+  contaDestinoId: number;
+  valorTotal: number;
+  quantidadeParcelas: number;
+  periodicidadeDias: number;
+  debitarPrimeiraParcela: boolean;
+  descricao: string;
+  dataInicio: string; // formato YYYY-MM-DD
+}
+
+// Response do agendamento
+export interface AgendamentoResponse {
+  contaDestino: {
+    contaId: number;
+    numeroConta: string;
+    titular: string;
+    usuarioProprietario: string;
+    usuarioProprietarioId: number;
+    saldo: number | null;
+  };
+  contaOrigem: {
+    contaId: number;
+    numeroConta: string;
+    titular: string;
+    usuarioProprietario: string;
+    usuarioProprietarioId: number;
+    saldo: number | null;
+  };
+  dados: {
+    valorDebitadoAgora: number;
+    agendamento: {
+      descricao: string;
+      id: number;
+      quantidadeParcelas: number;
+      valorTotal: number;
+      primeiraParcelaDebitada: boolean;
+      status: 'CONCLUIDO' | 'ATIVO' | 'CANCELADO';
+      valorParcela: number;
+      dataProximaExecucao: string;
+    };
+  };
+  message: string;
+  timestamp: string;
+}
+
+// Opções pré-definidas de periodicidade
+export const PERIODICIDADE_OPTIONS = [
+  { value: 7, label: 'Semanal (7 dias)' },
+  { value: 15, label: 'Quinzenal (15 dias)' },
+  { value: 30, label: 'Mensal (30 dias)' },
+  { value: 60, label: 'Bimestral (60 dias)' },
+  { value: 90, label: 'Trimestral (90 dias)' }
+] as const;
+
+// Interface para parcela calculada
+export interface ParcelaCalculada {
+  numero: number;
+  valor: number;
+  dataVencimento: string;
+  status: 'PENDENTE' | 'PAGO' | 'A_PAGAR_HOJE';
+}
+
 // Interface para buscar conta por número
 export interface ContaInfo {
   contaId: number;

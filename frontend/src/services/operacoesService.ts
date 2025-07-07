@@ -1,4 +1,4 @@
-import { DepositoRequest, DepositoResponse, SaqueRequest, SaqueOpcoesResponse, SaqueConfirmacaoRequest, SaqueResponse, TransferenciaRequest, TransferenciaResponse, ContaInfo } from '../types/operacoes';
+import { DepositoRequest, DepositoResponse, SaqueRequest, SaqueOpcoesResponse, SaqueConfirmacaoRequest, SaqueResponse, TransferenciaRequest, TransferenciaResponse, ContaInfo, AgendamentoRequest, AgendamentoResponse } from '../types/operacoes';
 
 /**
  * INTEGRAÇÃO BACKEND - INFORMAÇÕES PARA IMPLEMENTAÇÃO FUTURA:
@@ -471,6 +471,123 @@ class OperacoesService {
         }
       },
       message: "Transferência realizada com sucesso",
+      timestamp: new Date().toISOString()
+    };
+
+    return response;
+  }
+
+  /**
+   * Cria um agendamento de pagamento
+   * 
+   * INTEGRAÇÃO BACKEND - INFORMAÇÕES PARA IMPLEMENTAÇÃO FUTURA:
+   * 
+   * Endpoint: POST /operacoes/agendamento
+   * Headers: 
+   *   - Authorization: Bearer {token}
+   *   - Content-Type: application/json
+   * 
+   * Request body:
+   * {
+   *   "contaDestinoId": 5,
+   *   "valorTotal": 100,
+   *   "quantidadeParcelas": 1,
+   *   "periodicidadeDias": 30,
+   *   "debitarPrimeiraParcela": true,
+   *   "descricao": "Pagamento único",
+   *   "dataInicio": "2025-07-07"
+   * }
+   */
+  async criarAgendamento(request: AgendamentoRequest): Promise<AgendamentoResponse> {
+    // Simular delay de rede
+    await this.delay(2000);
+
+    // Buscar dados das contas para resposta realista
+    const contasMock = [
+      { contaId: 1, numeroConta: "2025000001", titular: "João Silva", usuarioProprietario: "cliente_teste", usuarioProprietarioId: 2 },
+      { contaId: 2, numeroConta: "2025000002", titular: "Maria Santos", usuarioProprietario: "cliente2", usuarioProprietarioId: 3 },
+      { contaId: 3, numeroConta: "2025000003", titular: "Pedro Oliveira", usuarioProprietario: "cliente3", usuarioProprietarioId: 4 },
+      { contaId: 4, numeroConta: "2025000004", titular: "Ana Costa", usuarioProprietario: "cliente4", usuarioProprietarioId: 5 },
+      { contaId: 5, numeroConta: "2025000005", titular: "Carlos Silva", usuarioProprietario: "cliente5", usuarioProprietarioId: 6 },
+      { contaId: 6, numeroConta: "2025000006", titular: "Fernanda Lima", usuarioProprietario: "cliente6", usuarioProprietarioId: 7 },
+      { contaId: 7, numeroConta: "2025000007", titular: "Roberto Ferreira", usuarioProprietario: "cliente7", usuarioProprietarioId: 8 },
+      { contaId: 8, numeroConta: "2025000008", titular: "Juliana Alves", usuarioProprietario: "cliente8", usuarioProprietarioId: 9 }
+    ];
+
+    // Assumindo que a conta origem é sempre a conta 1 (usuário logado)
+    const contaOrigem = contasMock.find(c => c.contaId === 1);
+    const contaDestino = contasMock.find(c => c.contaId === request.contaDestinoId);
+
+    if (!contaOrigem) {
+      throw new Error('Conta de origem não encontrada');
+    }
+
+    if (!contaDestino) {
+      throw new Error('Conta de destino não encontrada');
+    }
+
+    // Calcular valor da parcela
+    const valorParcela = request.valorTotal / request.quantidadeParcelas;
+    
+    // Calcular valor debitado agora
+    const valorDebitadoAgora = request.debitarPrimeiraParcela ? valorParcela : 0;
+
+    // Calcular data da próxima execução
+    const dataInicio = new Date(request.dataInicio);
+    let dataProximaExecucao: Date;
+    
+    if (request.debitarPrimeiraParcela && request.quantidadeParcelas > 1) {
+      // Se debita primeira parcela e há mais parcelas, próxima é após periodicidade
+      dataProximaExecucao = new Date(dataInicio);
+      dataProximaExecucao.setDate(dataProximaExecucao.getDate() + request.periodicidadeDias);
+    } else if (!request.debitarPrimeiraParcela) {
+      // Se não debita primeira parcela, primeira execução é na data de início
+      dataProximaExecucao = dataInicio;
+    } else {
+      // Se é pagamento único e já foi debitado, não há próxima execução
+      dataProximaExecucao = dataInicio;
+    }
+
+    // Determinar status do agendamento
+    let status: 'CONCLUIDO' | 'ATIVO' | 'CANCELADO';
+    if (request.quantidadeParcelas === 1 && request.debitarPrimeiraParcela) {
+      status = 'CONCLUIDO';
+    } else {
+      status = 'ATIVO';
+    }
+
+    // Simular resposta realista do backend
+    const response: AgendamentoResponse = {
+      contaDestino: {
+        contaId: contaDestino.contaId,
+        numeroConta: contaDestino.numeroConta,
+        titular: contaDestino.titular,
+        usuarioProprietario: contaDestino.usuarioProprietario,
+        usuarioProprietarioId: contaDestino.usuarioProprietarioId,
+        saldo: null
+      },
+      contaOrigem: {
+        contaId: contaOrigem.contaId,
+        numeroConta: contaOrigem.numeroConta,
+        titular: contaOrigem.titular,
+        usuarioProprietario: contaOrigem.usuarioProprietario,
+        usuarioProprietarioId: contaOrigem.usuarioProprietarioId,
+        saldo: null
+      },
+      dados: {
+        valorDebitadoAgora,
+        agendamento: {
+          descricao: request.descricao,
+          id: Math.floor(Math.random() * 1000) + 1, // ID simulado
+          quantidadeParcelas: request.quantidadeParcelas,
+          valorTotal: request.valorTotal,
+          primeiraParcelaDebitada: request.debitarPrimeiraParcela,
+          status,
+          valorParcela: Number(valorParcela.toFixed(2)),
+          dataProximaExecucao: dataProximaExecucao.toISOString().split('T')[0]
+        }
+      },
+      message: "Transferência agendada com sucesso",
       timestamp: new Date().toISOString()
     };
 
