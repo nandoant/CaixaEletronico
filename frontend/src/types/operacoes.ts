@@ -302,3 +302,41 @@ export interface ContaInfo {
   usuarioProprietario: string;
   usuarioProprietarioId: number;
 }
+
+// Interface para agendamento na lista
+export interface AgendamentoListItem {
+  id: number;
+  descricao: string;
+  contaDestino: {
+    numeroConta: string;
+    titular: string;
+  };
+  valorTotal: number;
+  valorParcela: number;
+  quantidadeParcelas: number;
+  parcelasRestantes: number;
+  periodicidadeDias: number;
+  dataProximaExecucao: string;
+  dataCriacao: string;
+  status: 'ATIVO' | 'CONCLUIDO' | 'CANCELADO';
+  primeiraParcelaDebitada: boolean;
+}
+
+// Response do cancelamento de agendamento
+export interface CancelamentoResponse {
+  id: number;
+  status: 'CANCELADO';
+  message: string;
+  timestamp: string;
+}
+
+// Estatísticas dos agendamentos
+export interface AgendamentosStats {
+  totalAtivos: number;
+  valorTotalAgendado: number;
+  proximoPagamento?: {
+    descricao: string;
+    valor: number;
+    data: string;
+  };
+}

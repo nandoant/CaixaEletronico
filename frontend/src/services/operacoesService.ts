@@ -1,4 +1,4 @@
-import { DepositoRequest, DepositoResponse, SaqueRequest, SaqueOpcoesResponse, SaqueConfirmacaoRequest, SaqueResponse, ExtratoRequest, ExtratoResponse, ExtratoOperacao, EnviarExtratoEmailRequest, TransferenciaRequest, TransferenciaResponse, ContaInfo, AgendamentoRequest, AgendamentoResponse } from '../types/operacoes';
+import { DepositoRequest, DepositoResponse, SaqueRequest, SaqueOpcoesResponse, SaqueConfirmacaoRequest, SaqueResponse, ExtratoRequest, ExtratoResponse, ExtratoOperacao, EnviarExtratoEmailRequest, TransferenciaRequest, TransferenciaResponse, ContaInfo, AgendamentoRequest, AgendamentoResponse, AgendamentoListItem, CancelamentoResponse } from '../types/operacoes';
 
 /**
  * INTEGRAÇÃO BACKEND - INFORMAÇÕES PARA IMPLEMENTAÇÃO FUTURA:
@@ -702,6 +702,144 @@ class OperacoesService {
         }
       },
       message: "Transferência agendada com sucesso",
+      timestamp: new Date().toISOString()
+    };
+
+    return response;
+  }
+
+  /**
+   * Lista agendamentos do usuário (MOCK)
+   * 
+   * INTEGRAÇÃO BACKEND - INFORMAÇÕES PARA IMPLEMENTAÇÃO FUTURA:
+   * 
+   * Endpoint: GET /operacoes/agendamentos
+   * Headers: 
+   *   - Authorization: Bearer {token}
+   * 
+   * Query params:
+   *   - status?: 'ATIVO' | 'CONCLUIDO' | 'CANCELADO'
+   *   - limit?: number
+   */
+  async listarAgendamentos(): Promise<AgendamentoListItem[]> {
+    // Simular delay de rede
+    await this.delay(1200);
+
+    // Dados mock para teste
+    const agendamentosMock: AgendamentoListItem[] = [
+      {
+        id: 1,
+        descricao: "Pagamento de aluguel",
+        contaDestino: {
+          numeroConta: "2025000002",
+          titular: "Maria Santos"
+        },
+        valorTotal: 1200.00,
+        valorParcela: 1200.00,
+        quantidadeParcelas: 12,
+        parcelasRestantes: 10,
+        periodicidadeDias: 30,
+        dataProximaExecucao: "2025-08-07",
+        dataCriacao: "2025-01-07",
+        status: "ATIVO",
+        primeiraParcelaDebitada: true
+      },
+      {
+        id: 2,
+        descricao: "Financiamento do carro",
+        contaDestino: {
+          numeroConta: "2025000003",
+          titular: "Pedro Oliveira"
+        },
+        valorTotal: 3600.00,
+        valorParcela: 600.00,
+        quantidadeParcelas: 6,
+        parcelasRestantes: 4,
+        periodicidadeDias: 30,
+        dataProximaExecucao: "2025-07-15",
+        dataCriacao: "2025-02-15",
+        status: "ATIVO",
+        primeiraParcelaDebitada: true
+      },
+      {
+        id: 3,
+        descricao: "Pagamento de empréstimo",
+        contaDestino: {
+          numeroConta: "2025000004",
+          titular: "Ana Costa"
+        },
+        valorTotal: 2400.00,
+        valorParcela: 400.00,
+        quantidadeParcelas: 6,
+        parcelasRestantes: 0,
+        periodicidadeDias: 30,
+        dataProximaExecucao: "2025-06-15",
+        dataCriacao: "2025-01-15",
+        status: "CONCLUIDO",
+        primeiraParcelaDebitada: true
+      },
+      {
+        id: 4,
+        descricao: "Mensalidade do curso",
+        contaDestino: {
+          numeroConta: "2025000005",
+          titular: "Carlos Silva"
+        },
+        valorTotal: 500.00,
+        valorParcela: 500.00,
+        quantidadeParcelas: 1,
+        parcelasRestantes: 0,
+        periodicidadeDias: 30,
+        dataProximaExecucao: "2025-06-20",
+        dataCriacao: "2025-06-20",
+        status: "CANCELADO",
+        primeiraParcelaDebitada: false
+      },
+      {
+        id: 5,
+        descricao: "Pagamento semanal de serviços",
+        contaDestino: {
+          numeroConta: "2025000006",
+          titular: "Fernanda Lima"
+        },
+        valorTotal: 280.00,
+        valorParcela: 70.00,
+        quantidadeParcelas: 4,
+        parcelasRestantes: 2,
+        periodicidadeDias: 7,
+        dataProximaExecucao: "2025-07-14",
+        dataCriacao: "2025-06-23",
+        status: "ATIVO",
+        primeiraParcelaDebitada: true
+      }
+    ];
+
+    return agendamentosMock;
+  }
+
+  /**
+   * Cancela um agendamento (MOCK)
+   * 
+   * INTEGRAÇÃO BACKEND - INFORMAÇÕES PARA IMPLEMENTAÇÃO FUTURA:
+   * 
+   * Endpoint: DELETE /operacoes/agendamentos/{id}
+   * Headers: 
+   *   - Authorization: Bearer {token}
+   */
+  async cancelarAgendamento(id: number): Promise<CancelamentoResponse> {
+    // Simular delay de rede
+    await this.delay(1500);
+
+    // Simular 5% de chance de erro para teste
+    if (Math.random() < 0.05) {
+      throw new Error('Erro interno do servidor. Tente novamente.');
+    }
+
+    // Simular resposta de sucesso
+    const response: CancelamentoResponse = {
+      id,
+      status: "CANCELADO",
+      message: "Agendamento cancelado com sucesso",
       timestamp: new Date().toISOString()
     };
 
