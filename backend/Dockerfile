@@ -17,6 +17,9 @@ RUN mvn clean package -DskipTests
 # Estágio final - imagem de produção
 FROM eclipse-temurin:17-jre-jammy
 
+# Instalar wget para healthcheck
+RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
+
 # Criar usuário não-root
 RUN addgroup --system spring && adduser --system spring --ingroup spring
 
