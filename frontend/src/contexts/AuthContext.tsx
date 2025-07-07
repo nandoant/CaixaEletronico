@@ -1,10 +1,13 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 interface User {
   id: number;
   login: string;
   email: string;
-  perfil: 'CLIENTE' | 'ADMIN';
+  perfil: "CLIENTE" | "ADMIN";
+  contaId: number;
+  numeroConta: string;
+  titular: string;
 }
 
 interface AuthContextType {
@@ -21,7 +24,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
@@ -37,11 +40,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Carregar token do localStorage na inicialização
   useEffect(() => {
-    const savedToken = localStorage.getItem('token');
+    const savedToken = localStorage.getItem("token");
     if (savedToken) {
       setToken(savedToken);
-      // TODO: Validar token e carregar dados do usuário
-      // fetchUserData(savedToken);
+      // Carregar dados do usuário mock para teste
+      const mockUser: User = {
+        id: 2,
+        login: "cliente_teste",
+        email: "cliente@teste.com",
+        perfil: "CLIENTE",
+        contaId: 1,
+        numeroConta: "2025000001",
+        titular: "João Silva",
+      };
+      setUser(mockUser);
+    } else {
+      // Auto-login para facilitar testes de transferência
+      const autoLoginUser: User = {
+        id: 2,
+        login: "cliente_teste",
+        email: "cliente@teste.com",
+        perfil: "CLIENTE",
+        contaId: 1,
+        numeroConta: "2025000001",
+        titular: "João Silva",
+      };
+      setUser(autoLoginUser);
+      setToken("mock-token-auto");
+      localStorage.setItem("token", "mock-token-auto");
     }
     setIsLoading(false);
   }, []);
@@ -54,19 +80,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // setToken(response.token);
       // setUser(response.user);
       // localStorage.setItem('token', response.token);
-      
-      // Mock temporário
+
+      // Mock temporário - Usuário de teste para transferências
       const mockUser: User = {
-        id: 1,
-        login: email,
+        id: 2, // ID do usuário (usuarioProprietarioId)
+        login: "cliente_teste",
         email: email,
-        perfil: 'CLIENTE'
+        perfil: "CLIENTE",
+        contaId: 1, // ID da conta
+        numeroConta: "2025000001",
+        titular: "João Silva",
       };
       setUser(mockUser);
-      setToken('mock-token');
-      localStorage.setItem('token', 'mock-token');
+      setToken("mock-token");
+      localStorage.setItem("token", "mock-token");
     } catch (error) {
-      throw new Error('Falha no login');
+      throw new Error("Falha no login");
     } finally {
       setIsLoading(false);
     }
@@ -75,7 +104,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem('token');
+    localStorage.removeItem("token");
   };
 
   const value = {
