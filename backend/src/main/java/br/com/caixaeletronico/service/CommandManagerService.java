@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Transactional
@@ -134,7 +135,22 @@ public class CommandManagerService {
         Usuario usuarioAlvo = usuarioRepository.findById(usuarioId)
             .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
         
-        return operacaoRepository.findByUsuarioResponsavelOrderByDataHoraDesc(usuarioAlvo.getLogin());
+        // Log de debug
+        System.out.println("DEBUG: Buscando operações para usuário: " + usuarioAlvo.getLogin() + " (ID: " + usuarioId + ")");
+        
+        // Buscar operações do usuário, incluindo apenas as não desfeitas
+        List<Operacao> todasOperacoes = operacaoRepository.findByUsuarioResponsavelWithContasOrderByDataHoraDesc(usuarioAlvo.getLogin());
+        
+        System.out.println("DEBUG: Total de operações encontradas: " + todasOperacoes.size());
+        
+        // Filtra operações que ainda podem ser desfeitas (não desfeitas e com memento)
+        List<Operacao> operacoesFiltradas = todasOperacoes.stream()
+            .filter(op -> !Boolean.TRUE.equals(op.getDesfeita()) && op.getMementoJson() != null)
+            .collect(java.util.stream.Collectors.toList());
+            
+        System.out.println("DEBUG: Operações que podem ser desfeitas: " + operacoesFiltradas.size());
+        
+        return operacoesFiltradas;
     }
     
     private Operacao criarOperacao(TipoOperacao tipo, Usuario usuario, OperationMemento memento, Object... parametros) {

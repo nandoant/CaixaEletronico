@@ -70,11 +70,42 @@ public class UndoController implements UndoControllerApi {
             
             List<Operacao> operacoes = commandManagerService.listarOperacoesUsuario(usuarioId, admin);
             
+            // Converte operações para DTOs para evitar problemas de serialização
+            List<Map<String, Object>> operacoesDto = operacoes.stream()
+                .map(op -> {
+                    Map<String, Object> dto = new HashMap<>();
+                    dto.put("id", op.getId());
+                    dto.put("tipo", op.getTipo());
+                    dto.put("dataHora", op.getDataHora());
+                    dto.put("valor", op.getValor());
+                    dto.put("usuarioResponsavel", op.getUsuarioResponsavel());
+                    dto.put("desfeita", op.getDesfeita());
+                    
+                    // Informações das contas (sem lazy loading)
+                    if (op.getContaOrigem() != null) {
+                        dto.put("contaOrigem", Map.of(
+                            "id", op.getContaOrigem().getId(),
+                            "numeroConta", op.getContaOrigem().getNumeroConta()
+                        ));
+                    }
+                    if (op.getContaDestino() != null) {
+                        dto.put("contaDestino", Map.of(
+                            "id", op.getContaDestino().getId(),
+                            "numeroConta", op.getContaDestino().getNumeroConta()
+                        ));
+                    }
+                    
+                    dto.put("podeDesfazer", !Boolean.TRUE.equals(op.getDesfeita()) && op.getMementoJson() != null);
+                    
+                    return dto;
+                })
+                .collect(java.util.stream.Collectors.toList());
+            
             Map<String, Object> dadosOperacoes = new HashMap<>();
             dadosOperacoes.put("usuarioConsultado", usuarioId);
             dadosOperacoes.put("adminSolicitante", admin.getLogin());
-            dadosOperacoes.put("operacoes", operacoes);
-            dadosOperacoes.put("totalOperacoes", operacoes.size());
+            dadosOperacoes.put("operacoes", operacoesDto);
+            dadosOperacoes.put("totalOperacoes", operacoesDto.size());
             
             Map<String, Object> response = ResponseUtil.criarRespostaPadraoSimples(
                 "Operações do usuário listadas com sucesso", dadosOperacoes);
