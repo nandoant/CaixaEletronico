@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Paper,
@@ -7,28 +7,35 @@ import {
   Typography,
   Link,
   Container,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface LoginFormData {
-  email: string;
+  login: string;
   password: string;
 }
 
 const LoginPage: React.FC = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>();
-  const { login } = useAuth();
+  const { login, isLoading, error } = useAuth();
   const navigate = useNavigate();
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const onSubmit = async (data: LoginFormData) => {
+    setLoginError(null);
     try {
-      await login(data.email, data.password);
+      await login({
+        login: data.login,
+        senha: data.password,
+      });
       navigate('/dashboard');
     } catch (error) {
-      console.error('Erro no login:', error);
-      // TODO: Mostrar mensagem de erro para o usuário
+      const errorMessage = error instanceof Error ? error.message : 'Erro no login';
+      setLoginError(errorMessage);
     }
   };
 
@@ -51,19 +58,24 @@ const LoginPage: React.FC = () => {
             Entrar na sua conta
           </Typography>
 
+          {(loginError || error) && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {loginError || error}
+            </Alert>
+          )}
+
           <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ mt: 1 }}>
             <TextField
               margin="normal"
               required
               fullWidth
-              id="email"
-              label="Email"
-              type="email"
-              autoComplete="email"
+              id="login"
+              label="Login"
+              autoComplete="username"
               autoFocus
-              {...register('email', { required: 'Email é obrigatório' })}
-              error={!!errors.email}
-              helperText={errors.email?.message}
+              {...register('login', { required: 'Login é obrigatório' })}
+              error={!!errors.login}
+              helperText={errors.login?.message}
             />
             
             <TextField
@@ -83,9 +95,10 @@ const LoginPage: React.FC = () => {
               type="submit"
               fullWidth
               variant="contained"
+              disabled={isLoading}
               sx={{ mt: 3, mb: 2 }}
             >
-              Entrar
+              {isLoading ? <CircularProgress size={24} /> : 'Entrar'}
             </Button>
             
             <Box textAlign="center">

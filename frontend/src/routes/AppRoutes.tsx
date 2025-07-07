@@ -15,9 +15,10 @@ import AgendamentosPage from "../pages/agendamentos/AgendamentosPage";
 import AdminPage from "../pages/admin/AdminPage";
 import Layout from "../components/layout/Layout";
 import LoadingSpinner from "../components/common/LoadingSpinner";
+import { ProtectedRoute } from "../components/common/ProtectedRoute";
 
 const AppRoutes: React.FC = () => {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -42,7 +43,11 @@ const AppRoutes: React.FC = () => {
       {/* Rotas protegidas */}
       <Route
         path="/"
-        element={isAuthenticated ? <Layout /> : <Navigate to="/login" />}
+        element={
+          <ProtectedRoute>
+            <Layout />
+          </ProtectedRoute>
+        }
       >
         <Route index element={<Navigate to="/dashboard" />} />
         <Route path="dashboard" element={<DashboardPage />} />
@@ -56,9 +61,14 @@ const AppRoutes: React.FC = () => {
         <Route path="agendamentos" element={<AgendamentosPage />} />
 
         {/* Rota admin - apenas para admins */}
-        {user?.perfil === "ADMIN" && (
-          <Route path="admin" element={<AdminPage />} />
-        )}
+        <Route 
+          path="admin" 
+          element={
+            <ProtectedRoute requiredRole="ADMIN">
+              <AdminPage />
+            </ProtectedRoute>
+          } 
+        />
       </Route>
 
       {/* Rota 404 */}

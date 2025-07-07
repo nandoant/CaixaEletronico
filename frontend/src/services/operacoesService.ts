@@ -1,4 +1,5 @@
 import { DepositoRequest, DepositoResponse, SaqueRequest, SaqueOpcoesResponse, SaqueConfirmacaoRequest, SaqueResponse, ExtratoRequest, ExtratoResponse, ExtratoOperacao, EnviarExtratoEmailRequest, TransferenciaRequest, TransferenciaResponse, ContaInfo, AgendamentoRequest, AgendamentoResponse, AgendamentoListItem, CancelamentoResponse } from '../types/operacoes';
+import { httpClient } from './httpClient';
 
 /**
  * INTEGRAÇÃO BACKEND - INFORMAÇÕES PARA IMPLEMENTAÇÃO FUTURA:

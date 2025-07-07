@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { authService, LoginRequest, RegisterRequest, LoginResponse, RegisterResponse } from "../services/authService";
 
 interface User {
   id: number;
@@ -13,10 +14,12 @@ interface User {
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (loginData: LoginRequest) => Promise<LoginResponse>;
+  register: (registerData: RegisterRequest) => Promise<RegisterResponse>;
   logout: () => void;
   isAuthenticated: boolean;
   isLoading: boolean;
+  error: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,65 +40,60 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Carregar token do localStorage na inicialização
   useEffect(() => {
-    const savedToken = localStorage.getItem("token");
-    if (savedToken) {
+    const savedToken = authService.getToken();
+    if (savedToken && authService.isTokenValid(savedToken)) {
       setToken(savedToken);
-      // Carregar dados do usuário mock para teste
-      const mockUser: User = {
-        id: 2,
-        login: "cliente_teste",
-        email: "cliente@teste.com",
-        perfil: "CLIENTE",
-        contaId: 1,
-        numeroConta: "2025000001",
-        titular: "João Silva",
-      };
-      setUser(mockUser);
-    } else {
-      // Auto-login para facilitar testes de transferência
-      const autoLoginUser: User = {
-        id: 2,
-        login: "cliente_teste",
-        email: "cliente@teste.com",
-        perfil: "CLIENTE",
-        contaId: 1,
-        numeroConta: "2025000001",
-        titular: "João Silva",
-      };
-      setUser(autoLoginUser);
-      setToken("mock-token-auto");
-      localStorage.setItem("token", "mock-token-auto");
+      // TODO: Implementar busca de dados do usuário com o token
+      // Por enquanto, mantém mock para não quebrar
     }
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (loginData: LoginRequest): Promise<LoginResponse> => {
     setIsLoading(true);
+    setError(null);
     try {
-      // TODO: Implementar chamada para API de login
-      // const response = await authService.login(email, password);
-      // setToken(response.token);
-      // setUser(response.user);
-      // localStorage.setItem('token', response.token);
-
-      // Mock temporário - Usuário de teste para transferências
-      const mockUser: User = {
-        id: 2, // ID do usuário (usuarioProprietarioId)
-        login: "cliente_teste",
-        email: email,
-        perfil: "CLIENTE",
-        contaId: 1, // ID da conta
-        numeroConta: "2025000001",
-        titular: "João Silva",
+      const response = await authService.login(loginData);
+      
+      // Mapear dados da resposta para o formato do contexto
+      const userData: User = {
+        id: response.dados.usuario.userId,
+        login: response.dados.usuario.login,
+        email: response.dados.usuario.email,
+        perfil: response.dados.usuario.perfil as "CLIENTE" | "ADMIN",
+        contaId: response.dados.conta.contaId,
+        numeroConta: response.dados.conta.numeroConta,
+        titular: response.dados.conta.titular,
       };
-      setUser(mockUser);
-      setToken("mock-token");
-      localStorage.setItem("token", "mock-token");
+      
+      setUser(userData);
+      setToken(response.dados.autenticacao.token);
+      authService.saveToken(response.dados.autenticacao.token);
+      
+      return response;
     } catch (error) {
-      throw new Error("Falha no login");
+      const errorMessage = error instanceof Error ? error.message : "Erro no login";
+      setError(errorMessage);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (registerData: RegisterRequest): Promise<RegisterResponse> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await authService.register(registerData);
+      return response;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Erro no registro";
+      setError(errorMessage);
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -104,16 +102,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem("token");
+    setError(null);
+    authService.removeToken();
   };
 
   const value = {
     user,
     token,
     login,
+    register,
     logout,
     isAuthenticated: !!token,
     isLoading,
+    error,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
