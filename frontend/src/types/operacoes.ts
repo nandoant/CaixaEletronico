@@ -144,3 +144,52 @@ export interface SaqueResponse {
   message: string;
   timestamp: string;
 }
+
+// Request para obter extrato
+export interface ExtratoRequest {
+  id: number; // ID do usuário logado
+  dataInicio: string; // formato: 2025-06-01
+  dataFim: string; // formato: 2025-08-01
+  limite: number; // ex: 50
+}
+
+// Operação do extrato
+export interface ExtratoOperacao {
+  id: number;
+  tipo: 'SAQUE' | 'DEPOSITO';
+  dataHora: string;
+  valor: number;
+  usuarioResponsavel: string;
+  descricao: string;
+}
+
+// Response do extrato
+export interface ExtratoResponse {
+  dados: {
+    periodo: {
+      dataFim: string; // formato: 2025-08-01T23:59:59
+      dataInicio: string; // formato: 2025-06-01T00:00:00
+    };
+    operacoes: ExtratoOperacao[];
+    totalOperacoes: number;
+  };
+  conta: {
+    contaId: number;
+    numeroConta: string;
+    titular: string;
+    usuarioProprietario: string;
+    usuarioProprietarioId: number;
+    saldo: number;
+  };
+  message: string;
+  timestamp: string;
+}
+
+// Request para enviar extrato por email
+export interface EnviarExtratoEmailRequest {
+  contaId: number;
+  dataInicio: string;
+  dataFim: string;
+  limite: number;
+  email?: string; // Se não informado, usa o email da conta
+}

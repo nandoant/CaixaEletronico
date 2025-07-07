@@ -1,4 +1,4 @@
-import { DepositoRequest, DepositoResponse, SaqueRequest, SaqueOpcoesResponse, SaqueConfirmacaoRequest, SaqueResponse } from '../types/operacoes';
+import { DepositoRequest, DepositoResponse, SaqueRequest, SaqueOpcoesResponse, SaqueConfirmacaoRequest, SaqueResponse, ExtratoRequest, ExtratoResponse, ExtratoOperacao, EnviarExtratoEmailRequest } from '../types/operacoes';
 
 /**
  * INTEGRAÇÃO BACKEND - INFORMAÇÕES PARA IMPLEMENTAÇÃO FUTURA:
@@ -235,6 +235,120 @@ class OperacoesService {
     }
 
     return mockResponse;
+  }
+
+  /**
+   * Obtém o extrato de operações
+   * @param dados Dados para filtrar o extrato
+   * @returns Promise com o extrato
+   */
+  async obterExtrato(dados: ExtratoRequest): Promise<ExtratoResponse> {
+    // Simulação de dados mockados
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    const operacoesMock: ExtratoOperacao[] = [
+      {
+        id: 15,
+        tipo: 'DEPOSITO',
+        dataHora: '2025-07-07T14:30:22.123456',
+        valor: 500,
+        usuarioResponsavel: 'cliente',
+        descricao: 'Depósito em dinheiro'
+      },
+      {
+        id: 14,
+        tipo: 'SAQUE',
+        dataHora: '2025-07-06T16:45:10.654321',
+        valor: 200,
+        usuarioResponsavel: 'cliente',
+        descricao: 'Saque no caixa eletrônico'
+      },
+      {
+        id: 13,
+        tipo: 'DEPOSITO',
+        dataHora: '2025-07-05T09:15:33.789012',
+        valor: 1000,
+        usuarioResponsavel: 'cliente',
+        descricao: 'Transferência recebida'
+      },
+      {
+        id: 12,
+        tipo: 'SAQUE',
+        dataHora: '2025-07-04T18:20:45.345678',
+        valor: 150,
+        usuarioResponsavel: 'cliente',
+        descricao: 'Saque no caixa eletrônico'
+      },
+      {
+        id: 11,
+        tipo: 'DEPOSITO',
+        dataHora: '2025-07-03T11:30:15.567890',
+        valor: 300,
+        usuarioResponsavel: 'cliente',
+        descricao: 'Depósito em cheque'
+      },
+      {
+        id: 10,
+        tipo: 'SAQUE',
+        dataHora: '2025-07-02T20:10:30.234567',
+        valor: 80,
+        usuarioResponsavel: 'cliente',
+        descricao: 'Saque no caixa eletrônico'
+      },
+      {
+        id: 9,
+        tipo: 'DEPOSITO',
+        dataHora: '2025-07-01T15:45:20.890123',
+        valor: 750,
+        usuarioResponsavel: 'cliente',
+        descricao: 'Depósito em dinheiro'
+      }
+    ];
+
+    const response: ExtratoResponse = {
+      dados: {
+        periodo: {
+          dataInicio: `${dados.dataInicio}T00:00:00`,
+          dataFim: `${dados.dataFim}T23:59:59`
+        },
+        operacoes: operacoesMock.slice(0, dados.limite),
+        totalOperacoes: operacoesMock.length
+      },
+      conta: {
+        contaId: 1,
+        numeroConta: '2025000001',
+        titular: 'João Silva',
+        usuarioProprietario: 'cliente',
+        usuarioProprietarioId: dados.id,
+        saldo: 4860
+      },
+      message: 'Extrato obtido com sucesso',
+      timestamp: new Date().toISOString()
+    };
+
+    return response;
+  }
+
+  /**
+   * Envia extrato por email
+   * @param dados Dados para enviar o extrato
+   * @returns Promise com resultado do envio
+   */
+  async enviarExtratoPorEmail(dados: EnviarExtratoEmailRequest): Promise<{ success: boolean; message: string }> {
+    // Simulação de envio de email
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Simular sucesso na maioria das vezes
+    const sucesso = Math.random() > 0.1;
+
+    if (sucesso) {
+      return {
+        success: true,
+        message: 'Extrato enviado por email com sucesso!'
+      };
+    } else {
+      throw new Error('Erro ao enviar extrato por email. Tente novamente.');
+    }
   }
 
   /**
