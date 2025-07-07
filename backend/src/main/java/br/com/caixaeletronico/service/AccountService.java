@@ -3,6 +3,7 @@ package br.com.caixaeletronico.service;
 import br.com.caixaeletronico.model.Conta;
 import br.com.caixaeletronico.model.EstoqueGlobal;
 import br.com.caixaeletronico.model.ValorCedula;
+import br.com.caixaeletronico.model.Usuario;
 import br.com.caixaeletronico.repository.ContaRepository;
 import br.com.caixaeletronico.repository.EstoqueGlobalRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,5 +72,15 @@ public class AccountService {
     
     public boolean verificarSaldoSuficiente(Long contaId, BigDecimal valor) {
         return obterSaldo(contaId).compareTo(valor) >= 0;
+    }
+    
+    public Conta obterContaDoUsuario(Usuario usuario) {
+        return contaRepository.findByUsuario(usuario)
+            .orElseThrow(() -> new RuntimeException("Usuário não possui conta"));
+    }
+    
+    public Conta obterContaPorId(Long contaId) {
+        return contaRepository.findById(contaId)
+            .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
     }
 }

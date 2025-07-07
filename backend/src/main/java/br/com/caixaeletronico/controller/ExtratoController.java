@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Optional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,9 +53,14 @@ public class ExtratoController implements ExtratoControllerApi {
                 conta = contaRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
             } else {
-                // Usuário comum só pode acessar suas próprias contas
-                conta = contaRepository.findByIdAndUsuario(id, usuario)
-                    .orElseThrow(() -> new RuntimeException("Conta não encontrada ou não autorizada"));
+                // Usuário comum só pode acessar sua própria conta
+                conta = contaRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+                
+                // Verifica se a conta pertence ao usuário
+                if (!conta.getUsuario().getId().equals(usuario.getId())) {
+                    throw new RuntimeException("Acesso negado: você não tem permissão para acessar esta conta");
+                }
             }
             
             List<Operacao> operacoes;
@@ -111,9 +117,14 @@ public class ExtratoController implements ExtratoControllerApi {
                 conta = contaRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
             } else {
-                // Usuário comum só pode acessar suas próprias contas
-                conta = contaRepository.findByIdAndUsuario(id, usuario)
-                    .orElseThrow(() -> new RuntimeException("Conta não encontrada ou não autorizada"));
+                // Usuário comum só pode acessar sua própria conta
+                conta = contaRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+                
+                // Verifica se a conta pertence ao usuário
+                if (!conta.getUsuario().getId().equals(usuario.getId())) {
+                    throw new RuntimeException("Acesso negado: você não tem permissão para acessar esta conta");
+                }
             }
             
             Map<String, Object> response = new HashMap<>();
@@ -143,8 +154,9 @@ public class ExtratoController implements ExtratoControllerApi {
                 // Admin pode ver todas as contas
                 contas = contaRepository.findAll();
             } else {
-                // Usuário comum só vê suas próprias contas
-                contas = contaRepository.findByUsuario(usuario);
+                // Usuário comum só vê sua própria conta
+                Optional<Conta> contaOpt = contaRepository.findByUsuario(usuario);
+                contas = contaOpt.map(List::of).orElse(List.of());
             }
             
             Map<String, Object> response = new HashMap<>();

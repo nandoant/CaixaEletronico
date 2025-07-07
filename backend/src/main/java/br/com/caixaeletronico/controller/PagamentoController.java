@@ -39,8 +39,13 @@ public class PagamentoController implements PagamentoControllerApi {
             Usuario usuario = principal.getUsuario();
             
             // Verifica se a conta pertence ao usuário
-            Conta conta = contaRepository.findByIdAndUsuario(request.getContaId(), usuario)
-                .orElseThrow(() -> new RuntimeException("Conta não encontrada ou não autorizada"));
+            Conta conta = contaRepository.findById(request.getContaId())
+                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+            
+            // Verifica se a conta pertence ao usuário
+            if (!conta.getUsuario().getId().equals(usuario.getId())) {
+                throw new RuntimeException("Acesso negado: você não tem permissão para acessar esta conta");
+            }
             
             PagamentoAgendado pagamento = paymentScheduleService.criarPagamentoAgendado(
                 conta,
@@ -119,8 +124,13 @@ public class PagamentoController implements PagamentoControllerApi {
                 (CustomUserDetailsService.CustomUserPrincipal) authentication.getPrincipal();
             Usuario usuario = principal.getUsuario();
             
-            Conta conta = contaRepository.findByIdAndUsuario(contaId, usuario)
-                .orElseThrow(() -> new RuntimeException("Conta não encontrada ou não autorizada"));
+            Conta conta = contaRepository.findById(contaId)
+                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+            
+            // Verifica se a conta pertence ao usuário
+            if (!conta.getUsuario().getId().equals(usuario.getId())) {
+                throw new RuntimeException("Acesso negado: você não tem permissão para acessar esta conta");
+            }
             
             List<PagamentoAgendado> pagamentos = paymentScheduleService.obterTodosPagamentos(conta);
             

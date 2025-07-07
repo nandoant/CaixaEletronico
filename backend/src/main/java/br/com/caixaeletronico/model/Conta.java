@@ -25,8 +25,8 @@ public class Conta {
     @Column(precision = 10, scale = 2)
     private BigDecimal saldo;
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id", unique = true)
     private Usuario usuario;
     
     // Constructors
