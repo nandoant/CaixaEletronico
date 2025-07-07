@@ -8,6 +8,7 @@ import OperacoesPage from "../pages/operacoes/OperacoesPage";
 import DepositoPage from "../pages/operacoes/DepositoPage";
 import SaquePage from "../pages/operacoes/SaquePage";
 import TransferenciaPage from "../pages/operacoes/TransferenciaPage";
+import AgendamentoPage from "../pages/operacoes/AgendamentoPage";
 import ExtratoPage from "../pages/consultas/ExtratoPage";
 import SaldoPage from "../pages/consultas/SaldoPage";
 import AgendamentosPage from "../pages/agendamentos/AgendamentosPage";
@@ -49,6 +50,7 @@ const AppRoutes: React.FC = () => {
         <Route path="operacoes/deposito" element={<DepositoPage />} />
         <Route path="operacoes/saque" element={<SaquePage />} />
         <Route path="operacoes/transferencia" element={<TransferenciaPage />} />
+        <Route path="operacoes/agendamento" element={<AgendamentoPage />} />
         <Route path="extrato" element={<ExtratoPage />} />
         <Route path="saldo" element={<SaldoPage />} />
         <Route path="agendamentos" element={<AgendamentosPage />} />
