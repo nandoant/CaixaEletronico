@@ -418,11 +418,11 @@ class OperacoesService {
    * Busca informações de uma conta pelo número da conta
    */
   async buscarContaPorNumero(numeroConta: string): Promise<ContaInfo> {
-    console.log('🔍 Buscando conta por número:', numeroConta);
+    console.log('🔍 Buscando conta:', numeroConta);
     
     try {
       const contasResponse = await this.buscarContasDisponiveis();
-      console.log('📋 Contas encontradas:', contasResponse.dados.totalContas);
+      console.log('📋 Total de contas encontradas:', contasResponse.dados.totalContas);
       
       const conta = contasResponse.dados.contas.find(c => c.numeroConta === numeroConta);
 
@@ -434,7 +434,7 @@ class OperacoesService {
       console.log('✅ Conta encontrada:', conta);
       return conta;
     } catch (error: any) {
-      console.error('🚨 Erro ao buscar conta:', error);
+      console.error('🚨 Erro na busca da conta:', error);
       if (error.message) {
         throw new Error(error.message);
       } else {
@@ -803,76 +803,22 @@ class OperacoesService {
   /**
    * Busca todas as contas disponíveis no sistema
    * 
-   * Para admin: GET /contas/todas-contas
-   * Para cliente: Usa dados mockados das contas principais do sistema
-   * 
-   * Na prática, um cliente não precisa ver todas as contas do sistema.
-   * Ele deve saber o número da conta de destino para fazer a transferência.
+   * Endpoint: GET /auth/contas-disponiveis
+   * Retorna lista de todas as contas sem informações de saldo
    */
   async buscarContasDisponiveis(): Promise<ContasDisponiveisResponse> {
-    console.log('🔍 Iniciando busca por contas disponíveis...');
-    
     try {
-      console.log('🌐 Tentando endpoint de admin: GET /contas/todas-contas');
-      const response = await httpClient.get<ContasDisponiveisResponse>('/contas/todas-contas');
-      console.log('✅ Sucesso ao buscar contas via API:', response);
+      console.log('🔍 Chamando /auth/contas-disponiveis...');
+      const response = await httpClient.get<ContasDisponiveisResponse>('/auth/contas-disponiveis');
+      console.log('✅ Resposta recebida:', response);
       return response;
     } catch (error: any) {
-      console.log('⚠️ Endpoint admin não acessível, usando estratégia para cliente comum');
-      console.log('Erro detalhado:', error);
-      
-      // Para clientes comuns, vamos usar um conjunto limitado de contas conhecidas
-      // Na prática, o cliente vai digitar o número da conta e o sistema vai validar
-      const mockResponse: ContasDisponiveisResponse = {
-        dados: {
-          totalContas: 5,
-          contas: [
-            {
-              contaId: 1,
-              numeroConta: "2025000001",
-              titular: "João Silva",
-              usuarioProprietario: "cliente",
-              usuarioProprietarioId: 2
-            },
-            {
-              contaId: 2,
-              numeroConta: "2025000002",
-              titular: "Maria Santos",
-              usuarioProprietario: "cliente2",
-              usuarioProprietarioId: 3
-            },
-            {
-              contaId: 3,
-              numeroConta: "2025000003",
-              titular: "Pedro Oliveira",
-              usuarioProprietario: "cliente3",
-              usuarioProprietarioId: 4
-            },
-            {
-              contaId: 4,
-              numeroConta: "2025000004",
-              titular: "Ana Costa",
-              usuarioProprietario: "cliente4",
-              usuarioProprietarioId: 5
-            },
-            {
-              contaId: 5,
-              numeroConta: "2025000005",
-              titular: "Carlos Silva",
-              usuarioProprietario: "cliente5",
-              usuarioProprietarioId: 6
-            }
-          ]
-        },
-        message: "Contas disponíveis para transferência",
-        timestamp: new Date().toISOString()
-      };
-      
-      console.log('📋 Retornando dados mock:', mockResponse);
-      
-      // Simular delay da rede
-      await this.delay(500);
-      return mockResponse;
+      console.error('❌ Erro ao buscar contas:', error);
+      if (error.message) {
+        throw new Error(error.message);
+      } else {
+        throw new Error('Erro inesperado ao buscar contas disponíveis. Tente novamente.');
+      }
     }
   }
 

@@ -21,8 +21,7 @@ export class HttpClient {
 
   async get<T>(endpoint: string): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    console.log('🌐 GET Request:', url);
-    console.log('📋 Headers:', this.getAuthHeaders());
+    console.log('🌐 GET Request para:', url);
     
     const response = await fetch(url, {
       method: 'GET',
@@ -62,8 +61,7 @@ export class HttpClient {
   }
 
   private async handleResponse<T>(response: Response): Promise<T> {
-    console.log('📡 Response status:', response.status, response.statusText);
-    console.log('📡 Response URL:', response.url);
+    console.log('📡 Status da resposta:', response.status, response.statusText);
     
     if (response.status === 401) {
       // Token expirado ou inválido - fazer logout
@@ -76,17 +74,16 @@ export class HttpClient {
       let errorMessage = 'Erro na requisição';
       try {
         const errorData = await response.json();
-        console.log('🚨 Erro detalhado:', errorData);
-        errorMessage = errorData.message || errorMessage;
+        console.log('🚨 Dados do erro:', errorData);
+        errorMessage = errorData.message || errorData.error || errorMessage;
       } catch {
-        // Se não conseguir parsear o JSON, usa a mensagem padrão
-        console.log('🚨 Erro sem JSON, status:', response.status);
+        console.log('🚨 Não foi possível parsear erro como JSON');
       }
       throw new Error(errorMessage);
     }
 
     const data = await response.json();
-    console.log('✅ Response data:', data);
+    console.log('✅ Dados recebidos:', data);
     return data;
   }
 }

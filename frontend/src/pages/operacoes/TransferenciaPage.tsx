@@ -269,26 +269,6 @@ const TransferenciaPage: React.FC = () => {
           Transfira dinheiro para outra conta de forma rápida e segura
         </Typography>
 
-        {/* Dicas para teste */}
-        <Alert severity="info" sx={{ mb: 3 }}>
-          <Typography variant="subtitle2" gutterBottom>
-            👤 Sua conta (origem): <strong>{user?.numeroConta}</strong> -{" "}
-            {user?.titular}
-          </Typography>
-          <Typography variant="subtitle2" gutterBottom>
-            🧪 Contas disponíveis para teste:
-          </Typography>
-          <Typography variant="body2">
-            • <strong>2025000002</strong> - Maria Santos
-            <br />• <strong>2025000003</strong> - Pedro Oliveira
-            <br />• <strong>2025000004</strong> - Ana Costa
-            <br />• <strong>2025000005</strong> - Carlos Silva
-            <br />• <strong>2025000006</strong> - Fernanda Lima
-            <br />• <strong>2025000007</strong> - Roberto Ferreira
-            <br />• <strong>2025000008</strong> - Juliana Alves
-          </Typography>
-        </Alert>
-
         {error && (
           <Alert severity="error" sx={{ mb: 3 }}>
             {error}
@@ -310,7 +290,7 @@ const TransferenciaPage: React.FC = () => {
                 label="Número da Conta"
                 value={formData.numeroContaDestino}
                 onChange={handleInputChange}
-                placeholder="Ex: 2025000002"
+                placeholder="Digite o número da conta"
                 fullWidth
                 disabled={buscandoConta}
               />

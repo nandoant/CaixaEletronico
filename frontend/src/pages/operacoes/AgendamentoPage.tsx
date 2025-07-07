@@ -382,20 +382,6 @@ const AgendamentoPage: React.FC = () => {
           Agende pagamentos únicos ou parcelados para serem executados automaticamente
         </Typography>
 
-        {/* Dicas para teste */}
-        <Alert severity="info" sx={{ mb: 3 }}>
-          <Typography variant="subtitle2" gutterBottom>
-            👤 Sua conta (origem): <strong>{user?.numeroConta}</strong> - {user?.titular}
-          </Typography>
-          <Typography variant="subtitle2" gutterBottom>
-            🧪 Contas disponíveis para teste:
-          </Typography>
-          <Typography variant="body2">
-            • <strong>2025000002</strong> - Maria Santos • <strong>2025000003</strong> - Pedro Oliveira<br/>
-            • <strong>2025000004</strong> - Ana Costa • <strong>2025000005</strong> - Carlos Silva
-          </Typography>
-        </Alert>
-
         {error && (
           <Alert severity="error" sx={{ mb: 3 }}>
             {error}
@@ -422,7 +408,7 @@ const AgendamentoPage: React.FC = () => {
                 label="Número da Conta"
                 value={formData.numeroContaDestino}
                 onChange={handleInputChange}
-                placeholder="Ex: 2025000002"
+                placeholder="Digite o número da conta"
                 fullWidth
                 disabled={buscandoConta}
               />
