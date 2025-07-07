@@ -1,5 +1,6 @@
 package br.com.caixaeletronico.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
@@ -19,11 +20,13 @@ public class PagamentoAgendado {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "conta_origem_id")
     @NotNull(message = "Conta origem é obrigatória")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "usuario", "operacoes"})
     private Conta contaOrigem;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "conta_destino_id")
     @NotNull(message = "Conta destino é obrigatória")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "usuario", "operacoes"})
     private Conta contaDestino;
     
     @NotNull(message = "Valor total é obrigatório")

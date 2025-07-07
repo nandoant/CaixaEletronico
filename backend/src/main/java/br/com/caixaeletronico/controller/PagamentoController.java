@@ -4,6 +4,7 @@ import br.com.caixaeletronico.config.CustomUserDetailsService;
 import br.com.caixaeletronico.controller.api.PagamentoControllerApi;
 import br.com.caixaeletronico.model.Conta;
 import br.com.caixaeletronico.model.PagamentoAgendado;
+import br.com.caixaeletronico.model.StatusAgendamento;
 import br.com.caixaeletronico.model.Usuario;
 import br.com.caixaeletronico.repository.ContaRepository;
 import br.com.caixaeletronico.service.PaymentScheduleService;
@@ -109,17 +110,10 @@ public class PagamentoController implements PagamentoControllerApi {
                 throw new RuntimeException("Pagamento não autorizado");
             }
             
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", pagamento.getId());
-            response.put("valorTotal", pagamento.getValorTotal());
-            response.put("valorParcela", pagamento.getValorParcela());
-            response.put("quantidadeParcelas", pagamento.getQuantidadeParcelas());
-            response.put("parcelasRestantes", pagamento.getParcelasRestantes());
-            response.put("periodicidadeDias", pagamento.getPeriodicidadeDias());
-            response.put("dataProximaExecucao", pagamento.getDataProximaExecucao());
-            response.put("status", pagamento.getStatus());
+            // Converter para DTO para evitar problemas de serialização
+            PagamentoAgendadoDTO pagamentoDTO = convertToDTO(pagamento);
             
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(pagamentoDTO);
             
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
@@ -147,9 +141,14 @@ public class PagamentoController implements PagamentoControllerApi {
             
             List<PagamentoAgendado> pagamentos = paymentScheduleService.obterTodosPagamentos(conta);
             
+            // Converter para DTO para evitar problemas de serialização
+            List<PagamentoAgendadoDTO> pagamentosDTO = pagamentos.stream()
+                .map(this::convertToDTO)
+                .toList();
+            
             Map<String, Object> response = new HashMap<>();
             response.put("contaId", conta.getId());
-            response.put("pagamentos", pagamentos);
+            response.put("pagamentos", pagamentosDTO);
             
             return ResponseEntity.ok(response);
             
@@ -236,5 +235,93 @@ public class PagamentoController implements PagamentoControllerApi {
         
         public String getDescricao() { return descricao; }
         public void setDescricao(String descricao) { this.descricao = descricao; }
+    }
+    
+    // DTO para resposta de listagem de pagamentos
+    @Schema(description = "Dados de um pagamento agendado para listagem")
+    public static class PagamentoAgendadoDTO {
+        @Schema(description = "ID do pagamento", example = "1")
+        private Long id;
+        
+        @Schema(description = "ID da conta origem", example = "1")
+        private Long contaOrigemId;
+        
+        @Schema(description = "ID da conta destino", example = "2")
+        private Long contaDestinoId;
+        
+        @Schema(description = "Valor total", example = "150.00")
+        private BigDecimal valorTotal;
+        
+        @Schema(description = "Valor da parcela", example = "50.00")
+        private BigDecimal valorParcela;
+        
+        @Schema(description = "Quantidade de parcelas", example = "3")
+        private Integer quantidadeParcelas;
+        
+        @Schema(description = "Parcelas restantes", example = "2")
+        private Integer parcelasRestantes;
+        
+        @Schema(description = "Periodicidade em dias", example = "30")
+        private Integer periodicidadeDias;
+        
+        @Schema(description = "Data da próxima execução", example = "2025-08-07")
+        private LocalDate dataProximaExecucao;
+        
+        @Schema(description = "Status do pagamento", example = "ATIVO")
+        private StatusAgendamento status;
+        
+        @Schema(description = "Descrição", example = "Transferência mensal")
+        private String descricao;
+
+        // Getters and Setters
+        public Long getId() { return id; }
+        public void setId(Long id) { this.id = id; }
+        
+        public Long getContaOrigemId() { return contaOrigemId; }
+        public void setContaOrigemId(Long contaOrigemId) { this.contaOrigemId = contaOrigemId; }
+        
+        public Long getContaDestinoId() { return contaDestinoId; }
+        public void setContaDestinoId(Long contaDestinoId) { this.contaDestinoId = contaDestinoId; }
+        
+        public BigDecimal getValorTotal() { return valorTotal; }
+        public void setValorTotal(BigDecimal valorTotal) { this.valorTotal = valorTotal; }
+        
+        public BigDecimal getValorParcela() { return valorParcela; }
+        public void setValorParcela(BigDecimal valorParcela) { this.valorParcela = valorParcela; }
+        
+        public Integer getQuantidadeParcelas() { return quantidadeParcelas; }
+        public void setQuantidadeParcelas(Integer quantidadeParcelas) { this.quantidadeParcelas = quantidadeParcelas; }
+        
+        public Integer getParcelasRestantes() { return parcelasRestantes; }
+        public void setParcelasRestantes(Integer parcelasRestantes) { this.parcelasRestantes = parcelasRestantes; }
+        
+        public Integer getPeriodicidadeDias() { return periodicidadeDias; }
+        public void setPeriodicidadeDias(Integer periodicidadeDias) { this.periodicidadeDias = periodicidadeDias; }
+        
+        public LocalDate getDataProximaExecucao() { return dataProximaExecucao; }
+        public void setDataProximaExecucao(LocalDate dataProximaExecucao) { this.dataProximaExecucao = dataProximaExecucao; }
+        
+        public StatusAgendamento getStatus() { return status; }
+        public void setStatus(StatusAgendamento status) { this.status = status; }
+        
+        public String getDescricao() { return descricao; }
+        public void setDescricao(String descricao) { this.descricao = descricao; }
+    }
+    
+    // Método para converter PagamentoAgendado para DTO
+    private PagamentoAgendadoDTO convertToDTO(PagamentoAgendado pagamento) {
+        PagamentoAgendadoDTO dto = new PagamentoAgendadoDTO();
+        dto.setId(pagamento.getId());
+        dto.setContaOrigemId(pagamento.getContaOrigem().getId());
+        dto.setContaDestinoId(pagamento.getContaDestino().getId());
+        dto.setValorTotal(pagamento.getValorTotal());
+        dto.setValorParcela(pagamento.getValorParcela());
+        dto.setQuantidadeParcelas(pagamento.getQuantidadeParcelas());
+        dto.setParcelasRestantes(pagamento.getParcelasRestantes());
+        dto.setPeriodicidadeDias(pagamento.getPeriodicidadeDias());
+        dto.setDataProximaExecucao(pagamento.getDataProximaExecucao());
+        dto.setStatus(pagamento.getStatus());
+        dto.setDescricao(pagamento.getDescricao());
+        return dto;
     }
 }
