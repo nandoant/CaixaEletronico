@@ -18,7 +18,6 @@ public class SaqueCommand implements OperacaoCommand {
     private final Long contaId;
     private final BigDecimal valor;
     private final Map<ValorCedula, Integer> cedulasSaque;
-    private final Usuario usuarioLogado;
     private OperationMemento memento;
     
     public SaqueCommand(ContaRepository contaRepository, EstoqueGlobalRepository estoqueGlobalRepository, 
@@ -28,7 +27,6 @@ public class SaqueCommand implements OperacaoCommand {
         this.contaId = contaId;
         this.valor = valor;
         this.cedulasSaque = cedulasSaque;
-        this.usuarioLogado = null; // Será passado posteriormente
     }
     
     public SaqueCommand(ContaRepository contaRepository, EstoqueGlobalRepository estoqueGlobalRepository, 
@@ -38,7 +36,7 @@ public class SaqueCommand implements OperacaoCommand {
         this.contaId = contaId;
         this.valor = valor;
         this.cedulasSaque = cedulasSaque;
-        this.usuarioLogado = usuarioLogado;
+        // Ignoramos o usuarioLogado pois agora permitimos saques de qualquer conta
     }
     
     @Override
@@ -46,12 +44,7 @@ public class SaqueCommand implements OperacaoCommand {
         Conta conta = contaRepository.findById(contaId)
             .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
         
-        // Validação: apenas o proprietário da conta ou admin pode fazer saque
-        if (usuarioLogado != null && 
-            !conta.getUsuario().getId().equals(usuarioLogado.getId()) && 
-            !PerfilUsuario.ADMIN.equals(usuarioLogado.getPerfil())) {
-            throw new RuntimeException("Você não tem permissão para sacar desta conta");
-        }
+        // Removida a validação de propriedade - agora permite saque de qualquer conta
         
         // Verifica se há saldo suficiente
         if (conta.getSaldo().compareTo(valor) < 0) {

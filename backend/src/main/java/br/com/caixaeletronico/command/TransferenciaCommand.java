@@ -25,7 +25,7 @@ public class TransferenciaCommand implements OperacaoCommand {
         this.contaOrigemId = contaOrigemId;
         this.contaDestinoId = contaDestinoId;
         this.valor = valor;
-        this.usuarioLogado = null; // Será passado posteriormente
+        this.usuarioLogado = null; // Para compatibilidade com versões antigas
     }
     
     public TransferenciaCommand(ContaRepository contaRepository, 
@@ -35,6 +35,7 @@ public class TransferenciaCommand implements OperacaoCommand {
         this.contaDestinoId = contaDestinoId;
         this.valor = valor;
         this.usuarioLogado = usuarioLogado;
+        // usuarioLogado agora é usado para validação de propriedade da conta origem
     }
     
     @Override
@@ -45,11 +46,12 @@ public class TransferenciaCommand implements OperacaoCommand {
         Conta contaDestino = contaRepository.findById(contaDestinoId)
             .orElseThrow(() -> new RuntimeException("Conta destino não encontrada"));
         
-        // Validação: apenas o proprietário da conta origem ou admin pode fazer transferência
-        if (usuarioLogado != null && 
-            !contaOrigem.getUsuario().getId().equals(usuarioLogado.getId()) && 
-            !PerfilUsuario.ADMIN.equals(usuarioLogado.getPerfil())) {
-            throw new RuntimeException("Você não tem permissão para transferir desta conta");
+        // Validação de propriedade da conta origem
+        if (usuarioLogado != null && !usuarioLogado.getPerfil().equals(br.com.caixaeletronico.model.PerfilUsuario.ADMIN)) {
+            // Para usuários não-admin, a conta origem deve ser do próprio usuário
+            if (!contaOrigem.getUsuario().getId().equals(usuarioLogado.getId())) {
+                throw new RuntimeException("Você só pode transferir de suas próprias contas");
+            }
         }
         
         // Verifica se há saldo suficiente

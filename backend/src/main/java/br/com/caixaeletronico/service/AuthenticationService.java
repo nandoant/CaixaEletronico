@@ -2,12 +2,15 @@ package br.com.caixaeletronico.service;
 
 import br.com.caixaeletronico.model.PerfilUsuario;
 import br.com.caixaeletronico.model.Usuario;
+import br.com.caixaeletronico.model.Conta;
 import br.com.caixaeletronico.repository.UsuarioRepository;
+import br.com.caixaeletronico.repository.ContaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 @Service
@@ -16,6 +19,9 @@ public class AuthenticationService {
     
     @Autowired
     private UsuarioRepository usuarioRepository;
+    
+    @Autowired
+    private ContaRepository contaRepository;
     
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -41,7 +47,17 @@ public class AuthenticationService {
         usuario.setSenha(passwordEncoder.encode(senha));
         usuario.setPerfil(perfil);
         
-        return usuarioRepository.save(usuario);
+        usuario = usuarioRepository.save(usuario);
+        
+        // Cria conta automaticamente para o usuário
+        Conta conta = new Conta();
+        conta.setTitular(login); // Usa o login como titular
+        conta.setSaldo(BigDecimal.valueOf(1000.00)); // Saldo inicial de R$ 1000
+        conta.setUsuario(usuario);
+        
+        contaRepository.save(conta);
+        
+        return usuario;
     }
     
     public String autenticar(String login, String senha) {
