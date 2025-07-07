@@ -27,6 +27,7 @@ import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { Banknote, DepositoRequest, TipoCedula, Cedulas } from '../../types/operacoes';
 import { operacoesService } from '../../services/operacoesService';
+import { useAuth } from '../../contexts/AuthContext';
 
 // Available banknotes for deposit
 const AVAILABLE_BANKNOTES: Banknote[] = [
@@ -47,6 +48,7 @@ const steps = [
 
 export const DepositoPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeStep, setActiveStep] = useState(0);
   const [banknotes, setBanknotes] = useState<Banknote[]>(AVAILABLE_BANKNOTES);
   const [loading, setLoading] = useState(false);
@@ -123,6 +125,11 @@ export const DepositoPage: React.FC = () => {
   };
 
   const handleDeposito = async () => {
+    if (!user) {
+      setError('Usuário não autenticado. Faça login novamente.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -131,15 +138,15 @@ export const DepositoPage: React.FC = () => {
       const cedulas = convertBanknotesToCedulas(banknotes);
       
       const depositoRequest: DepositoRequest = {
-        contaId: 1, // TODO: Get from user context/auth when integrated
+        contaId: user.contaId,
         valor: totalValue,
         cedulas: cedulas
       };
 
-      // TODO: Integrate with backend
-      // This is currently using a mock service
-      // Future integration: POST /operacoes/deposito
-      await operacoesService.realizarDeposito(depositoRequest);
+      const response = await operacoesService.realizarDeposito(depositoRequest);
+      
+      // Log para debug (pode ser removido em produção)
+      console.log('Depósito realizado com sucesso:', response);
       
       setActiveStep(2);
     } catch (err) {

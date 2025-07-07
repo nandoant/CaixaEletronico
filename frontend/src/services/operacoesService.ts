@@ -56,53 +56,21 @@ import { httpClient } from './httpClient';
 class OperacoesService {
   /**
    * Realiza um depósito
-   * @param dados Dados do depósito
-   * @returns Promise com a resposta da operação
+   * @param dados Dados do depósito (contaId, valor, cedulas)
+   * @returns Promise com a resposta da operação incluindo dados da conta e operação
    */
   async realizarDeposito(dados: DepositoRequest): Promise<DepositoResponse> {
-    // TODO: Substituir por chamada real à API quando integrar com backend
-    // const response = await fetch('/operacoes/deposito', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //     'Authorization': `Bearer ${token}`
-    //   },
-    //   body: JSON.stringify(dados)
-    // });
-    // return response.json();
-
-    // MOCK - Simula delay da API
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    // Simula resposta de sucesso
-    const mockResponse: DepositoResponse = {
-      dados: {
-        novoSaldoDisponivel: true,
-        operacao: {
-          tipo: 'DEPOSITO',
-          valor: dados.valor,
-          dataHora: new Date().toISOString(),
-          status: 'CONCLUIDA'
-        }
-      },
-      conta: {
-        contaId: dados.contaId,
-        numeroConta: '2025000001',
-        titular: 'João Silva',
-        usuarioProprietario: 'cliente',
-        usuarioProprietarioId: 2,
-        saldo: null
-      },
-      message: 'Depósito realizado com sucesso',
-      timestamp: new Date().toISOString()
-    };
-
-    // Simula possível erro (5% de chance)
-    if (Math.random() < 0.05) {
-      throw new Error('Erro ao processar depósito. Tente novamente.');
+    try {
+      const response = await httpClient.post<DepositoResponse>('/operacoes/deposito', dados);
+      return response;
+    } catch (error: any) {
+      // Trata erros específicos do backend
+      if (error.message) {
+        throw new Error(error.message);
+      } else {
+        throw new Error('Erro inesperado ao realizar depósito. Tente novamente.');
+      }
     }
-
-    return mockResponse;
   }
 
   /**
