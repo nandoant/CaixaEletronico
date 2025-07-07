@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # Banco de dados PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: caixaeletronico-postgres
+    environment:
+      POSTGRES_DB: caixaeletronico
+      POSTGRES_USER: caixaeletronico
+      POSTGRES_PASSWORD: caixaeletronico123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - caixaeletronico-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U caixaeletronico"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Aplicação Spring Boot
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: caixaeletronico-backend
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_USERNAME=caixaeletronico
+      - DB_PASSWORD=caixaeletronico123
+      - JWT_SECRET=minha-chave-secreta-super-segura-para-jwt-que-deve-ter-pelo-menos-256-bits
+      - JWT_EXPIRATION=86400000
+      - MAIL_HOST=smtp.gmail.com
+      - MAIL_PORT=587
+      - MAIL_USERNAME=seu-email@gmail.com
+      - MAIL_PASSWORD=sua-senha-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - caixaeletronico-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  caixaeletronico-network:
+    driver: bridge
