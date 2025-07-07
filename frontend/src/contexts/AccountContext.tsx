@@ -35,7 +35,9 @@ interface AccountProviderProps {
   children: React.ReactNode;
 }
 
-export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) => {
+export const AccountProvider: React.FC<AccountProviderProps> = ({
+  children,
+}) => {
   const [accountData, setAccountData] = useState<AccountData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,11 +56,11 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
     console.log("🔍 Carregando dados da conta para contaId:", user.contaId);
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const response = await operacoesService.consultarSaldo(user.contaId);
       console.log("✅ Resposta do backend:", response);
-      
+
       const newAccountData: AccountData = {
         contaId: response.conta.contaId,
         numeroConta: response.conta.numeroConta,
@@ -66,13 +68,14 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
         usuarioProprietario: response.conta.usuarioProprietario,
         usuarioProprietarioId: response.conta.usuarioProprietarioId,
         saldo: response.conta.saldo,
-        dataUltimaConsulta: response.dados.dataConsulta
+        dataUltimaConsulta: response.dados.dataConsulta,
       };
-      
+
       console.log("💰 Dados da conta carregados:", newAccountData);
       setAccountData(newAccountData);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Erro ao carregar dados da conta";
+      const errorMessage =
+        err instanceof Error ? err.message : "Erro ao carregar dados da conta";
       console.error("❌ Erro ao carregar dados da conta:", err);
       setError(errorMessage);
     } finally {
@@ -87,15 +90,15 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
 
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const response = await operacoesService.consultarSaldo(user.contaId);
-      
+
       if (accountData) {
         setAccountData({
           ...accountData,
           saldo: response.conta.saldo,
-          dataUltimaConsulta: response.dados.dataConsulta
+          dataUltimaConsulta: response.dados.dataConsulta,
         });
       } else {
         const newAccountData: AccountData = {
@@ -105,12 +108,13 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
           usuarioProprietario: response.conta.usuarioProprietario,
           usuarioProprietarioId: response.conta.usuarioProprietarioId,
           saldo: response.conta.saldo,
-          dataUltimaConsulta: response.dados.dataConsulta
+          dataUltimaConsulta: response.dados.dataConsulta,
         };
         setAccountData(newAccountData);
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Erro ao atualizar saldo";
+      const errorMessage =
+        err instanceof Error ? err.message : "Erro ao atualizar saldo";
       setError(errorMessage);
       throw err;
     } finally {
@@ -123,7 +127,7 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
       setAccountData({
         ...accountData,
         saldo: novoSaldo,
-        dataUltimaConsulta: new Date().toISOString()
+        dataUltimaConsulta: new Date().toISOString(),
       });
     }
   };
@@ -144,5 +148,7 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({ children }) =>
     updateSaldo,
   };
 
-  return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;
+  return (
+    <AccountContext.Provider value={value}>{children}</AccountContext.Provider>
+  );
 };
