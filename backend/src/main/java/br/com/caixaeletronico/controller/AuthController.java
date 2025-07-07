@@ -1,7 +1,20 @@
 package br.com.caixaeletronico.controller;
 
 import br.com.caixaeletronico.controller.api.AuthControllerApi;
+import br.com.caixaeletronico.model.Conta;
 import br.com.caixaeletronico.model.PerfilUsuario;
+import br.com.caixaeletronico.model.Usuario;
+import br.com.caixaeletronico.repository.ContaRepository;
+import br.com.caixaeletronico.service.AuthenticationService;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import br.com.caixaeletronico.model.Usuario;
 import br.com.caixaeletronico.service.AuthenticationService;
 import jakarta.validation.Valid;
@@ -10,7 +23,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/auth")
@@ -18,6 +33,9 @@ public class AuthController implements AuthControllerApi {
     
     @Autowired
     private AuthenticationService authenticationService;
+    
+    @Autowired
+    private ContaRepository contaRepository;
     
     @PostMapping("/register")
     public ResponseEntity<?> registrar(@Valid @RequestBody RegistroRequest request) {
@@ -80,6 +98,36 @@ public class AuthController implements AuthControllerApi {
             response.put("login", usuario.getLogin());
             response.put("email", usuario.getEmail());
             response.put("perfil", usuario.getPerfil());
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+    
+    @GetMapping("/contas-disponiveis")
+    public ResponseEntity<?> listarContasDisponiveis() {
+        try {
+            List<Conta> todasContas = contaRepository.findAll();
+            
+            List<Map<String, Object>> contasInfo = todasContas.stream()
+                .map(conta -> {
+                    Map<String, Object> contaInfo = new HashMap<>();
+                    contaInfo.put("id", conta.getId());
+                    contaInfo.put("numeroConta", conta.getNumeroConta());
+                    contaInfo.put("titular", conta.getTitular());
+                    contaInfo.put("proprietario", conta.getUsuario().getLogin());
+                    return contaInfo;
+                })
+                .collect(Collectors.toList());
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Contas disponíveis listadas com sucesso");
+            response.put("total", contasInfo.size());
+            response.put("contas", contasInfo);
             
             return ResponseEntity.ok(response);
             

@@ -12,4 +12,8 @@ public interface ContaRepository extends JpaRepository<Conta, Long> {
     
     Optional<Conta> findByUsuario(Usuario usuario);
     
+    Optional<Conta> findTopByNumeroContaStartingWithOrderByNumeroContaDesc(String prefixo);
+    
+    Optional<Conta> findByNumeroConta(String numeroConta);
+    
 }

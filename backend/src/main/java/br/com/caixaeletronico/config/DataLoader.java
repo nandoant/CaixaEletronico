@@ -52,6 +52,7 @@ public class DataLoader implements CommandLineRunner {
         Conta conta = new Conta();
         conta.setTitular("João Silva");
         conta.setSaldo(new BigDecimal("5000.00"));
+        conta.setNumeroConta("2025000001"); // Número da conta gerado manualmente para dados iniciais
         conta.setUsuario(cliente);
         contaRepository.save(conta);
         
@@ -67,6 +68,7 @@ public class DataLoader implements CommandLineRunner {
         Conta conta2 = new Conta();
         conta2.setTitular("Maria Santos");
         conta2.setSaldo(new BigDecimal("3000.00"));
+        conta2.setNumeroConta("2025000002"); // Número da conta gerado manualmente para dados iniciais
         conta2.setUsuario(cliente2);
         contaRepository.save(conta2);
         
@@ -83,8 +85,8 @@ public class DataLoader implements CommandLineRunner {
         System.out.println("- Admin: login=admin, senha=admin123");
         System.out.println("- Cliente 1: login=cliente, senha=cliente123");
         System.out.println("- Cliente 2: login=cliente2, senha=cliente123");
-        System.out.println("- Conta 1: ID=1, Titular=João Silva, Saldo=R$ 5.000,00");
-        System.out.println("- Conta 2: ID=2, Titular=Maria Santos, Saldo=R$ 3.000,00");
+        System.out.println("- Conta 1: ID=1, Número=2025000001, Titular=João Silva, Saldo=R$ 5.000,00");
+        System.out.println("- Conta 2: ID=2, Número=2025000002, Titular=Maria Santos, Saldo=R$ 3.000,00");
         System.out.println("- Estoque global de cédulas criado");
     }
     

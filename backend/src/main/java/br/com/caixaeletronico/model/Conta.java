@@ -29,13 +29,18 @@ public class Conta {
     @JoinColumn(name = "usuario_id", unique = true)
     private Usuario usuario;
     
+    @NotBlank(message = "Número da conta é obrigatório")
+    @Column(unique = true, length = 20)
+    private String numeroConta;
+    
     // Constructors
     public Conta() {}
     
-    public Conta(String titular, BigDecimal saldo, Usuario usuario) {
+    public Conta(String titular, BigDecimal saldo, Usuario usuario, String numeroConta) {
         this.titular = titular;
         this.saldo = saldo;
         this.usuario = usuario;
+        this.numeroConta = numeroConta;
     }
     
     // Getters and Setters
@@ -69,5 +74,13 @@ public class Conta {
     
     public void setUsuario(Usuario usuario) {
         this.usuario = usuario;
+    }
+    
+    public String getNumeroConta() {
+        return numeroConta;
+    }
+    
+    public void setNumeroConta(String numeroConta) {
+        this.numeroConta = numeroConta;
     }
 }

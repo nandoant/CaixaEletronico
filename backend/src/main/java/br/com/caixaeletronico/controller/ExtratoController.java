@@ -165,6 +165,7 @@ public class ExtratoController implements ExtratoControllerApi {
             response.put("contas", contas.stream().map(conta -> {
                 Map<String, Object> contaInfo = new HashMap<>();
                 contaInfo.put("id", conta.getId());
+                contaInfo.put("numeroConta", conta.getNumeroConta());
                 contaInfo.put("titular", conta.getTitular());
                 contaInfo.put("saldo", conta.getSaldo());
                 contaInfo.put("proprietario", conta.getUsuario().getLogin());
