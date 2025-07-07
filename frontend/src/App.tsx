@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider } from './contexts/AuthContext';
+import { AccountProvider } from './contexts/AccountContext';
 import AppRoutes from './routes/AppRoutes';
 import './App.css';
 
@@ -36,7 +37,9 @@ function App() {
         <CssBaseline />
         <BrowserRouter>
           <AuthProvider>
-            <AppRoutes />
+            <AccountProvider>
+              <AppRoutes />
+            </AccountProvider>
           </AuthProvider>
         </BrowserRouter>
       </ThemeProvider>

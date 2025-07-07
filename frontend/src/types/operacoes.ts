@@ -340,3 +340,20 @@ export interface AgendamentosStats {
     data: string;
   };
 }
+
+// Consulta de saldo
+export interface SaldoResponse {
+  dados: {
+    dataConsulta: string;
+  };
+  conta: {
+    contaId: number;
+    numeroConta: string;
+    titular: string;
+    usuarioProprietario: string;
+    usuarioProprietarioId: number;
+    saldo: number;
+  };
+  message: string;
+  timestamp: string;
+}
