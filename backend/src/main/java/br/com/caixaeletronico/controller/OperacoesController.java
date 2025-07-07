@@ -4,7 +4,9 @@ import br.com.caixaeletronico.config.CustomUserDetailsService;
 import br.com.caixaeletronico.controller.api.OperacoesControllerApi;
 import br.com.caixaeletronico.model.TipoOperacao;
 import br.com.caixaeletronico.model.Usuario;
+import br.com.caixaeletronico.model.Conta;
 import br.com.caixaeletronico.model.ValorCedula;
+import br.com.caixaeletronico.repository.ContaRepository;
 import br.com.caixaeletronico.service.CommandManagerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -21,6 +24,9 @@ public class OperacoesController implements OperacoesControllerApi {
     
     @Autowired
     private CommandManagerService commandManagerService;
+    
+    @Autowired
+    private ContaRepository contaRepository;
     
     @PostMapping("/deposito")
     public ResponseEntity<?> depositar(
@@ -70,12 +76,23 @@ public class OperacoesController implements OperacoesControllerApi {
                 (CustomUserDetailsService.CustomUserPrincipal) authentication.getPrincipal();
             Usuario usuario = principal.getUsuario();
             
+            Long contaOrigemId = request.getContaOrigemId();
+            
+            // Para usuários não-admin, a conta origem deve ser uma das contas do usuário
+            if (!usuario.getPerfil().equals(br.com.caixaeletronico.model.PerfilUsuario.ADMIN)) {
+                // Se não foi especificada conta origem ou se a conta especificada não pertence ao usuário
+                if (contaOrigemId == null) {
+                    throw new RuntimeException("Conta origem é obrigatória");
+                }
+                // A validação de propriedade será feita no comando
+            }
+            
             // Executar transferência
             commandManagerService.executarComando(
                 TipoOperacao.TRANSFERENCIA,
                 usuario,
                 usuario.getEmail(),
-                request.getContaOrigemId(),
+                contaOrigemId,
                 request.getContaDestinoId(),
                 request.getValor()
             );
@@ -83,6 +100,45 @@ public class OperacoesController implements OperacoesControllerApi {
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Transferência realizada com sucesso");
             response.put("valor", request.getValor());
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+    
+    @GetMapping("/contas-origem")
+    public ResponseEntity<?> listarContasOrigem(Authentication authentication) {
+        try {
+            CustomUserDetailsService.CustomUserPrincipal principal = 
+                (CustomUserDetailsService.CustomUserPrincipal) authentication.getPrincipal();
+            Usuario usuario = principal.getUsuario();
+            
+            List<Conta> contas;
+            
+            // Administradores podem usar qualquer conta como origem
+            if (usuario.getPerfil().equals(br.com.caixaeletronico.model.PerfilUsuario.ADMIN)) {
+                contas = contaRepository.findAll();
+            } else {
+                // Usuários normais só podem usar suas próprias contas
+                contas = contaRepository.findByUsuario(usuario);
+            }
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("usuario", usuario.getLogin());
+            response.put("perfil", usuario.getPerfil());
+            response.put("totalContas", contas.size());
+            response.put("contas", contas.stream().map(conta -> {
+                Map<String, Object> contaInfo = new HashMap<>();
+                contaInfo.put("id", conta.getId());
+                contaInfo.put("titular", conta.getTitular());
+                contaInfo.put("saldo", conta.getSaldo());
+                contaInfo.put("proprietario", conta.getUsuario().getLogin());
+                return contaInfo;
+            }).toList());
             
             return ResponseEntity.ok(response);
             

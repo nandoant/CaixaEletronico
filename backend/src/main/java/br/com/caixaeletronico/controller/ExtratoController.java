@@ -138,18 +138,13 @@ public class ExtratoController implements ExtratoControllerApi {
                 (CustomUserDetailsService.CustomUserPrincipal) authentication.getPrincipal();
             Usuario usuario = principal.getUsuario();
             
-            List<Conta> contas;
-            if (PerfilUsuario.ADMIN.equals(usuario.getPerfil())) {
-                // Admin pode ver todas as contas
-                contas = contaRepository.findAll();
-            } else {
-                // Usuário comum só vê suas próprias contas
-                contas = contaRepository.findByUsuario(usuario);
-            }
+            // Lista apenas as contas do usuário logado
+            List<Conta> contas = contaRepository.findByUsuario(usuario);
             
             Map<String, Object> response = new HashMap<>();
             response.put("usuario", usuario.getLogin());
             response.put("perfil", usuario.getPerfil());
+            response.put("totalContas", contas.size());
             response.put("contas", contas.stream().map(conta -> {
                 Map<String, Object> contaInfo = new HashMap<>();
                 contaInfo.put("id", conta.getId());
@@ -167,7 +162,7 @@ public class ExtratoController implements ExtratoControllerApi {
             return ResponseEntity.badRequest().body(error);
         }
     }
-    
+
     @GetMapping("/todas-contas")
     public ResponseEntity<?> listarTodasContas(Authentication authentication) {
         try {
@@ -175,12 +170,8 @@ public class ExtratoController implements ExtratoControllerApi {
                 (CustomUserDetailsService.CustomUserPrincipal) authentication.getPrincipal();
             Usuario usuario = principal.getUsuario();
             
-            // Apenas administradores podem acessar este endpoint
-            if (!PerfilUsuario.ADMIN.equals(usuario.getPerfil())) {
-                Map<String, String> error = new HashMap<>();
-                error.put("error", "Acesso negado: apenas administradores podem listar todas as contas");
-                return ResponseEntity.status(403).body(error);
-            }
+            // Removida a restrição de admin - agora qualquer usuário pode listar todas as contas
+            // para realizar transações entre qualquer conta
             
             List<Conta> contas = contaRepository.findAll();
             

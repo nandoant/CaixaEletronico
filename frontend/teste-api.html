@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de API</title>
+</head>
+<body>
+    <h1>Teste de Conexão com Backend</h1>
+    <button onclick="testarConexao()">Testar Conexão</button>
+    <button onclick="testarLogin()">Testar Login</button>
+    <button onclick="testarContas()">Testar Contas</button>
+    <div id="resultado"></div>
+
+    <script>
+        async function testarConexao() {
+            try {
+                const response = await fetch('http://localhost:8080/auth/test', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.text();
+                document.getElementById('resultado').innerHTML = `<pre>Status: ${response.status}\nResposta: ${data}</pre>`;
+            } catch (error) {
+                document.getElementById('resultado').innerHTML = `<pre>Erro: ${error.message}</pre>`;
+            }
+        }
+
+        async function testarLogin() {
+            try {
+                const response = await fetch('http://localhost:8080/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        login: 'teste',
+                        senha: '123456'
+                    })
+                });
+                const data = await response.json();
+                document.getElementById('resultado').innerHTML = `<pre>Status: ${response.status}\nResposta: ${JSON.stringify(data, null, 2)}</pre>`;
+                
+                // Salvar token para próximo teste
+                if (data.token) {
+                    localStorage.setItem('testToken', data.token);
+                }
+            } catch (error) {
+                document.getElementById('resultado').innerHTML = `<pre>Erro: ${error.message}</pre>`;
+            }
+        }
+
+        async function testarContas() {
+            try {
+                const token = localStorage.getItem('testToken');
+                if (!token) {
+                    document.getElementById('resultado').innerHTML = '<pre>Erro: Faça login primeiro</pre>';
+                    return;
+                }
+
+                const response = await fetch('http://localhost:8080/contas/minhas-contas', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await response.json();
+                document.getElementById('resultado').innerHTML = `<pre>Status: ${response.status}\nResposta: ${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('resultado').innerHTML = `<pre>Erro: ${error.message}</pre>`;
+            }
+        }
+    </script>
+</body>
+</html>
