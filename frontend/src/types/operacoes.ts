@@ -193,3 +193,49 @@ export interface EnviarExtratoEmailRequest {
   limite: number;
   email?: string; // Se não informado, usa o email da conta
 }
+
+// Request para transferência
+export interface TransferenciaRequest {
+  contaOrigemId: number;
+  contaDestinoId: number;
+  valor: number;
+}
+
+// Response da transferência
+export interface TransferenciaResponse {
+  contaDestino: {
+    contaId: number;
+    numeroConta: string;
+    titular: string;
+    usuarioProprietario: string;
+    usuarioProprietarioId: number;
+    saldo: number | null;
+  };
+  contaOrigem: {
+    contaId: number;
+    numeroConta: string;
+    titular: string;
+    usuarioProprietario: string;
+    usuarioProprietarioId: number;
+    saldo: number | null;
+  };
+  dados: {
+    operacao: {
+      valor: number;
+      dataHora: string;
+      status: 'CONCLUIDA';
+      tipo: 'TRANSFERENCIA';
+    };
+  };
+  message: string;
+  timestamp: string;
+}
+
+// Interface para buscar conta por número
+export interface ContaInfo {
+  contaId: number;
+  numeroConta: string;
+  titular: string;
+  usuarioProprietario: string;
+  usuarioProprietarioId: number;
+}

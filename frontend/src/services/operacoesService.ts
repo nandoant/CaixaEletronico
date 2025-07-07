@@ -1,4 +1,4 @@
-import { DepositoRequest, DepositoResponse, SaqueRequest, SaqueOpcoesResponse, SaqueConfirmacaoRequest, SaqueResponse, ExtratoRequest, ExtratoResponse, ExtratoOperacao, EnviarExtratoEmailRequest } from '../types/operacoes';
+import { DepositoRequest, DepositoResponse, SaqueRequest, SaqueOpcoesResponse, SaqueConfirmacaoRequest, SaqueResponse, ExtratoRequest, ExtratoResponse, ExtratoOperacao, EnviarExtratoEmailRequest, TransferenciaRequest, TransferenciaResponse, ContaInfo } from '../types/operacoes';
 
 /**
  * INTEGRAÇÃO BACKEND - INFORMAÇÕES PARA IMPLEMENTAÇÃO FUTURA:
@@ -356,7 +356,7 @@ class OperacoesService {
    */
   private gerarOpcoesSaqueMock(valor: number) {
     const opcoes = [];
-    
+
     // Opção 1: Usar as maiores cédulas possíveis
     if (valor >= 50) {
       const duzentos = Math.floor(valor / 200);
@@ -364,10 +364,10 @@ class OperacoesService {
       const cinquenta = Math.floor(resto1 / 50);
       const resto2 = resto1 % 50;
       const dez = Math.floor(resto2 / 10);
-      
+
       const mapaCedulas: any = {};
       let descricao = [];
-      
+
       if (duzentos > 0) {
         mapaCedulas.DUZENTOS = duzentos;
         descricao.push(`${duzentos}x R$200`);
@@ -380,7 +380,7 @@ class OperacoesService {
         mapaCedulas.DEZ = dez;
         descricao.push(`${dez}x R$10`);
       }
-      
+
       opcoes.push({
         idOpcao: `opt1-${Date.now()}`,
         mapaCedulas,
@@ -388,16 +388,16 @@ class OperacoesService {
         descricaoLegivel: descricao.join(', ')
       });
     }
-    
+
     // Opção 2: Usar mais cédulas de 20
     if (valor >= 20) {
       const vinte = Math.floor(valor / 20);
       const resto = valor % 20;
       const dez = Math.floor(resto / 10);
-      
+
       const mapaCedulas: any = {};
       let descricao = [];
-      
+
       if (vinte > 0) {
         mapaCedulas.VINTE = vinte;
         descricao.push(`${vinte}x R$20`);
@@ -406,7 +406,7 @@ class OperacoesService {
         mapaCedulas.DEZ = dez;
         descricao.push(`${dez}x R$10`);
       }
-      
+
       opcoes.push({
         idOpcao: `opt2-${Date.now()}`,
         mapaCedulas,
@@ -414,11 +414,11 @@ class OperacoesService {
         descricaoLegivel: descricao.join(', ')
       });
     }
-    
+
     // Opção 3: Usar cédulas menores (apenas se valor permitir)
     if (valor <= 200) {
       const dez = Math.floor(valor / 10);
-      
+
       opcoes.push({
         idOpcao: `opt3-${Date.now()}`,
         mapaCedulas: { DEZ: dez },
@@ -426,7 +426,7 @@ class OperacoesService {
         descricaoLegivel: `${dez}x R$10`
       });
     }
-    
+
     return opcoes;
   }
 
@@ -443,6 +443,156 @@ class OperacoesService {
     } else {
       return 'Combinação com cédulas de R$10';
     }
+  }
+
+  /**
+   * Busca informações de uma conta pelo número da conta
+   */
+  async buscarContaPorNumero(numeroConta: string): Promise<ContaInfo> {
+    // Simular delay de rede
+    await this.delay(800);
+
+    // Contas mock para teste de transferência
+    const contasMock: ContaInfo[] = [
+      {
+        contaId: 2,
+        numeroConta: "2025000002",
+        titular: "Maria Santos",
+        usuarioProprietario: "cliente2",
+        usuarioProprietarioId: 3
+      },
+      {
+        contaId: 3,
+        numeroConta: "2025000003",
+        titular: "Pedro Oliveira",
+        usuarioProprietario: "cliente3",
+        usuarioProprietarioId: 4
+      },
+      {
+        contaId: 4,
+        numeroConta: "2025000004",
+        titular: "Ana Costa",
+        usuarioProprietario: "cliente4",
+        usuarioProprietarioId: 5
+      },
+      {
+        contaId: 5,
+        numeroConta: "2025000005",
+        titular: "Carlos Silva",
+        usuarioProprietario: "cliente5",
+        usuarioProprietarioId: 6
+      },
+      {
+        contaId: 6,
+        numeroConta: "2025000006",
+        titular: "Fernanda Lima",
+        usuarioProprietario: "cliente6",
+        usuarioProprietarioId: 7
+      },
+      {
+        contaId: 7,
+        numeroConta: "2025000007",
+        titular: "Roberto Ferreira",
+        usuarioProprietario: "cliente7",
+        usuarioProprietarioId: 8
+      },
+      {
+        contaId: 8,
+        numeroConta: "2025000008",
+        titular: "Juliana Alves",
+        usuarioProprietario: "cliente8",
+        usuarioProprietarioId: 9
+      }
+    ];
+
+    const conta = contasMock.find(c => c.numeroConta === numeroConta);
+
+    if (!conta) {
+      throw new Error('Conta não encontrada');
+    }
+
+    return conta;
+  }
+
+  /**
+   * Realiza uma transferência entre contas
+   * 
+   * INTEGRAÇÃO BACKEND - INFORMAÇÕES PARA IMPLEMENTAÇÃO FUTURA:
+   * 
+   * Endpoint: POST /operacoes/transferencia
+   * Headers: 
+   *   - Authorization: Bearer {token}
+   *   - Content-Type: application/json
+   * 
+   * Request body:
+   * {
+   *   "contaOrigemId": 1,
+   *   "contaDestinoId": 2,
+   *   "valor": 150
+   * }
+   */
+  async realizarTransferencia(request: TransferenciaRequest): Promise<TransferenciaResponse> {
+    // Simular delay de rede
+    await this.delay(1500);
+
+    // Buscar dados das contas para resposta realista
+    const contasMock = [
+      { contaId: 1, numeroConta: "2025000001", titular: "João Silva", usuarioProprietario: "cliente_teste", usuarioProprietarioId: 2 },
+      { contaId: 2, numeroConta: "2025000002", titular: "Maria Santos", usuarioProprietario: "cliente2", usuarioProprietarioId: 3 },
+      { contaId: 3, numeroConta: "2025000003", titular: "Pedro Oliveira", usuarioProprietario: "cliente3", usuarioProprietarioId: 4 },
+      { contaId: 4, numeroConta: "2025000004", titular: "Ana Costa", usuarioProprietario: "cliente4", usuarioProprietarioId: 5 },
+      { contaId: 5, numeroConta: "2025000005", titular: "Carlos Silva", usuarioProprietario: "cliente5", usuarioProprietarioId: 6 },
+      { contaId: 6, numeroConta: "2025000006", titular: "Fernanda Lima", usuarioProprietario: "cliente6", usuarioProprietarioId: 7 },
+      { contaId: 7, numeroConta: "2025000007", titular: "Roberto Ferreira", usuarioProprietario: "cliente7", usuarioProprietarioId: 8 },
+      { contaId: 8, numeroConta: "2025000008", titular: "Juliana Alves", usuarioProprietario: "cliente8", usuarioProprietarioId: 9 }
+    ];
+
+    const contaOrigem = contasMock.find(c => c.contaId === request.contaOrigemId);
+    const contaDestino = contasMock.find(c => c.contaId === request.contaDestinoId);
+
+    if (!contaOrigem) {
+      throw new Error('Conta de origem não encontrada');
+    }
+
+    if (!contaDestino) {
+      throw new Error('Conta de destino não encontrada');
+    }
+
+    // Simular resposta realista do backend
+    const response: TransferenciaResponse = {
+      contaDestino: {
+        contaId: contaDestino.contaId,
+        numeroConta: contaDestino.numeroConta,
+        titular: contaDestino.titular,
+        usuarioProprietario: contaDestino.usuarioProprietario,
+        usuarioProprietarioId: contaDestino.usuarioProprietarioId,
+        saldo: null
+      },
+      contaOrigem: {
+        contaId: contaOrigem.contaId,
+        numeroConta: contaOrigem.numeroConta,
+        titular: contaOrigem.titular,
+        usuarioProprietario: contaOrigem.usuarioProprietario,
+        usuarioProprietarioId: contaOrigem.usuarioProprietarioId,
+        saldo: null
+      },
+      dados: {
+        operacao: {
+          valor: request.valor,
+          dataHora: new Date().toISOString(),
+          status: "CONCLUIDA",
+          tipo: "TRANSFERENCIA"
+        }
+      },
+      message: "Transferência realizada com sucesso",
+      timestamp: new Date().toISOString()
+    };
+
+    return response;
+  }
+
+  private delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
 
