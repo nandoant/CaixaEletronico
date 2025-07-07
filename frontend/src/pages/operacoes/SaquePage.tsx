@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Box, 
@@ -29,6 +29,7 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { SaqueRequest, SaqueOpcao, SaqueConfirmacaoRequest } from '../../types/operacoes';
 import { operacoesService } from '../../services/operacoesService';
+import { useAccount } from '../../contexts/AccountContext';
 
 const steps = [
   'Valor do Saque',
@@ -39,6 +40,7 @@ const steps = [
 
 export const SaquePage: React.FC = () => {
   const navigate = useNavigate();
+  const { accountData } = useAccount();
   const [activeStep, setActiveStep] = useState(0);
   const [valor, setValor] = useState<string>('');
   const [opcoesSaque, setOpcoesSaque] = useState<SaqueOpcao[]>([]);
@@ -51,14 +53,14 @@ export const SaquePage: React.FC = () => {
   const isValorValido = valorNumerico > 0 && valorNumerico % 10 === 0;
 
   const handleSolicitarOpcoes = async () => {
-    if (!isValorValido) return;
+    if (!isValorValido || !accountData) return;
 
     setLoading(true);
     setError(null);
 
     try {
       const request: SaqueRequest = {
-        contaId: 1, // TODO: Get from user context/auth when integrated
+        contaId: accountData.contaId,
         valor: valorNumerico
       };
 
@@ -84,14 +86,14 @@ export const SaquePage: React.FC = () => {
   };
 
   const handleConfirmarSaque = async () => {
-    if (!opcaoSelecionada) return;
+    if (!opcaoSelecionada || !accountData) return;
 
     setLoading(true);
     setError(null);
 
     try {
       const request: SaqueConfirmacaoRequest = {
-        contaId: 1, // TODO: Get from user context/auth when integrated
+        contaId: accountData.contaId,
         valor: valorNumerico,
         idOpcao: opcaoSelecionada.idOpcao
       };
@@ -156,7 +158,7 @@ export const SaquePage: React.FC = () => {
                 <Button
                   variant="contained"
                   onClick={handleSolicitarOpcoes}
-                  disabled={!isValorValido || loading}
+                  disabled={!isValorValido || loading || !accountData}
                   size="large"
                 >
                   {loading ? 'Buscando opções...' : 'Buscar Opções de Saque'}
@@ -276,7 +278,7 @@ export const SaquePage: React.FC = () => {
                 <Button
                   variant="contained"
                   onClick={handleConfirmarSaque}
-                  disabled={loading}
+                  disabled={loading || !accountData}
                   color="success"
                 >
                   {loading ? 'Processando...' : 'Confirmar Saque'}
@@ -345,6 +347,26 @@ export const SaquePage: React.FC = () => {
         return null;
     }
   };
+
+  // Validação se os dados da conta estão disponíveis
+  if (!accountData) {
+    return (
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <Paper elevation={2} sx={{ p: 4 }}>
+          <Alert severity="warning">
+            Não foi possível carregar os dados da conta. Tente recarregar a página.
+          </Alert>
+          <Button 
+            onClick={() => navigate('/dashboard')} 
+            sx={{ mt: 2 }}
+            startIcon={<ArrowBackIcon />}
+          >
+            Voltar ao Dashboard
+          </Button>
+        </Paper>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="md">
