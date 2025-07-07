@@ -1,7 +1,10 @@
 import React from 'react';
 import { Box, Typography, Grid, Paper, Button } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 const OperacoesPage: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
@@ -31,7 +34,11 @@ const OperacoesPage: React.FC = () => {
             <Typography variant="body2" sx={{ mb: 2 }}>
               Depositar dinheiro na sua conta
             </Typography>
-            <Button variant="contained" fullWidth>
+            <Button 
+              variant="contained" 
+              fullWidth
+              onClick={() => navigate('/operacoes/deposito')}
+            >
               Fazer Depósito
             </Button>
           </Paper>
