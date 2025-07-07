@@ -93,7 +93,7 @@ class OperacoesService {
       const response = await httpClient.get<SaqueOpcoesResponse>(
         `/operacoes/saque/opcoes?contaId=${dados.contaId}&valor=${dados.valor}`
       );
-      
+
       return response;
     } catch (error: any) {
       // Trata erros específicos do backend
@@ -436,14 +436,14 @@ class OperacoesService {
 
     // Calcular valor da parcela
     const valorParcela = request.valorTotal / request.quantidadeParcelas;
-    
+
     // Calcular valor debitado agora
     const valorDebitadoAgora = request.debitarPrimeiraParcela ? valorParcela : 0;
 
     // Calcular data da próxima execução
     const dataInicio = new Date(request.dataInicio);
     let dataProximaExecucao: Date;
-    
+
     if (request.debitarPrimeiraParcela && request.quantidadeParcelas > 1) {
       // Se debita primeira parcela e há mais parcelas, próxima é após periodicidade
       dataProximaExecucao = new Date(dataInicio);
@@ -672,7 +672,7 @@ class OperacoesService {
     } catch (error: any) {
       // Se a API não estiver disponível ou houver erro, usar dados mock como fallback
       console.warn('Erro ao consultar saldo no backend, usando dados mock:', error.message);
-      
+
       // Simular delay de rede
       await this.delay(800);
 
