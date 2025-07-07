@@ -1,8 +1,8 @@
 import api from './api';
-import type { 
-  PagamentoAgendado, 
+import type {
+  PagamentoAgendado,
   PagamentoForm,
-  ApiResponse 
+  ApiResponse
 } from '@/types';
 
 export const pagamentosService = {

@@ -1,47 +1,57 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Banknote, Loader2 } from 'lucide-react';
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Banknote, Loader2 } from "lucide-react";
 
 const LoginPage: React.FC = () => {
-  const [credentials, setCredentials] = useState({ login: '', senha: '' });
+  const [credentials, setCredentials] = useState({ login: "", senha: "" });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  
+  const [error, setError] = useState("");
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
-      console.log('Tentando fazer login com:', credentials);
+      console.log("Tentando fazer login com:", credentials);
       await login(credentials);
-      console.log('Login realizado com sucesso');
-      navigate('/dashboard');
+      console.log("Login realizado com sucesso");
+      navigate("/dashboard");
     } catch (err: any) {
-      console.error('Erro no login:', err);
-      
+      console.error("Erro no login:", err);
+
       // Melhor tratamento de erro
-      let errorMessage = 'Erro ao fazer login';
-      
+      let errorMessage = "Erro ao fazer login";
+
       if (err.response) {
         // Erro do servidor
-        errorMessage = err.response.data?.error || err.response.data?.message || `Erro ${err.response.status}`;
+        errorMessage =
+          err.response.data?.error ||
+          err.response.data?.message ||
+          `Erro ${err.response.status}`;
       } else if (err.request) {
         // Erro de rede
-        errorMessage = 'Erro de conexão. Verifique se o backend está rodando.';
+        errorMessage = "Erro de conexão. Verifique se o backend está rodando.";
       } else {
         // Outro tipo de erro
-        errorMessage = err.message || 'Erro desconhecido';
+        errorMessage = err.message || "Erro desconhecido";
       }
-      
+
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -50,7 +60,7 @@ const LoginPage: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setCredentials(prev => ({ ...prev, [name]: value }));
+    setCredentials((prev) => ({ ...prev, [name]: value }));
   };
 
   return (
@@ -63,11 +73,9 @@ const LoginPage: React.FC = () => {
             </div>
           </div>
           <CardTitle className="text-2xl">Caixa Eletrônico</CardTitle>
-          <CardDescription>
-            Faça login para acessar sua conta
-          </CardDescription>
+          <CardDescription>Faça login para acessar sua conta</CardDescription>
         </CardHeader>
-        
+
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -82,7 +90,7 @@ const LoginPage: React.FC = () => {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="senha">Senha</Label>
               <Input
@@ -109,7 +117,7 @@ const LoginPage: React.FC = () => {
                   Entrando...
                 </>
               ) : (
-                'Entrar'
+                "Entrar"
               )}
             </Button>
           </form>
@@ -117,7 +125,7 @@ const LoginPage: React.FC = () => {
 
         <CardFooter className="justify-center">
           <p className="text-sm text-muted-foreground">
-            Não tem conta?{' '}
+            Não tem conta?{" "}
             <Link to="/register" className="text-primary hover:underline">
               Registre-se
             </Link>

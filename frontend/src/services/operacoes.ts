@@ -1,10 +1,10 @@
 import api from './api';
-import type { 
-  DepositoForm, 
-  SaqueForm, 
-  TransferenciaForm, 
+import type {
+  DepositoForm,
+  SaqueForm,
+  TransferenciaForm,
   CombinacaoCedulas,
-  ApiResponse 
+  ApiResponse
 } from '@/types';
 
 export const operacoesService = {

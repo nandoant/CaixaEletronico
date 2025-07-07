@@ -1,9 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Banknote, RefreshCw } from 'lucide-react';
-import api from '@/services/api';
-import type { EstoqueGlobal } from '@/types';
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Banknote, RefreshCw } from "lucide-react";
+import api from "@/services/api";
+import type { EstoqueGlobal } from "@/types";
 
 interface EstoqueModalProps {
   isOpen: boolean;
@@ -13,7 +19,7 @@ interface EstoqueModalProps {
 const EstoqueModal: React.FC<EstoqueModalProps> = ({ isOpen, onClose }) => {
   const [estoque, setEstoque] = useState<EstoqueGlobal[]>([]);
   const [loading, setLoading] = useState(false);
-  const [erro, setErro] = useState('');
+  const [erro, setErro] = useState("");
 
   useEffect(() => {
     if (isOpen) {
@@ -23,12 +29,12 @@ const EstoqueModal: React.FC<EstoqueModalProps> = ({ isOpen, onClose }) => {
 
   const carregarEstoque = async () => {
     setLoading(true);
-    setErro('');
+    setErro("");
     try {
-      const response = await api.get('/estoque/cedulas');
+      const response = await api.get("/estoque/cedulas");
       setEstoque(response.data.estoque);
     } catch (error: any) {
-      setErro(error.response?.data?.error || 'Erro ao carregar estoque');
+      setErro(error.response?.data?.error || "Erro ao carregar estoque");
     } finally {
       setLoading(false);
     }
@@ -36,7 +42,7 @@ const EstoqueModal: React.FC<EstoqueModalProps> = ({ isOpen, onClose }) => {
 
   const calcularValorTotal = () => {
     return estoque.reduce((total, item) => {
-      return total + (item.valorCedula.valor * item.quantidade);
+      return total + item.valorCedula.valor * item.quantidade;
     }, 0);
   };
 
@@ -45,9 +51,9 @@ const EstoqueModal: React.FC<EstoqueModalProps> = ({ isOpen, onClose }) => {
   };
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
     }).format(value);
   };
 
@@ -62,13 +68,15 @@ const EstoqueModal: React.FC<EstoqueModalProps> = ({ isOpen, onClose }) => {
               <Banknote className="h-5 w-5 mr-2" />
               Estoque Global de Cédulas
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={carregarEstoque}
               disabled={loading}
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+              />
               Atualizar
             </Button>
           </CardTitle>
@@ -88,19 +96,23 @@ const EstoqueModal: React.FC<EstoqueModalProps> = ({ isOpen, onClose }) => {
                 </p>
               </div>
             </Card>
-            
+
             <Card className="p-4 bg-blue-50">
               <div className="text-center">
-                <h3 className="font-semibold text-blue-800">Total de Cédulas</h3>
+                <h3 className="font-semibold text-blue-800">
+                  Total de Cédulas
+                </h3>
                 <p className="text-2xl font-bold text-blue-600">
-                  {calcularTotalCedulas().toLocaleString('pt-BR')}
+                  {calcularTotalCedulas().toLocaleString("pt-BR")}
                 </p>
               </div>
             </Card>
-            
+
             <Card className="p-4 bg-purple-50">
               <div className="text-center">
-                <h3 className="font-semibold text-purple-800">Tipos de Cédulas</h3>
+                <h3 className="font-semibold text-purple-800">
+                  Tipos de Cédulas
+                </h3>
                 <p className="text-2xl font-bold text-purple-600">
                   {estoque.length}
                 </p>
@@ -111,7 +123,7 @@ const EstoqueModal: React.FC<EstoqueModalProps> = ({ isOpen, onClose }) => {
           {/* Estoque detalhado */}
           <div className="space-y-3">
             <h3 className="text-lg font-semibold">Detalhamento por Cédula</h3>
-            
+
             {loading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
@@ -125,7 +137,9 @@ const EstoqueModal: React.FC<EstoqueModalProps> = ({ isOpen, onClose }) => {
               </div>
             ) : estoque.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">Nenhuma cédula encontrada</p>
+                <p className="text-muted-foreground">
+                  Nenhuma cédula encontrada
+                </p>
               </div>
             ) : (
               <div className="grid gap-3">
@@ -147,44 +161,57 @@ const EstoqueModal: React.FC<EstoqueModalProps> = ({ isOpen, onClose }) => {
                             </p>
                           </div>
                         </div>
-                        
+
                         <div className="text-right space-y-1">
                           <div className="text-2xl font-bold">
-                            {item.quantidade.toLocaleString('pt-BR')}
+                            {item.quantidade.toLocaleString("pt-BR")}
                           </div>
                           <div className="text-sm text-muted-foreground">
                             cédulas
                           </div>
                           <div className="text-lg font-semibold text-green-600">
-                            {formatCurrency(item.valorCedula.valor * item.quantidade)}
+                            {formatCurrency(
+                              item.valorCedula.valor * item.quantidade
+                            )}
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Barra de status visual */}
                       <div className="mt-3">
                         <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div 
+                          <div
                             className={`h-2 rounded-full ${
-                              item.quantidade > 100 ? 'bg-green-500' :
-                              item.quantidade > 50 ? 'bg-yellow-500' :
-                              'bg-red-500'
+                              item.quantidade > 100
+                                ? "bg-green-500"
+                                : item.quantidade > 50
+                                ? "bg-yellow-500"
+                                : "bg-red-500"
                             }`}
                             style={{
-                              width: `${Math.min(100, (item.quantidade / 200) * 100)}%`
+                              width: `${Math.min(
+                                100,
+                                (item.quantidade / 200) * 100
+                              )}%`,
                             }}
                           ></div>
                         </div>
                         <div className="flex justify-between text-xs text-muted-foreground mt-1">
                           <span>Estoque:</span>
-                          <span className={
-                            item.quantidade > 100 ? 'text-green-600' :
-                            item.quantidade > 50 ? 'text-yellow-600' :
-                            'text-red-600'
-                          }>
-                            {item.quantidade > 100 ? 'Alto' :
-                             item.quantidade > 50 ? 'Médio' :
-                             'Baixo'}
+                          <span
+                            className={
+                              item.quantidade > 100
+                                ? "text-green-600"
+                                : item.quantidade > 50
+                                ? "text-yellow-600"
+                                : "text-red-600"
+                            }
+                          >
+                            {item.quantidade > 100
+                              ? "Alto"
+                              : item.quantidade > 50
+                              ? "Médio"
+                              : "Baixo"}
                           </span>
                         </div>
                       </div>
@@ -195,9 +222,7 @@ const EstoqueModal: React.FC<EstoqueModalProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div className="flex justify-end">
-            <Button onClick={onClose}>
-              Fechar
-            </Button>
+            <Button onClick={onClose}>Fechar</Button>
           </div>
         </CardContent>
       </Card>

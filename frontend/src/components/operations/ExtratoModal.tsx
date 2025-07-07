@@ -1,13 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, Calendar, Download, ArrowUpRight, ArrowDownLeft, ArrowLeftRight } from 'lucide-react';
-import { contasService } from '@/services/contas';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import type { Conta, Operacao } from '@/types';
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Eye,
+  Calendar,
+  Download,
+  ArrowUpRight,
+  ArrowDownLeft,
+  ArrowLeftRight,
+} from "lucide-react";
+import { contasService } from "@/services/contas";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import type { Conta, Operacao } from "@/types";
 
 interface ExtratoModalProps {
   isOpen: boolean;
@@ -15,10 +28,14 @@ interface ExtratoModalProps {
   conta?: Conta;
 }
 
-const ExtratoModal: React.FC<ExtratoModalProps> = ({ isOpen, onClose, conta }) => {
+const ExtratoModal: React.FC<ExtratoModalProps> = ({
+  isOpen,
+  onClose,
+  conta,
+}) => {
   const [operacoes, setOperacoes] = useState<Operacao[]>([]);
-  const [dataInicio, setDataInicio] = useState('');
-  const [dataFim, setDataFim] = useState('');
+  const [dataInicio, setDataInicio] = useState("");
+  const [dataFim, setDataFim] = useState("");
   const [loading, setLoading] = useState(false);
   const [saldoAtual, setSaldoAtual] = useState(0);
 
@@ -34,15 +51,15 @@ const ExtratoModal: React.FC<ExtratoModalProps> = ({ isOpen, onClose, conta }) =
     setLoading(true);
     try {
       const response = await contasService.obterExtrato(
-        conta.id, 
-        dataInicio, 
-        dataFim, 
+        conta.id,
+        dataInicio,
+        dataFim,
         50
       );
       setOperacoes(response.operacoes);
       setSaldoAtual(response.saldoAtual);
     } catch (error) {
-      console.error('Erro ao carregar extrato:', error);
+      console.error("Erro ao carregar extrato:", error);
     } finally {
       setLoading(false);
     }
@@ -50,13 +67,13 @@ const ExtratoModal: React.FC<ExtratoModalProps> = ({ isOpen, onClose, conta }) =
 
   const getOperationIcon = (tipo: string) => {
     switch (tipo) {
-      case 'DEPOSITO':
+      case "DEPOSITO":
         return <ArrowDownLeft className="h-4 w-4 text-green-600" />;
-      case 'SAQUE':
+      case "SAQUE":
         return <ArrowUpRight className="h-4 w-4 text-red-600" />;
-      case 'TRANSFERENCIA':
+      case "TRANSFERENCIA":
         return <ArrowLeftRight className="h-4 w-4 text-blue-600" />;
-      case 'PAGAMENTO_PARCELA':
+      case "PAGAMENTO_PARCELA":
         return <Calendar className="h-4 w-4 text-purple-600" />;
       default:
         return <ArrowLeftRight className="h-4 w-4 text-gray-600" />;
@@ -65,27 +82,27 @@ const ExtratoModal: React.FC<ExtratoModalProps> = ({ isOpen, onClose, conta }) =
 
   const getOperationColor = (tipo: string) => {
     switch (tipo) {
-      case 'DEPOSITO':
-        return 'text-green-600';
-      case 'SAQUE':
-      case 'PAGAMENTO_PARCELA':
-        return 'text-red-600';
-      case 'TRANSFERENCIA':
-        return 'text-blue-600';
+      case "DEPOSITO":
+        return "text-green-600";
+      case "SAQUE":
+      case "PAGAMENTO_PARCELA":
+        return "text-red-600";
+      case "TRANSFERENCIA":
+        return "text-blue-600";
       default:
-        return 'text-gray-600';
+        return "text-gray-600";
     }
   };
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
     }).format(value);
   };
 
   const formatDate = (dateString: string) => {
-    return format(new Date(dateString), 'dd/MM/yyyy HH:mm', { locale: ptBR });
+    return format(new Date(dateString), "dd/MM/yyyy HH:mm", { locale: ptBR });
   };
 
   if (!isOpen) return null;
@@ -103,9 +120,7 @@ const ExtratoModal: React.FC<ExtratoModalProps> = ({ isOpen, onClose, conta }) =
               Saldo: {formatCurrency(saldoAtual)}
             </div>
           </CardTitle>
-          <CardDescription>
-            Histórico de movimentações da conta
-          </CardDescription>
+          <CardDescription>Histórico de movimentações da conta</CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-6">
@@ -149,7 +164,9 @@ const ExtratoModal: React.FC<ExtratoModalProps> = ({ isOpen, onClose, conta }) =
               </div>
             ) : operacoes.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">Nenhuma operação encontrada</p>
+                <p className="text-muted-foreground">
+                  Nenhuma operação encontrada
+                </p>
               </div>
             ) : (
               operacoes.map((operacao) => (
@@ -161,7 +178,7 @@ const ExtratoModal: React.FC<ExtratoModalProps> = ({ isOpen, onClose, conta }) =
                       </div>
                       <div>
                         <h4 className="font-semibold">
-                          {operacao.tipo.replace('_', ' ')}
+                          {operacao.tipo.replace("_", " ")}
                         </h4>
                         <p className="text-sm text-muted-foreground">
                           {formatDate(operacao.dataHora)}
@@ -174,8 +191,13 @@ const ExtratoModal: React.FC<ExtratoModalProps> = ({ isOpen, onClose, conta }) =
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className={`text-lg font-bold ${getOperationColor(operacao.tipo)}`}>
-                        {operacao.tipo === 'DEPOSITO' ? '+' : '-'}{formatCurrency(operacao.valor)}
+                      <div
+                        className={`text-lg font-bold ${getOperationColor(
+                          operacao.tipo
+                        )}`}
+                      >
+                        {operacao.tipo === "DEPOSITO" ? "+" : "-"}
+                        {formatCurrency(operacao.valor)}
                       </div>
                       {operacao.contaDestino && (
                         <p className="text-sm text-muted-foreground">
@@ -190,9 +212,7 @@ const ExtratoModal: React.FC<ExtratoModalProps> = ({ isOpen, onClose, conta }) =
           </div>
 
           <div className="flex justify-end">
-            <Button onClick={onClose}>
-              Fechar
-            </Button>
+            <Button onClick={onClose}>Fechar</Button>
           </div>
         </CardContent>
       </Card>

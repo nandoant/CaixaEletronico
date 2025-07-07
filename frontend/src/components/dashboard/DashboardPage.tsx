@@ -1,26 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  Banknote, 
-  ArrowUpRight, 
-  ArrowDownLeft, 
-  ArrowLeftRight, 
+import React, { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Banknote,
+  ArrowUpRight,
+  ArrowDownLeft,
+  ArrowLeftRight,
   Calendar,
   Eye,
   LogOut,
   Settings,
-  PieChart
-} from 'lucide-react';
-import { contasService } from '@/services/contas';
-import SaqueModal from '@/components/operations/SaqueModal';
-import DepositoModal from '@/components/operations/DepositoModal';
-import ExtratoModal from '@/components/operations/ExtratoModal';
-import TransferenciaModal from '@/components/operations/TransferenciaModal';
-import PagamentoModal from '@/components/operations/PagamentoModal';
-import EstoqueModal from '@/components/admin/EstoqueModal';
-import type { Conta } from '@/types';
+  PieChart,
+} from "lucide-react";
+import { contasService } from "@/services/contas";
+import SaqueModal from "@/components/operations/SaqueModal";
+import DepositoModal from "@/components/operations/DepositoModal";
+import ExtratoModal from "@/components/operations/ExtratoModal";
+import TransferenciaModal from "@/components/operations/TransferenciaModal";
+import PagamentoModal from "@/components/operations/PagamentoModal";
+import EstoqueModal from "@/components/admin/EstoqueModal";
+import type { Conta } from "@/types";
 
 const DashboardPage: React.FC = () => {
   const { user, logout } = useAuth();
@@ -37,12 +43,12 @@ const DashboardPage: React.FC = () => {
   useEffect(() => {
     const fetchContas = async () => {
       try {
-        console.log('Carregando contas...');
+        console.log("Carregando contas...");
         const data = await contasService.obterContas();
-        console.log('Contas carregadas:', data);
+        console.log("Contas carregadas:", data);
         setContas(data);
       } catch (error) {
-        console.error('Erro ao carregar contas:', error);
+        console.error("Erro ao carregar contas:", error);
         // Adicionar toast de erro futuramente
       } finally {
         setLoading(false);
@@ -58,13 +64,13 @@ const DashboardPage: React.FC = () => {
   };
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
     }).format(value);
   };
 
-  const isAdmin = user?.perfil === 'ADMIN';
+  const isAdmin = user?.perfil === "ADMIN";
 
   if (loading) {
     return (
@@ -85,13 +91,19 @@ const DashboardPage: React.FC = () => {
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
               <Banknote className="h-8 w-8 text-primary mr-3" />
-              <h1 className="text-2xl font-bold text-gray-900">Caixa Eletrônico</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Caixa Eletrônico
+              </h1>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-700">
                 Olá, {user?.login}
-                {isAdmin && <span className="ml-2 px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">ADMIN</span>}
+                {isAdmin && (
+                  <span className="ml-2 px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
+                    ADMIN
+                  </span>
+                )}
               </span>
               <Button variant="ghost" size="sm">
                 <Settings className="h-4 w-4" />
@@ -111,12 +123,12 @@ const DashboardPage: React.FC = () => {
           {contas.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground">
-                {loading ? 'Carregando contas...' : 'Nenhuma conta encontrada'}
+                {loading ? "Carregando contas..." : "Nenhuma conta encontrada"}
               </p>
             </div>
           ) : null}
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {contas.map((conta) => (
             <Card key={conta.id}>
@@ -133,9 +145,9 @@ const DashboardPage: React.FC = () => {
                 <div className="text-3xl font-bold text-green-600 mb-4">
                   {formatCurrency(conta.saldo)}
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="w-full"
                   onClick={() => abrirExtrato(conta)}
                 >
@@ -149,7 +161,7 @@ const DashboardPage: React.FC = () => {
 
         {/* Operações */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card 
+          <Card
             className="hover:shadow-md transition-shadow cursor-pointer"
             onClick={() => setDepositoModalOpen(true)}
           >
@@ -160,13 +172,15 @@ const DashboardPage: React.FC = () => {
                 </div>
                 <div className="ml-4">
                   <h3 className="font-semibold">Depósito</h3>
-                  <p className="text-sm text-muted-foreground">Depositar dinheiro</p>
+                  <p className="text-sm text-muted-foreground">
+                    Depositar dinheiro
+                  </p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card 
+          <Card
             className="hover:shadow-md transition-shadow cursor-pointer"
             onClick={() => setSaqueModalOpen(true)}
           >
@@ -177,13 +191,15 @@ const DashboardPage: React.FC = () => {
                 </div>
                 <div className="ml-4">
                   <h3 className="font-semibold">Saque</h3>
-                  <p className="text-sm text-muted-foreground">Sacar dinheiro</p>
+                  <p className="text-sm text-muted-foreground">
+                    Sacar dinheiro
+                  </p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card 
+          <Card
             className="hover:shadow-md transition-shadow cursor-pointer"
             onClick={() => setTransferenciaModalOpen(true)}
           >
@@ -194,13 +210,15 @@ const DashboardPage: React.FC = () => {
                 </div>
                 <div className="ml-4">
                   <h3 className="font-semibold">Transferência</h3>
-                  <p className="text-sm text-muted-foreground">Transferir entre contas</p>
+                  <p className="text-sm text-muted-foreground">
+                    Transferir entre contas
+                  </p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card 
+          <Card
             className="hover:shadow-md transition-shadow cursor-pointer"
             onClick={() => setPagamentoModalOpen(true)}
           >
@@ -211,7 +229,9 @@ const DashboardPage: React.FC = () => {
                 </div>
                 <div className="ml-4">
                   <h3 className="font-semibold">Pagamentos</h3>
-                  <p className="text-sm text-muted-foreground">Agendar pagamentos</p>
+                  <p className="text-sm text-muted-foreground">
+                    Agendar pagamentos
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -232,8 +252,8 @@ const DashboardPage: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="h-20 flex-col"
                   onClick={() => setEstoqueModalOpen(true)}
                 >
@@ -255,30 +275,30 @@ const DashboardPage: React.FC = () => {
       </div>
 
       {/* Modais */}
-      <SaqueModal 
-        isOpen={saqueModalOpen} 
-        onClose={() => setSaqueModalOpen(false)} 
+      <SaqueModal
+        isOpen={saqueModalOpen}
+        onClose={() => setSaqueModalOpen(false)}
       />
-      <DepositoModal 
-        isOpen={depositoModalOpen} 
-        onClose={() => setDepositoModalOpen(false)} 
+      <DepositoModal
+        isOpen={depositoModalOpen}
+        onClose={() => setDepositoModalOpen(false)}
       />
-      <ExtratoModal 
-        isOpen={extratoModalOpen} 
+      <ExtratoModal
+        isOpen={extratoModalOpen}
         onClose={() => setExtratoModalOpen(false)}
         conta={contaSelecionada}
       />
-      <TransferenciaModal 
-        isOpen={transferenciaModalOpen} 
-        onClose={() => setTransferenciaModalOpen(false)} 
+      <TransferenciaModal
+        isOpen={transferenciaModalOpen}
+        onClose={() => setTransferenciaModalOpen(false)}
       />
-      <PagamentoModal 
-        isOpen={pagamentoModalOpen} 
-        onClose={() => setPagamentoModalOpen(false)} 
+      <PagamentoModal
+        isOpen={pagamentoModalOpen}
+        onClose={() => setPagamentoModalOpen(false)}
       />
-      <EstoqueModal 
-        isOpen={estoqueModalOpen} 
-        onClose={() => setEstoqueModalOpen(false)} 
+      <EstoqueModal
+        isOpen={estoqueModalOpen}
+        onClose={() => setEstoqueModalOpen(false)}
       />
     </div>
   );

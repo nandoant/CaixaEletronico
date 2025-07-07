@@ -1,12 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, Plus } from 'lucide-react';
-import { pagamentosService } from '@/services/pagamentos';
-import { contasService } from '@/services/contas';
-import type { Conta, PagamentoAgendado } from '@/types';
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Calendar, Plus } from "lucide-react";
+import { pagamentosService } from "@/services/pagamentos";
+import { contasService } from "@/services/contas";
+import type { Conta, PagamentoAgendado } from "@/types";
 
 interface PagamentoModalProps {
   isOpen: boolean;
@@ -16,18 +22,18 @@ interface PagamentoModalProps {
 const PagamentoModal: React.FC<PagamentoModalProps> = ({ isOpen, onClose }) => {
   const [contas, setContas] = useState<Conta[]>([]);
   const [pagamentos, setPagamentos] = useState<PagamentoAgendado[]>([]);
-  const [modoExibicao, setModoExibicao] = useState<'lista' | 'novo'>('lista');
+  const [modoExibicao, setModoExibicao] = useState<"lista" | "novo">("lista");
   const [loading, setLoading] = useState(false);
-  const [erro, setErro] = useState('');
-  
+  const [erro, setErro] = useState("");
+
   // Dados do novo pagamento
   const [novoPagamento, setNovoPagamento] = useState({
-    contaId: '',
-    valorTotal: '',
-    quantidadeParcelas: '',
-    periodicidadeDias: '30',
-    dataInicio: '',
-    descricao: ''
+    contaId: "",
+    valorTotal: "",
+    quantidadeParcelas: "",
+    periodicidadeDias: "30",
+    dataInicio: "",
+    descricao: "",
   });
 
   useEffect(() => {
@@ -39,31 +45,36 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({ isOpen, onClose }) => {
   const carregarDados = async () => {
     setLoading(true);
     try {
-      console.log('Carregando dados para pagamento...');
+      console.log("Carregando dados para pagamento...");
       const [contasData, pagamentosData] = await Promise.all([
         contasService.obterContas(),
-        pagamentosService.obterPendentes()
+        pagamentosService.obterPendentes(),
       ]);
-      console.log('Contas carregadas para pagamento:', contasData);
-      console.log('Pagamentos carregados:', pagamentosData);
+      console.log("Contas carregadas para pagamento:", contasData);
+      console.log("Pagamentos carregados:", pagamentosData);
       setContas(contasData);
       setPagamentos(pagamentosData);
     } catch (error) {
-      console.error('Erro ao carregar dados para pagamento:', error);
-      setErro('Erro ao carregar dados');
+      console.error("Erro ao carregar dados para pagamento:", error);
+      setErro("Erro ao carregar dados");
     } finally {
       setLoading(false);
     }
   };
 
   const criarPagamento = async () => {
-    if (!novoPagamento.contaId || !novoPagamento.valorTotal || !novoPagamento.quantidadeParcelas || !novoPagamento.dataInicio) {
-      setErro('Preencha todos os campos obrigatórios');
+    if (
+      !novoPagamento.contaId ||
+      !novoPagamento.valorTotal ||
+      !novoPagamento.quantidadeParcelas ||
+      !novoPagamento.dataInicio
+    ) {
+      setErro("Preencha todos os campos obrigatórios");
       return;
     }
 
     setLoading(true);
-    setErro('');
+    setErro("");
 
     try {
       await pagamentosService.agendar({
@@ -72,22 +83,22 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({ isOpen, onClose }) => {
         quantidadeParcelas: parseInt(novoPagamento.quantidadeParcelas),
         periodicidadeDias: parseInt(novoPagamento.periodicidadeDias),
         dataInicio: novoPagamento.dataInicio,
-        descricao: novoPagamento.descricao
+        descricao: novoPagamento.descricao,
       });
-      
+
       // Reset e voltar para lista
       setNovoPagamento({
-        contaId: '',
-        valorTotal: '',
-        quantidadeParcelas: '',
-        periodicidadeDias: '30',
-        dataInicio: '',
-        descricao: ''
+        contaId: "",
+        valorTotal: "",
+        quantidadeParcelas: "",
+        periodicidadeDias: "30",
+        dataInicio: "",
+        descricao: "",
       });
-      setModoExibicao('lista');
+      setModoExibicao("lista");
       carregarDados();
     } catch (error: any) {
-      setErro(error.response?.data?.error || 'Erro ao criar pagamento');
+      setErro(error.response?.data?.error || "Erro ao criar pagamento");
     } finally {
       setLoading(false);
     }
@@ -99,25 +110,25 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({ isOpen, onClose }) => {
       await pagamentosService.cancelar(id);
       carregarDados();
     } catch (error: any) {
-      setErro(error.response?.data?.error || 'Erro ao cancelar pagamento');
+      setErro(error.response?.data?.error || "Erro ao cancelar pagamento");
     } finally {
       setLoading(false);
     }
   };
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
     }).format(value);
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+    return new Date(dateString).toLocaleDateString("pt-BR");
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setNovoPagamento(prev => ({ ...prev, [field]: value }));
+    setNovoPagamento((prev) => ({ ...prev, [field]: value }));
   };
 
   if (!isOpen) return null;
@@ -133,14 +144,14 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({ isOpen, onClose }) => {
             </div>
             <div className="flex space-x-2">
               <Button
-                variant={modoExibicao === 'lista' ? 'default' : 'outline'}
-                onClick={() => setModoExibicao('lista')}
+                variant={modoExibicao === "lista" ? "default" : "outline"}
+                onClick={() => setModoExibicao("lista")}
               >
                 Lista
               </Button>
               <Button
-                variant={modoExibicao === 'novo' ? 'default' : 'outline'}
-                onClick={() => setModoExibicao('novo')}
+                variant={modoExibicao === "novo" ? "default" : "outline"}
+                onClick={() => setModoExibicao("novo")}
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Novo
@@ -148,15 +159,14 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({ isOpen, onClose }) => {
             </div>
           </CardTitle>
           <CardDescription>
-            {modoExibicao === 'lista' ? 
-              'Gerencie seus pagamentos agendados' : 
-              'Criar novo pagamento agendado'
-            }
+            {modoExibicao === "lista"
+              ? "Gerencie seus pagamentos agendados"
+              : "Criar novo pagamento agendado"}
           </CardDescription>
         </CardHeader>
 
         <CardContent>
-          {modoExibicao === 'lista' ? (
+          {modoExibicao === "lista" ? (
             <div className="space-y-4">
               {loading ? (
                 <div className="text-center py-8">
@@ -165,7 +175,9 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({ isOpen, onClose }) => {
                 </div>
               ) : pagamentos.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-muted-foreground">Nenhum pagamento agendado</p>
+                  <p className="text-muted-foreground">
+                    Nenhum pagamento agendado
+                  </p>
                 </div>
               ) : (
                 pagamentos.map((pagamento) => (
@@ -174,21 +186,42 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({ isOpen, onClose }) => {
                       <div className="space-y-2">
                         <div className="flex items-center space-x-2">
                           <h4 className="font-semibold">
-                            Conta {contas.find(c => c.id === pagamento.conta.id)?.titular}
+                            Conta{" "}
+                            {
+                              contas.find((c) => c.id === pagamento.conta.id)
+                                ?.titular
+                            }
                           </h4>
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            pagamento.status === 'ATIVO' ? 'bg-green-100 text-green-800' :
-                            pagamento.status === 'PAUSADO' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
+                          <span
+                            className={`px-2 py-1 text-xs rounded-full ${
+                              pagamento.status === "ATIVO"
+                                ? "bg-green-100 text-green-800"
+                                : pagamento.status === "PAUSADO"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
                             {pagamento.status}
                           </span>
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          <p>Valor total: {formatCurrency(pagamento.valorTotal)}</p>
-                          <p>Parcelas: {pagamento.parcelasExecutadas}/{pagamento.quantidadeParcelas}</p>
-                          <p>Valor por parcela: {formatCurrency(pagamento.valorParcela)}</p>
-                          <p>Próxima execução: {pagamento.proximaExecucao ? formatDate(pagamento.proximaExecucao) : 'N/A'}</p>
+                          <p>
+                            Valor total: {formatCurrency(pagamento.valorTotal)}
+                          </p>
+                          <p>
+                            Parcelas: {pagamento.parcelasExecutadas}/
+                            {pagamento.quantidadeParcelas}
+                          </p>
+                          <p>
+                            Valor por parcela:{" "}
+                            {formatCurrency(pagamento.valorParcela)}
+                          </p>
+                          <p>
+                            Próxima execução:{" "}
+                            {pagamento.proximaExecucao
+                              ? formatDate(pagamento.proximaExecucao)
+                              : "N/A"}
+                          </p>
                         </div>
                       </div>
                       <div className="flex space-x-2">
@@ -214,10 +247,12 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({ isOpen, onClose }) => {
                   <select
                     className="w-full p-2 border rounded-md"
                     value={novoPagamento.contaId}
-                    onChange={(e) => handleInputChange('contaId', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("contaId", e.target.value)
+                    }
                   >
                     <option value="">Selecione uma conta</option>
-                    {contas.map(conta => (
+                    {contas.map((conta) => (
                       <option key={conta.id} value={conta.id}>
                         {conta.titular} - {formatCurrency(conta.saldo)}
                       </option>
@@ -231,7 +266,9 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({ isOpen, onClose }) => {
                     id="valorTotal"
                     type="number"
                     value={novoPagamento.valorTotal}
-                    onChange={(e) => handleInputChange('valorTotal', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("valorTotal", e.target.value)
+                    }
                     placeholder="Digite o valor total"
                     min="0.01"
                     step="0.01"
@@ -239,23 +276,31 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="quantidadeParcelas">Quantidade de Parcelas</Label>
+                  <Label htmlFor="quantidadeParcelas">
+                    Quantidade de Parcelas
+                  </Label>
                   <Input
                     id="quantidadeParcelas"
                     type="number"
                     value={novoPagamento.quantidadeParcelas}
-                    onChange={(e) => handleInputChange('quantidadeParcelas', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("quantidadeParcelas", e.target.value)
+                    }
                     placeholder="Digite a quantidade"
                     min="1"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="periodicidadeDias">Periodicidade (dias)</Label>
+                  <Label htmlFor="periodicidadeDias">
+                    Periodicidade (dias)
+                  </Label>
                   <select
                     className="w-full p-2 border rounded-md"
                     value={novoPagamento.periodicidadeDias}
-                    onChange={(e) => handleInputChange('periodicidadeDias', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("periodicidadeDias", e.target.value)
+                    }
                   >
                     <option value="7">Semanal (7 dias)</option>
                     <option value="15">Quinzenal (15 dias)</option>
@@ -270,7 +315,9 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({ isOpen, onClose }) => {
                     id="dataInicio"
                     type="date"
                     value={novoPagamento.dataInicio}
-                    onChange={(e) => handleInputChange('dataInicio', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("dataInicio", e.target.value)
+                    }
                   />
                 </div>
 
@@ -279,7 +326,9 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({ isOpen, onClose }) => {
                   <Input
                     id="descricao"
                     value={novoPagamento.descricao}
-                    onChange={(e) => handleInputChange('descricao', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("descricao", e.target.value)
+                    }
                     placeholder="Descrição do pagamento"
                   />
                 </div>
@@ -292,7 +341,10 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({ isOpen, onClose }) => {
                     <div className="flex justify-between">
                       <span>Valor por parcela:</span>
                       <span className="font-medium">
-                        {formatCurrency(parseFloat(novoPagamento.valorTotal) / parseInt(novoPagamento.quantidadeParcelas))}
+                        {formatCurrency(
+                          parseFloat(novoPagamento.valorTotal) /
+                            parseInt(novoPagamento.quantidadeParcelas)
+                        )}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -305,7 +357,9 @@ const PagamentoModal: React.FC<PagamentoModalProps> = ({ isOpen, onClose }) => {
 
               <Button
                 onClick={criarPagamento}
-                disabled={loading || !novoPagamento.contaId || !novoPagamento.valorTotal}
+                disabled={
+                  loading || !novoPagamento.contaId || !novoPagamento.valorTotal
+                }
                 className="w-full"
               >
                 Criar Pagamento Agendado

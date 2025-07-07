@@ -1,25 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeftRight } from 'lucide-react';
-import { operacoesService } from '@/services/operacoes';
-import { contasService } from '@/services/contas';
-import type { Conta } from '@/types';
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { ArrowLeftRight } from "lucide-react";
+import { operacoesService } from "@/services/operacoes";
+import { contasService } from "@/services/contas";
+import type { Conta } from "@/types";
 
 interface TransferenciaModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const TransferenciaModal: React.FC<TransferenciaModalProps> = ({ isOpen, onClose }) => {
+const TransferenciaModal: React.FC<TransferenciaModalProps> = ({
+  isOpen,
+  onClose,
+}) => {
   const [contas, setContas] = useState<Conta[]>([]);
   const [contaOrigemId, setContaOrigemId] = useState<number | null>(null);
   const [contaDestinoId, setContaDestinoId] = useState<number | null>(null);
-  const [valor, setValor] = useState('');
+  const [valor, setValor] = useState("");
   const [loading, setLoading] = useState(false);
-  const [erro, setErro] = useState('');
+  const [erro, setErro] = useState("");
 
   useEffect(() => {
     if (isOpen) {
@@ -29,68 +38,68 @@ const TransferenciaModal: React.FC<TransferenciaModalProps> = ({ isOpen, onClose
 
   const carregarContas = async () => {
     try {
-      console.log('Carregando contas para transferência...');
+      console.log("Carregando contas para transferência...");
       const data = await contasService.obterTodasContas();
-      console.log('Contas carregadas para transferência:', data);
+      console.log("Contas carregadas para transferência:", data);
       setContas(data);
     } catch (error) {
-      console.error('Erro ao carregar contas para transferência:', error);
-      setErro('Erro ao carregar contas');
+      console.error("Erro ao carregar contas para transferência:", error);
+      setErro("Erro ao carregar contas");
     }
   };
 
   const executarTransferencia = async () => {
     if (!contaOrigemId || !contaDestinoId || !valor) {
-      setErro('Preencha todos os campos');
+      setErro("Preencha todos os campos");
       return;
     }
 
     if (contaOrigemId === contaDestinoId) {
-      setErro('A conta de origem deve ser diferente da conta de destino');
+      setErro("A conta de origem deve ser diferente da conta de destino");
       return;
     }
 
     const valorNumerico = parseFloat(valor);
     if (valorNumerico <= 0) {
-      setErro('O valor deve ser maior que zero');
+      setErro("O valor deve ser maior que zero");
       return;
     }
 
     setLoading(true);
-    setErro('');
+    setErro("");
 
     try {
       await operacoesService.transferir({
         contaOrigemId,
         contaDestinoId,
-        valor: valorNumerico
+        valor: valorNumerico,
       });
-      
+
       // Reset e fechar modal
       setContaOrigemId(null);
       setContaDestinoId(null);
-      setValor('');
+      setValor("");
       onClose();
     } catch (error: any) {
-      setErro(error.response?.data?.error || 'Erro ao executar transferência');
+      setErro(error.response?.data?.error || "Erro ao executar transferência");
     } finally {
       setLoading(false);
     }
   };
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
     }).format(value);
   };
 
   const getContaOrigemOptions = () => {
-    return contas.filter(conta => conta.id !== contaDestinoId);
+    return contas.filter((conta) => conta.id !== contaDestinoId);
   };
 
   const getContaDestinoOptions = () => {
-    return contas.filter(conta => conta.id !== contaOrigemId);
+    return contas.filter((conta) => conta.id !== contaOrigemId);
   };
 
   if (!isOpen) return null;
@@ -114,11 +123,11 @@ const TransferenciaModal: React.FC<TransferenciaModalProps> = ({ isOpen, onClose
             <Label>Conta de Origem</Label>
             <select
               className="w-full p-2 border rounded-md"
-              value={contaOrigemId || ''}
+              value={contaOrigemId || ""}
               onChange={(e) => setContaOrigemId(Number(e.target.value))}
             >
               <option value="">Selecione a conta de origem</option>
-              {getContaOrigemOptions().map(conta => (
+              {getContaOrigemOptions().map((conta) => (
                 <option key={conta.id} value={conta.id}>
                   {conta.titular} - {formatCurrency(conta.saldo)}
                 </option>
@@ -131,11 +140,11 @@ const TransferenciaModal: React.FC<TransferenciaModalProps> = ({ isOpen, onClose
             <Label>Conta de Destino</Label>
             <select
               className="w-full p-2 border rounded-md"
-              value={contaDestinoId || ''}
+              value={contaDestinoId || ""}
               onChange={(e) => setContaDestinoId(Number(e.target.value))}
             >
               <option value="">Selecione a conta de destino</option>
-              {getContaDestinoOptions().map(conta => (
+              {getContaDestinoOptions().map((conta) => (
                 <option key={conta.id} value={conta.id}>
                   {conta.titular} - {formatCurrency(conta.saldo)}
                 </option>
@@ -164,11 +173,15 @@ const TransferenciaModal: React.FC<TransferenciaModalProps> = ({ isOpen, onClose
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span>De:</span>
-                  <span>Conta {contas.find(c => c.id === contaOrigemId)?.titular}</span>
+                  <span>
+                    Conta {contas.find((c) => c.id === contaOrigemId)?.titular}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Para:</span>
-                  <span>Conta {contas.find(c => c.id === contaDestinoId)?.titular}</span>
+                  <span>
+                    Conta {contas.find((c) => c.id === contaDestinoId)?.titular}
+                  </span>
                 </div>
                 <div className="flex justify-between font-semibold">
                   <span>Valor:</span>
@@ -188,7 +201,7 @@ const TransferenciaModal: React.FC<TransferenciaModalProps> = ({ isOpen, onClose
             <Button variant="outline" onClick={onClose} className="flex-1">
               Cancelar
             </Button>
-            <Button 
+            <Button
               onClick={executarTransferencia}
               disabled={!contaOrigemId || !contaDestinoId || !valor || loading}
               className="flex-1"

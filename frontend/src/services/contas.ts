@@ -1,8 +1,8 @@
 import api from './api';
-import type { 
-  Conta, 
+import type {
+  Conta,
   ExtratoResponse,
-  ApiResponse 
+  ApiResponse
 } from '@/types';
 
 export const contasService = {
@@ -11,12 +11,12 @@ export const contasService = {
       console.log('Fazendo requisição para /contas/minhas-contas...');
       const response = await api.get('/contas/minhas-contas');
       console.log('Resposta recebida:', response.data);
-      
+
       if (!response.data || !response.data.contas) {
         console.warn('Estrutura de resposta inesperada:', response.data);
         return [];
       }
-      
+
       return response.data.contas;
     } catch (error) {
       console.error('Erro ao buscar contas:', error);
@@ -29,12 +29,12 @@ export const contasService = {
       console.log('Fazendo requisição para /contas/todas-contas...');
       const response = await api.get('/contas/todas-contas');
       console.log('Resposta recebida:', response.data);
-      
+
       if (!response.data || !response.data.contas) {
         console.warn('Estrutura de resposta inesperada:', response.data);
         return [];
       }
-      
+
       return response.data.contas;
     } catch (error) {
       console.error('Erro ao buscar todas as contas:', error);
@@ -44,9 +44,9 @@ export const contasService = {
   },
 
   async obterExtrato(
-    contaId: number, 
-    dataInicio?: string, 
-    dataFim?: string, 
+    contaId: number,
+    dataInicio?: string,
+    dataFim?: string,
     limite?: number
   ): Promise<ExtratoResponse> {
     const params = new URLSearchParams();

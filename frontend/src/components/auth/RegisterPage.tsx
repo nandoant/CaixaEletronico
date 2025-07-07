@@ -1,68 +1,78 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { authService } from '@/services/api';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Banknote, Loader2 } from 'lucide-react';
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { authService } from "@/services/api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Banknote, Loader2 } from "lucide-react";
 
 const RegisterPage: React.FC = () => {
   const [formData, setFormData] = useState({
-    login: '',
-    email: '',
-    senha: '',
-    confirmaSenha: ''
+    login: "",
+    email: "",
+    senha: "",
+    confirmaSenha: "",
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  
+
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     // Validações
     if (formData.senha !== formData.confirmaSenha) {
-      setError('As senhas não coincidem');
+      setError("As senhas não coincidem");
       setLoading(false);
       return;
     }
 
     if (formData.senha.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres');
+      setError("A senha deve ter pelo menos 6 caracteres");
       setLoading(false);
       return;
     }
 
     try {
-      console.log('Tentando registrar usuário:', formData);
+      console.log("Tentando registrar usuário:", formData);
       await authService.register(formData);
-      console.log('Registro realizado com sucesso');
+      console.log("Registro realizado com sucesso");
       setSuccess(true);
       setTimeout(() => {
-        navigate('/login');
+        navigate("/login");
       }, 2000);
     } catch (err: any) {
-      console.error('Erro no registro:', err);
-      
+      console.error("Erro no registro:", err);
+
       // Melhor tratamento de erro
-      let errorMessage = 'Erro ao criar conta';
-      
+      let errorMessage = "Erro ao criar conta";
+
       if (err.response) {
         // Erro do servidor
-        errorMessage = err.response.data?.error || err.response.data?.message || `Erro ${err.response.status}`;
+        errorMessage =
+          err.response.data?.error ||
+          err.response.data?.message ||
+          `Erro ${err.response.status}`;
       } else if (err.request) {
         // Erro de rede
-        errorMessage = 'Erro de conexão. Verifique se o backend está rodando.';
+        errorMessage = "Erro de conexão. Verifique se o backend está rodando.";
       } else {
         // Outro tipo de erro
-        errorMessage = err.message || 'Erro desconhecido';
+        errorMessage = err.message || "Erro desconhecido";
       }
-      
+
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -71,7 +81,7 @@ const RegisterPage: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   if (success) {
@@ -80,7 +90,9 @@ const RegisterPage: React.FC = () => {
         <Card className="w-full max-w-md">
           <CardContent className="text-center py-8">
             <div className="text-green-600 text-6xl mb-4">✓</div>
-            <h2 className="text-2xl font-bold mb-2">Conta criada com sucesso!</h2>
+            <h2 className="text-2xl font-bold mb-2">
+              Conta criada com sucesso!
+            </h2>
             <p className="text-muted-foreground mb-4">
               Redirecionando para o login...
             </p>
@@ -104,7 +116,7 @@ const RegisterPage: React.FC = () => {
             Preencha os dados para criar sua conta
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -132,7 +144,7 @@ const RegisterPage: React.FC = () => {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="senha">Senha</Label>
               <Input
@@ -174,7 +186,7 @@ const RegisterPage: React.FC = () => {
                   Criando conta...
                 </>
               ) : (
-                'Criar Conta'
+                "Criar Conta"
               )}
             </Button>
           </form>
@@ -182,7 +194,7 @@ const RegisterPage: React.FC = () => {
 
         <CardFooter className="justify-center">
           <p className="text-sm text-muted-foreground">
-            Já tem conta?{' '}
+            Já tem conta?{" "}
             <Link to="/login" className="text-primary hover:underline">
               Faça login
             </Link>

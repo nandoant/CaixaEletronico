@@ -1,9 +1,9 @@
 import axios from 'axios';
-import type { 
-  LoginForm, 
-  RegisterForm, 
-  AuthResponse, 
-  ApiResponse 
+import type {
+  LoginForm,
+  RegisterForm,
+  AuthResponse,
+  ApiResponse
 } from '@/types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
@@ -23,7 +23,7 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  
+
   // Debug: log da requisição
   console.log('API Request:', {
     method: config.method?.toUpperCase(),
@@ -31,7 +31,7 @@ api.interceptors.request.use((config) => {
     data: config.data,
     headers: config.headers
   });
-  
+
   return config;
 });
 
@@ -54,7 +54,7 @@ api.interceptors.response.use(
       data: error.response?.data,
       message: error.message
     });
-    
+
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
