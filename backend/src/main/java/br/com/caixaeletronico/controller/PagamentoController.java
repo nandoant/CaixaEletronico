@@ -8,6 +8,7 @@ import br.com.caixaeletronico.model.StatusAgendamento;
 import br.com.caixaeletronico.model.Usuario;
 import br.com.caixaeletronico.repository.ContaRepository;
 import br.com.caixaeletronico.service.PaymentScheduleService;
+import br.com.caixaeletronico.util.ResponseUtil;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -67,23 +68,25 @@ public class PagamentoController implements PagamentoControllerApi {
                 request.getDescricao()
             );
             
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Transferência agendada com sucesso");
-            response.put("id", transferencia.getId());
-            response.put("contaOrigemId", contaOrigem.getId());
-            response.put("contaDestinoId", contaDestino.getId());
-            response.put("valorTotal", transferencia.getValorTotal());
-            response.put("valorParcela", transferencia.getValorParcela());
-            response.put("quantidadeParcelas", transferencia.getQuantidadeParcelas());
-            response.put("dataProximaExecucao", transferencia.getDataProximaExecucao());
-            response.put("status", transferencia.getStatus());
-            response.put("descricao", transferencia.getDescricao());
-            response.put("primeiraParcelaDebitada", request.isDebitarPrimeiraParcela());
+            Map<String, Object> dadosAgendamento = new HashMap<>();
+            dadosAgendamento.put("agendamento", Map.of(
+                "id", transferencia.getId(),
+                "valorTotal", transferencia.getValorTotal(),
+                "valorParcela", transferencia.getValorParcela(),
+                "quantidadeParcelas", transferencia.getQuantidadeParcelas(),
+                "dataProximaExecucao", transferencia.getDataProximaExecucao(),
+                "status", transferencia.getStatus(),
+                "descricao", transferencia.getDescricao(),
+                "primeiraParcelaDebitada", request.isDebitarPrimeiraParcela()
+            ));
             
             if (request.isDebitarPrimeiraParcela()) {
-                response.put("valorDebitadoAgora", transferencia.getValorParcela());
-                response.put("novoSaldo", contaOrigem.getSaldo());
+                dadosAgendamento.put("valorDebitadoAgora", transferencia.getValorParcela());
             }
+            
+            // Não exibe saldo na resposta para proteger informações sensíveis
+            Map<String, Object> response = ResponseUtil.criarRespostaPadraoComDuasContas(
+                "Transferência agendada com sucesso", contaOrigem, contaDestino, false, dadosAgendamento);
             
             return ResponseEntity.ok(response);
             

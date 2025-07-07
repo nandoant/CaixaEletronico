@@ -9,6 +9,7 @@ import br.com.caixaeletronico.model.Usuario;
 import br.com.caixaeletronico.model.PerfilUsuario;
 import br.com.caixaeletronico.repository.ContaRepository;
 import br.com.caixaeletronico.service.ExtractService;
+import br.com.caixaeletronico.util.ResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -85,12 +86,20 @@ public class ExtratoController implements ExtratoControllerApi {
                 ))
                 .collect(Collectors.toList());
             
-            Map<String, Object> response = new HashMap<>();
-            response.put("contaId", conta.getId());
-            response.put("titular", conta.getTitular());
-            response.put("saldoAtual", conta.getSaldo());
-            response.put("operacoes", operacoesDtos);
-            response.put("totalOperacoes", operacoesDtos.size());
+            Map<String, Object> dadosExtrato = new HashMap<>();
+            dadosExtrato.put("operacoes", operacoesDtos);
+            dadosExtrato.put("totalOperacoes", operacoesDtos.size());
+            
+            if (dataInicio != null && dataFim != null) {
+                Map<String, Object> periodo = new HashMap<>();
+                periodo.put("dataInicio", parseDateTime(dataInicio, true));
+                periodo.put("dataFim", parseDateTime(dataFim, false));
+                dadosExtrato.put("periodo", periodo);
+            }
+            
+            // Extrato sempre mostra saldo (é o propósito)
+            Map<String, Object> response = ResponseUtil.criarRespostaPadraoComConta(
+                "Extrato obtido com sucesso", conta, true, dadosExtrato);
             
             return ResponseEntity.ok(response);
             
@@ -127,11 +136,12 @@ public class ExtratoController implements ExtratoControllerApi {
                 }
             }
             
-            Map<String, Object> response = new HashMap<>();
-            response.put("contaId", conta.getId());
-            response.put("titular", conta.getTitular());
-            response.put("saldo", conta.getSaldo());
-            response.put("dataConsulta", java.time.LocalDateTime.now());
+            Map<String, Object> dadosSaldo = new HashMap<>();
+            dadosSaldo.put("dataConsulta", java.time.LocalDateTime.now());
+            
+            // Consulta de saldo sempre mostra saldo (é o propósito)
+            Map<String, Object> response = ResponseUtil.criarRespostaPadraoComConta(
+                "Saldo consultado com sucesso", conta, true, dadosSaldo);
             
             return ResponseEntity.ok(response);
             
@@ -159,18 +169,18 @@ public class ExtratoController implements ExtratoControllerApi {
                 contas = contaOpt.map(List::of).orElse(List.of());
             }
             
-            Map<String, Object> response = new HashMap<>();
-            response.put("usuario", usuario.getLogin());
-            response.put("perfil", usuario.getPerfil());
-            response.put("contas", contas.stream().map(conta -> {
-                Map<String, Object> contaInfo = new HashMap<>();
-                contaInfo.put("id", conta.getId());
-                contaInfo.put("numeroConta", conta.getNumeroConta());
-                contaInfo.put("titular", conta.getTitular());
-                contaInfo.put("saldo", conta.getSaldo());
-                contaInfo.put("proprietario", conta.getUsuario().getLogin());
-                return contaInfo;
+            Map<String, Object> dadosContas = new HashMap<>();
+            dadosContas.put("usuario", usuario.getLogin());
+            dadosContas.put("perfil", usuario.getPerfil());
+            dadosContas.put("totalContas", contas.size());
+            
+            // Para minhas contas, usuário pode ver saldo da própria conta
+            dadosContas.put("contas", contas.stream().map(conta -> {
+                return ResponseUtil.criarContaInfoComSaldo(conta);
             }).toList());
+            
+            Map<String, Object> response = ResponseUtil.criarRespostaPadraoSimples(
+                "Contas listadas com sucesso", dadosContas);
             
             return ResponseEntity.ok(response);
             
@@ -197,18 +207,18 @@ public class ExtratoController implements ExtratoControllerApi {
             
             List<Conta> contas = contaRepository.findAll();
             
-            Map<String, Object> response = new HashMap<>();
-            response.put("usuario", usuario.getLogin());
-            response.put("perfil", usuario.getPerfil());
-            response.put("totalContas", contas.size());
-            response.put("contas", contas.stream().map(conta -> {
-                Map<String, Object> contaInfo = new HashMap<>();
-                contaInfo.put("id", conta.getId());
-                contaInfo.put("titular", conta.getTitular());
-                contaInfo.put("saldo", conta.getSaldo());
-                contaInfo.put("proprietario", conta.getUsuario().getLogin());
-                return contaInfo;
+            Map<String, Object> dadosTodasContas = new HashMap<>();
+            dadosTodasContas.put("usuarioSolicitante", usuario.getLogin());
+            dadosTodasContas.put("perfil", usuario.getPerfil());
+            dadosTodasContas.put("totalContas", contas.size());
+            
+            // Admin pode ver saldo de todas as contas
+            dadosTodasContas.put("contas", contas.stream().map(conta -> {
+                return ResponseUtil.criarContaInfoComSaldo(conta);
             }).toList());
+            
+            Map<String, Object> response = ResponseUtil.criarRespostaPadraoSimples(
+                "Todas as contas listadas com sucesso", dadosTodasContas);
             
             return ResponseEntity.ok(response);
             

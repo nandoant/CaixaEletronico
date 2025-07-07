@@ -6,17 +6,7 @@ import br.com.caixaeletronico.model.PerfilUsuario;
 import br.com.caixaeletronico.model.Usuario;
 import br.com.caixaeletronico.repository.ContaRepository;
 import br.com.caixaeletronico.service.AuthenticationService;
-import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import br.com.caixaeletronico.model.Usuario;
-import br.com.caixaeletronico.service.AuthenticationService;
+import br.com.caixaeletronico.util.ResponseUtil;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -47,12 +37,20 @@ public class AuthController implements AuthControllerApi {
                 request.getPerfil() != null ? request.getPerfil() : PerfilUsuario.CLIENTE
             );
             
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Usuário registrado com sucesso");
-            response.put("userId", usuario.getId());
-            response.put("login", usuario.getLogin());
-            response.put("email", usuario.getEmail());
-            response.put("perfil", usuario.getPerfil());
+            Map<String, Object> dadosRegistro = new HashMap<>();
+            dadosRegistro.put("usuario", Map.of(
+                "userId", usuario.getId(),
+                "login", usuario.getLogin(),
+                "email", usuario.getEmail(),
+                "perfil", usuario.getPerfil()
+            ));
+            dadosRegistro.put("proximosPassos", List.of(
+                "Fazer login para acessar o sistema",
+                "Conta bancária será criada automaticamente"
+            ));
+            
+            Map<String, Object> response = ResponseUtil.criarRespostaPadraoSimples(
+                "Usuário registrado com sucesso", dadosRegistro);
             
             return ResponseEntity.ok(response);
             
@@ -69,13 +67,33 @@ public class AuthController implements AuthControllerApi {
             String token = authenticationService.autenticar(request.getLogin(), request.getSenha());
             Usuario usuario = authenticationService.obterUsuarioPorLogin(request.getLogin());
             
-            Map<String, Object> response = new HashMap<>();
-            response.put("token", token);
-            response.put("type", "Bearer");
-            response.put("userId", usuario.getId());
-            response.put("login", usuario.getLogin());
-            response.put("email", usuario.getEmail());
-            response.put("perfil", usuario.getPerfil());
+            Map<String, Object> dadosLogin = new HashMap<>();
+            
+            // Dados de autenticação
+            dadosLogin.put("autenticacao", Map.of(
+                "token", token,
+                "type", "Bearer",
+                "expiresIn", "24h"
+            ));
+            
+            // Dados do usuário
+            dadosLogin.put("usuario", Map.of(
+                "userId", usuario.getId(),
+                "login", usuario.getLogin(),
+                "email", usuario.getEmail(),
+                "perfil", usuario.getPerfil()
+            ));
+            
+            // Se for cliente, incluir dados da conta (sem saldo)
+            if (PerfilUsuario.CLIENTE.equals(usuario.getPerfil())) {
+                Conta conta = usuario.getConta();
+                if (conta != null) {
+                    dadosLogin.put("conta", ResponseUtil.criarContaBasica(conta));
+                }
+            }
+            
+            Map<String, Object> response = ResponseUtil.criarRespostaPadraoSimples(
+                "Login realizado com sucesso", dadosLogin);
             
             return ResponseEntity.ok(response);
             
@@ -93,11 +111,31 @@ public class AuthController implements AuthControllerApi {
             Usuario usuario = authenticationService.obterUsuarioDoToken(jwt)
                 .orElseThrow(() -> new RuntimeException("Token inválido"));
             
-            Map<String, Object> response = new HashMap<>();
-            response.put("userId", usuario.getId());
-            response.put("login", usuario.getLogin());
-            response.put("email", usuario.getEmail());
-            response.put("perfil", usuario.getPerfil());
+            Map<String, Object> dadosUsuario = new HashMap<>();
+            
+            // Dados do usuário
+            dadosUsuario.put("usuario", Map.of(
+                "userId", usuario.getId(),
+                "login", usuario.getLogin(),
+                "email", usuario.getEmail(),
+                "perfil", usuario.getPerfil()
+            ));
+            
+            // Se for cliente, incluir dados da conta (sem saldo)
+            if (PerfilUsuario.CLIENTE.equals(usuario.getPerfil())) {
+                Conta conta = usuario.getConta();
+                if (conta != null) {
+                    dadosUsuario.put("conta", ResponseUtil.criarContaBasica(conta));
+                }
+            }
+            
+            // Informações da sessão
+            dadosUsuario.put("sessao", Map.of(
+                "ultimaAtividade", java.time.LocalDateTime.now()
+            ));
+            
+            Map<String, Object> response = ResponseUtil.criarRespostaPadraoSimples(
+                "Dados do usuário obtidos com sucesso", dadosUsuario);
             
             return ResponseEntity.ok(response);
             
@@ -113,21 +151,17 @@ public class AuthController implements AuthControllerApi {
         try {
             List<Conta> todasContas = contaRepository.findAll();
             
-            List<Map<String, Object>> contasInfo = todasContas.stream()
-                .map(conta -> {
-                    Map<String, Object> contaInfo = new HashMap<>();
-                    contaInfo.put("id", conta.getId());
-                    contaInfo.put("numeroConta", conta.getNumeroConta());
-                    contaInfo.put("titular", conta.getTitular());
-                    contaInfo.put("proprietario", conta.getUsuario().getLogin());
-                    return contaInfo;
-                })
+            // Usar ResponseUtil para padronizar informações das contas (sem saldo)
+            List<Object> contasInfo = todasContas.stream()
+                .map(conta -> ResponseUtil.criarContaBasica(conta))
                 .collect(Collectors.toList());
             
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Contas disponíveis listadas com sucesso");
-            response.put("total", contasInfo.size());
-            response.put("contas", contasInfo);
+            Map<String, Object> dadosContas = new HashMap<>();
+            dadosContas.put("contas", contasInfo);
+            dadosContas.put("totalContas", contasInfo.size());
+            
+            Map<String, Object> response = ResponseUtil.criarRespostaPadraoSimples(
+                "Contas disponíveis listadas com sucesso", dadosContas);
             
             return ResponseEntity.ok(response);
             
