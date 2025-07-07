@@ -80,3 +80,67 @@ export const VALORES_CEDULAS = {
   [TipoCedula.CEM]: 100,
   [TipoCedula.DUZENTOS]: 200,
 } as const;
+
+// Request para solicitar opções de saque
+export interface SaqueRequest {
+  contaId: number;
+  valor: number;
+}
+
+// Opção de combinação de cédulas para saque
+export interface SaqueOpcao {
+  idOpcao: string;
+  mapaCedulas: { [key: string]: number };
+  quantidadeTotalDeNotas: number;
+  descricaoLegivel: string;
+}
+
+// Response das opções de saque
+export interface SaqueOpcoesResponse {
+  dados: {
+    valorSolicitado: number;
+    opcoes: SaqueOpcao[];
+    totalOpcoes: number;
+    saldoSuficiente: boolean;
+  };
+  conta: {
+    contaId: number;
+    numeroConta: string;
+    titular: string;
+    usuarioProprietario: string;
+    usuarioProprietarioId: number;
+    saldo: number | null;
+  };
+  message: string;
+  timestamp: string;
+}
+
+// Request para confirmar saque
+export interface SaqueConfirmacaoRequest {
+  contaId: number;
+  valor: number;
+  idOpcao: string;
+}
+
+// Response da confirmação do saque
+export interface SaqueResponse {
+  dados: {
+    operacao: {
+      status: 'CONCLUIDA';
+      combinacaoEscolhida: string;
+      dataHora: string;
+      valor: number;
+      tipo: 'SAQUE';
+    };
+  };
+  conta: {
+    contaId: number;
+    numeroConta: string;
+    titular: string;
+    usuarioProprietario: string;
+    usuarioProprietarioId: number;
+    saldo: number | null;
+  };
+  message: string;
+  timestamp: string;
+}

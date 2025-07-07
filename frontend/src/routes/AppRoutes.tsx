@@ -6,6 +6,7 @@ import RegisterPage from '../pages/auth/RegisterPage';
 import DashboardPage from '../pages/dashboard/DashboardPage';
 import OperacoesPage from '../pages/operacoes/OperacoesPage';
 import DepositoPage from '../pages/operacoes/DepositoPage';
+import SaquePage from '../pages/operacoes/SaquePage';
 import ExtratoPage from '../pages/consultas/ExtratoPage';
 import SaldoPage from '../pages/consultas/SaldoPage';
 import AgendamentosPage from '../pages/agendamentos/AgendamentosPage';
@@ -41,6 +42,7 @@ const AppRoutes: React.FC = () => {
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="operacoes" element={<OperacoesPage />} />
         <Route path="operacoes/deposito" element={<DepositoPage />} />
+        <Route path="operacoes/saque" element={<SaquePage />} />
         <Route path="extrato" element={<ExtratoPage />} />
         <Route path="saldo" element={<SaldoPage />} />
         <Route path="agendamentos" element={<AgendamentosPage />} />

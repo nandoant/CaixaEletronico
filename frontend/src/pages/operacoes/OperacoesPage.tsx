@@ -20,7 +20,11 @@ const OperacoesPage: React.FC = () => {
             <Typography variant="body2" sx={{ mb: 2 }}>
               Retirar dinheiro da sua conta
             </Typography>
-            <Button variant="contained" fullWidth>
+            <Button 
+              variant="contained" 
+              fullWidth
+              onClick={() => navigate('/operacoes/saque')}
+            >
               Fazer Saque
             </Button>
           </Paper>
