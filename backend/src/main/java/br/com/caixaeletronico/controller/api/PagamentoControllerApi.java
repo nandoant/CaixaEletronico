@@ -81,7 +81,7 @@ public interface PagamentoControllerApi {
             )
         )
     })
-    @PostMapping("/agendar")
+    @PostMapping("/agendar-pagamento")
     ResponseEntity<?> agendarPagamento(
         @Parameter(description = "Dados do pagamento a ser agendado", required = true,
                   schema = @Schema(implementation = PagamentoController.PagamentoRequest.class,
@@ -95,6 +95,87 @@ public interface PagamentoControllerApi {
                                  }
                                  """))
         @RequestBody PagamentoController.PagamentoRequest request,
+        
+        Authentication authentication
+    );
+
+    @Operation(
+        summary = "Agendar transferência entre contas",
+        description = "Agenda uma transferência parcelada entre contas que será executada automaticamente nas datas especificadas. " +
+                     "Permite especificar conta destino, valor, parcelas e periodicidade.",
+        tags = {"Pagamentos"}
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Transferência agendada com sucesso",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = Object.class),
+                examples = @ExampleObject(
+                    value = """
+                    {
+                        "message": "Transferência agendada com sucesso",
+                        "id": 1,
+                        "contaOrigemId": 1,
+                        "contaDestinoId": 2,
+                        "valorTotal": 150.00,
+                        "valorParcela": 50.00,
+                        "quantidadeParcelas": 3,
+                        "dataProximaExecucao": "2025-07-15",
+                        "status": "ATIVO",
+                        "descricao": "Transferência agendada",
+                        "primeiraParcelaDebitada": true
+                    }
+                    """
+                )
+            )
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Dados inválidos ou conta não encontrada",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    value = """
+                    {
+                        "error": "Conta destino não encontrada"
+                    }
+                    """
+                )
+            )
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Token de autenticação inválido",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    value = """
+                    {
+                        "error": "Acesso negado"
+                    }
+                    """
+                )
+            )
+        )
+    })
+    @PostMapping("/agendar")
+    ResponseEntity<?> agendarTransferencia(
+        @Parameter(description = "Dados da transferência a ser agendada", required = true,
+                  schema = @Schema(implementation = PagamentoController.TransferenciaAgendadaRequest.class,
+                                 example = """
+                                 {
+                                     "contaDestinoId": 5,
+                                     "valorTotal": 100.00,
+                                     "quantidadeParcelas": 1,
+                                     "periodicidadeDias": 1,
+                                     "dataInicio": "2025-07-07",
+                                     "debitarPrimeiraParcela": true,
+                                     "descricao": "Pagamento único"
+                                 }
+                                 """))
+        @RequestBody PagamentoController.TransferenciaAgendadaRequest request,
         
         Authentication authentication
     );

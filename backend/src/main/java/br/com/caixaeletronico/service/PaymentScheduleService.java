@@ -27,8 +27,8 @@ public class PaymentScheduleService {
                                                    Integer quantidadeParcelas, Integer periodicidadeDias,
                                                    LocalDate dataInicio, boolean debitarPrimeiraParcela) {
         
-        PagamentoAgendado pagamento = new PagamentoAgendado(conta, valorTotal, quantidadeParcelas, 
-                                                           periodicidadeDias, dataInicio);
+        PagamentoAgendado pagamento = new PagamentoAgendado(conta, conta, valorTotal, quantidadeParcelas, 
+                                                           periodicidadeDias, dataInicio, "Pagamento agendado");
         
         if (debitarPrimeiraParcela) {
             // Valida saldo para primeira parcela
@@ -90,5 +90,48 @@ public class PaymentScheduleService {
     
     public List<PagamentoAgendado> obterTodosPagamentos(Conta conta) {
         return pagamentoAgendadoRepository.findByContaOrigem(conta);
+    }
+    
+    // Novo método para criar transferência agendada
+    public PagamentoAgendado criarTransferenciaAgendada(Conta contaOrigem, Conta contaDestino,
+                                                       BigDecimal valorTotal, Integer quantidadeParcelas,
+                                                       Integer periodicidadeDias, LocalDate dataInicio,
+                                                       boolean debitarPrimeiraParcela, String descricao) {
+        
+        // Validações básicas
+        if (contaOrigem.getId().equals(contaDestino.getId())) {
+            throw new RuntimeException("Conta origem e destino não podem ser iguais");
+        }
+        
+        PagamentoAgendado transferencia = new PagamentoAgendado(contaOrigem, contaDestino, valorTotal, 
+                                                               quantidadeParcelas, periodicidadeDias, 
+                                                               dataInicio, descricao);
+        
+        if (debitarPrimeiraParcela) {
+            // Valida saldo para primeira parcela
+            BigDecimal valorParcela = transferencia.getValorParcela();
+            if (contaOrigem.getSaldo().compareTo(valorParcela) < 0) {
+                throw new RuntimeException("Saldo insuficiente para primeira parcela");
+            }
+            
+            // Executa primeira transferência imediatamente
+            contaOrigem.setSaldo(contaOrigem.getSaldo().subtract(valorParcela));
+            contaDestino.setSaldo(contaDestino.getSaldo().add(valorParcela));
+            
+            // Atualiza controle da transferência
+            transferencia.setParcelasRestantes(quantidadeParcelas - 1);
+            transferencia.setDataProximaExecucao(dataInicio.plusDays(periodicidadeDias));
+            
+            // Se só tinha 1 parcela, finaliza a transferência
+            if (quantidadeParcelas == 1) {
+                transferencia.setStatus(StatusAgendamento.CONCLUIDO);
+            }
+            
+            // Salva alterações nas contas
+            contaRepository.save(contaOrigem);
+            contaRepository.save(contaDestino);
+        }
+        
+        return pagamentoAgendadoRepository.save(transferencia);
     }
 }

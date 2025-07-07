@@ -7,6 +7,7 @@ import br.com.caixaeletronico.model.PagamentoAgendado;
 import br.com.caixaeletronico.model.Usuario;
 import br.com.caixaeletronico.repository.ContaRepository;
 import br.com.caixaeletronico.service.PaymentScheduleService;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -30,45 +31,57 @@ public class PagamentoController implements PagamentoControllerApi {
     private ContaRepository contaRepository;
     
     @PostMapping("/agendar")
-    public ResponseEntity<?> agendarPagamento(
-            @RequestBody PagamentoRequest request,
+    @Override
+    public ResponseEntity<?> agendarTransferencia(
+            @RequestBody TransferenciaAgendadaRequest request,
             Authentication authentication) {
         try {
             CustomUserDetailsService.CustomUserPrincipal principal = 
                 (CustomUserDetailsService.CustomUserPrincipal) authentication.getPrincipal();
             Usuario usuario = principal.getUsuario();
             
-            // Verifica se a conta pertence ao usuário
-            Conta conta = contaRepository.findById(request.getContaId())
-                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
-            
-            // Verifica se a conta pertence ao usuário
-            if (!conta.getUsuario().getId().equals(usuario.getId())) {
-                throw new RuntimeException("Acesso negado: você não tem permissão para acessar esta conta");
+            // Busca a conta origem do usuário logado
+            Conta contaOrigem = usuario.getConta();
+            if (contaOrigem == null) {
+                throw new RuntimeException("Usuário não possui conta associada");
             }
             
-            PagamentoAgendado pagamento = paymentScheduleService.criarPagamentoAgendado(
-                conta,
+            // Busca a conta destino
+            Conta contaDestino = contaRepository.findById(request.getContaDestinoId())
+                .orElseThrow(() -> new RuntimeException("Conta destino não encontrada"));
+            
+            // Valida se as contas são diferentes
+            if (contaOrigem.getId().equals(contaDestino.getId())) {
+                throw new RuntimeException("Conta origem e destino não podem ser iguais");
+            }
+            
+            PagamentoAgendado transferencia = paymentScheduleService.criarTransferenciaAgendada(
+                contaOrigem,
+                contaDestino,
                 request.getValorTotal(),
                 request.getQuantidadeParcelas(),
                 request.getPeriodicidadeDias(),
                 request.getDataInicio(),
-                request.isDebitarPrimeiraParcela()
+                request.isDebitarPrimeiraParcela(),
+                request.getDescricao()
             );
             
             Map<String, Object> response = new HashMap<>();
-            response.put("message", "Pagamento agendado com sucesso");
-            response.put("id", pagamento.getId());
-            response.put("valorTotal", pagamento.getValorTotal());
-            response.put("valorParcela", pagamento.getValorParcela());
-            response.put("quantidadeParcelas", pagamento.getQuantidadeParcelas());
-            response.put("dataProximaExecucao", pagamento.getDataProximaExecucao());
-            response.put("status", pagamento.getStatus());
+            response.put("message", "Transferência agendada com sucesso");
+            response.put("id", transferencia.getId());
+            response.put("contaOrigemId", contaOrigem.getId());
+            response.put("contaDestinoId", contaDestino.getId());
+            response.put("valorTotal", transferencia.getValorTotal());
+            response.put("valorParcela", transferencia.getValorParcela());
+            response.put("quantidadeParcelas", transferencia.getQuantidadeParcelas());
+            response.put("dataProximaExecucao", transferencia.getDataProximaExecucao());
+            response.put("status", transferencia.getStatus());
+            response.put("descricao", transferencia.getDescricao());
             response.put("primeiraParcelaDebitada", request.isDebitarPrimeiraParcela());
             
             if (request.isDebitarPrimeiraParcela()) {
-                response.put("valorDebitadoAgora", pagamento.getValorParcela());
-                response.put("novoSaldo", conta.getSaldo());
+                response.put("valorDebitadoAgora", transferencia.getValorParcela());
+                response.put("novoSaldo", contaOrigem.getSaldo());
             }
             
             return ResponseEntity.ok(response);
@@ -178,12 +191,60 @@ public class PagamentoController implements PagamentoControllerApi {
     }
     
     // DTO
+    @Schema(description = "Dados para agendar transferência entre contas")
+    public static class TransferenciaAgendadaRequest {
+        @Schema(description = "ID da conta destino", example = "5", required = true)
+        private Long contaDestinoId;
+        
+        @Schema(description = "Valor total da transferência", example = "100.00", required = true)
+        private BigDecimal valorTotal;
+        
+        @Schema(description = "Número de parcelas", example = "1", required = true)
+        private Integer quantidadeParcelas;
+        
+        @Schema(description = "Periodicidade entre parcelas em dias", example = "30", required = true)
+        private Integer periodicidadeDias;
+        
+        @Schema(description = "Debitar primeira parcela imediatamente", example = "true")
+        private boolean debitarPrimeiraParcela = false;
+        
+        @Schema(description = "Descrição da transferência", example = "Pagamento único")
+        private String descricao;
+        
+        @Schema(description = "Data de início da transferência", example = "2025-07-07", required = true)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        private LocalDate dataInicio;
+        
+        // Getters and Setters
+        public Long getContaDestinoId() { return contaDestinoId; }
+        public void setContaDestinoId(Long contaDestinoId) { this.contaDestinoId = contaDestinoId; }
+        
+        public BigDecimal getValorTotal() { return valorTotal; }
+        public void setValorTotal(BigDecimal valorTotal) { this.valorTotal = valorTotal; }
+        
+        public Integer getQuantidadeParcelas() { return quantidadeParcelas; }
+        public void setQuantidadeParcelas(Integer quantidadeParcelas) { this.quantidadeParcelas = quantidadeParcelas; }
+        
+        public Integer getPeriodicidadeDias() { return periodicidadeDias; }
+        public void setPeriodicidadeDias(Integer periodicidadeDias) { this.periodicidadeDias = periodicidadeDias; }
+        
+        public LocalDate getDataInicio() { return dataInicio; }
+        public void setDataInicio(LocalDate dataInicio) { this.dataInicio = dataInicio; }
+        
+        public boolean isDebitarPrimeiraParcela() { return debitarPrimeiraParcela; }
+        public void setDebitarPrimeiraParcela(boolean debitarPrimeiraParcela) { this.debitarPrimeiraParcela = debitarPrimeiraParcela; }
+        
+        public String getDescricao() { return descricao; }
+        public void setDescricao(String descricao) { this.descricao = descricao; }
+    }
+    
+    // DTO para compatibilidade com API existente
     public static class PagamentoRequest {
         private Long contaId;
         private BigDecimal valorTotal;
         private Integer quantidadeParcelas;
         private Integer periodicidadeDias;
-        private boolean debitarPrimeiraParcela = false; // Default false para compatibilidade
+        private boolean debitarPrimeiraParcela = false;
         
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         private LocalDate dataInicio;
@@ -206,5 +267,24 @@ public class PagamentoController implements PagamentoControllerApi {
         
         public boolean isDebitarPrimeiraParcela() { return debitarPrimeiraParcela; }
         public void setDebitarPrimeiraParcela(boolean debitarPrimeiraParcela) { this.debitarPrimeiraParcela = debitarPrimeiraParcela; }
+    }
+    
+    // Método para compatibilidade com API existente
+    @PostMapping("/agendar-pagamento")
+    @Override
+    public ResponseEntity<?> agendarPagamento(
+            PagamentoRequest request,
+            Authentication authentication) {
+        // Converter para o novo formato
+        TransferenciaAgendadaRequest novoRequest = new TransferenciaAgendadaRequest();
+        novoRequest.setContaDestinoId(request.getContaId());
+        novoRequest.setValorTotal(request.getValorTotal());
+        novoRequest.setQuantidadeParcelas(request.getQuantidadeParcelas());
+        novoRequest.setPeriodicidadeDias(request.getPeriodicidadeDias());
+        novoRequest.setDataInicio(request.getDataInicio());
+        novoRequest.setDebitarPrimeiraParcela(request.isDebitarPrimeiraParcela());
+        novoRequest.setDescricao("Pagamento agendado");
+        
+        return agendarTransferencia(novoRequest, authentication);
     }
 }

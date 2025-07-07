@@ -21,6 +21,11 @@ public class PagamentoAgendado {
     @NotNull(message = "Conta origem é obrigatória")
     private Conta contaOrigem;
     
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "conta_destino_id")
+    @NotNull(message = "Conta destino é obrigatória")
+    private Conta contaDestino;
+    
     @NotNull(message = "Valor total é obrigatório")
     @DecimalMin(value = "0.01", message = "Valor total deve ser maior que zero")
     @Column(precision = 10, scale = 2)
@@ -45,18 +50,24 @@ public class PagamentoAgendado {
     @Enumerated(EnumType.STRING)
     private StatusAgendamento status;
     
+    @Column(length = 255)
+    private String descricao;
+    
     // Constructors
     public PagamentoAgendado() {}
     
-    public PagamentoAgendado(Conta contaOrigem, BigDecimal valorTotal, Integer quantidadeParcelas, 
-                           Integer periodicidadeDias, LocalDate dataProximaExecucao) {
+    public PagamentoAgendado(Conta contaOrigem, Conta contaDestino, BigDecimal valorTotal, 
+                           Integer quantidadeParcelas, Integer periodicidadeDias, 
+                           LocalDate dataProximaExecucao, String descricao) {
         this.contaOrigem = contaOrigem;
+        this.contaDestino = contaDestino;
         this.valorTotal = valorTotal;
         this.quantidadeParcelas = quantidadeParcelas;
         this.periodicidadeDias = periodicidadeDias;
         this.dataProximaExecucao = dataProximaExecucao;
         this.parcelasRestantes = quantidadeParcelas;
         this.status = StatusAgendamento.ATIVO;
+        this.descricao = descricao;
     }
     
     // Getters and Setters
@@ -74,6 +85,14 @@ public class PagamentoAgendado {
     
     public void setContaOrigem(Conta contaOrigem) {
         this.contaOrigem = contaOrigem;
+    }
+    
+    public Conta getContaDestino() {
+        return contaDestino;
+    }
+    
+    public void setContaDestino(Conta contaDestino) {
+        this.contaDestino = contaDestino;
     }
     
     public BigDecimal getValorTotal() {
@@ -122,6 +141,14 @@ public class PagamentoAgendado {
     
     public void setStatus(StatusAgendamento status) {
         this.status = status;
+    }
+    
+    public String getDescricao() {
+        return descricao;
+    }
+    
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
     }
     
     // Helper methods
