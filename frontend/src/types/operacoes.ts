@@ -231,6 +231,16 @@ export interface TransferenciaResponse {
   timestamp: string;
 }
 
+// Response para listar contas disponíveis
+export interface ContasDisponiveisResponse {
+  dados: {
+    totalContas: number;
+    contas: ContaInfo[];
+  };
+  message: string;
+  timestamp: string;
+}
+
 // Request para agendamento de pagamento
 export interface AgendamentoRequest {
   contaDestinoId: number;

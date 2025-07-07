@@ -1,4 +1,4 @@
-import { DepositoRequest, DepositoResponse, SaqueRequest, SaqueOpcoesResponse, SaqueConfirmacaoRequest, SaqueResponse, ExtratoRequest, ExtratoResponse, ExtratoOperacao, EnviarExtratoEmailRequest, TransferenciaRequest, TransferenciaResponse, ContaInfo, AgendamentoRequest, AgendamentoResponse, AgendamentoListItem, CancelamentoResponse, SaldoResponse } from '../types/operacoes';
+import { DepositoRequest, DepositoResponse, SaqueRequest, SaqueOpcoesResponse, SaqueConfirmacaoRequest, SaqueResponse, ExtratoRequest, ExtratoResponse, ExtratoOperacao, EnviarExtratoEmailRequest, TransferenciaRequest, TransferenciaResponse, ContaInfo, ContasDisponiveisResponse, AgendamentoRequest, AgendamentoResponse, AgendamentoListItem, CancelamentoResponse, SaldoResponse } from '../types/operacoes';
 import { httpClient } from './httpClient';
 
 /**
@@ -418,75 +418,33 @@ class OperacoesService {
    * Busca informações de uma conta pelo número da conta
    */
   async buscarContaPorNumero(numeroConta: string): Promise<ContaInfo> {
-    // Simular delay de rede
-    await this.delay(800);
+    console.log('🔍 Buscando conta por número:', numeroConta);
+    
+    try {
+      const contasResponse = await this.buscarContasDisponiveis();
+      console.log('📋 Contas encontradas:', contasResponse.dados.totalContas);
+      
+      const conta = contasResponse.dados.contas.find(c => c.numeroConta === numeroConta);
 
-    // Contas mock para teste de transferência
-    const contasMock: ContaInfo[] = [
-      {
-        contaId: 2,
-        numeroConta: "2025000002",
-        titular: "Maria Santos",
-        usuarioProprietario: "cliente2",
-        usuarioProprietarioId: 3
-      },
-      {
-        contaId: 3,
-        numeroConta: "2025000003",
-        titular: "Pedro Oliveira",
-        usuarioProprietario: "cliente3",
-        usuarioProprietarioId: 4
-      },
-      {
-        contaId: 4,
-        numeroConta: "2025000004",
-        titular: "Ana Costa",
-        usuarioProprietario: "cliente4",
-        usuarioProprietarioId: 5
-      },
-      {
-        contaId: 5,
-        numeroConta: "2025000005",
-        titular: "Carlos Silva",
-        usuarioProprietario: "cliente5",
-        usuarioProprietarioId: 6
-      },
-      {
-        contaId: 6,
-        numeroConta: "2025000006",
-        titular: "Fernanda Lima",
-        usuarioProprietario: "cliente6",
-        usuarioProprietarioId: 7
-      },
-      {
-        contaId: 7,
-        numeroConta: "2025000007",
-        titular: "Roberto Ferreira",
-        usuarioProprietario: "cliente7",
-        usuarioProprietarioId: 8
-      },
-      {
-        contaId: 8,
-        numeroConta: "2025000008",
-        titular: "Juliana Alves",
-        usuarioProprietario: "cliente8",
-        usuarioProprietarioId: 9
+      if (!conta) {
+        console.log('❌ Conta não encontrada na lista');
+        throw new Error('Conta não encontrada');
       }
-    ];
 
-    const conta = contasMock.find(c => c.numeroConta === numeroConta);
-
-    if (!conta) {
-      throw new Error('Conta não encontrada');
+      console.log('✅ Conta encontrada:', conta);
+      return conta;
+    } catch (error: any) {
+      console.error('🚨 Erro ao buscar conta:', error);
+      if (error.message) {
+        throw new Error(error.message);
+      } else {
+        throw new Error('Erro inesperado ao buscar conta. Tente novamente.');
+      }
     }
-
-    return conta;
   }
 
   /**
    * Realiza uma transferência entre contas
-   * 
-   * INTEGRAÇÃO BACKEND - INFORMAÇÕES PARA IMPLEMENTAÇÃO FUTURA:
    * 
    * Endpoint: POST /operacoes/transferencia
    * Headers: 
@@ -501,63 +459,16 @@ class OperacoesService {
    * }
    */
   async realizarTransferencia(request: TransferenciaRequest): Promise<TransferenciaResponse> {
-    // Simular delay de rede
-    await this.delay(1500);
-
-    // Buscar dados das contas para resposta realista
-    const contasMock = [
-      { contaId: 1, numeroConta: "2025000001", titular: "João Silva", usuarioProprietario: "cliente_teste", usuarioProprietarioId: 2 },
-      { contaId: 2, numeroConta: "2025000002", titular: "Maria Santos", usuarioProprietario: "cliente2", usuarioProprietarioId: 3 },
-      { contaId: 3, numeroConta: "2025000003", titular: "Pedro Oliveira", usuarioProprietario: "cliente3", usuarioProprietarioId: 4 },
-      { contaId: 4, numeroConta: "2025000004", titular: "Ana Costa", usuarioProprietario: "cliente4", usuarioProprietarioId: 5 },
-      { contaId: 5, numeroConta: "2025000005", titular: "Carlos Silva", usuarioProprietario: "cliente5", usuarioProprietarioId: 6 },
-      { contaId: 6, numeroConta: "2025000006", titular: "Fernanda Lima", usuarioProprietario: "cliente6", usuarioProprietarioId: 7 },
-      { contaId: 7, numeroConta: "2025000007", titular: "Roberto Ferreira", usuarioProprietario: "cliente7", usuarioProprietarioId: 8 },
-      { contaId: 8, numeroConta: "2025000008", titular: "Juliana Alves", usuarioProprietario: "cliente8", usuarioProprietarioId: 9 }
-    ];
-
-    const contaOrigem = contasMock.find(c => c.contaId === request.contaOrigemId);
-    const contaDestino = contasMock.find(c => c.contaId === request.contaDestinoId);
-
-    if (!contaOrigem) {
-      throw new Error('Conta de origem não encontrada');
+    try {
+      const response = await httpClient.post<TransferenciaResponse>('/operacoes/transferencia', request);
+      return response;
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
+      } else {
+        throw new Error('Erro inesperado ao realizar transferência. Tente novamente.');
+      }
     }
-
-    if (!contaDestino) {
-      throw new Error('Conta de destino não encontrada');
-    }
-
-    // Simular resposta realista do backend
-    const response: TransferenciaResponse = {
-      contaDestino: {
-        contaId: contaDestino.contaId,
-        numeroConta: contaDestino.numeroConta,
-        titular: contaDestino.titular,
-        usuarioProprietario: contaDestino.usuarioProprietario,
-        usuarioProprietarioId: contaDestino.usuarioProprietarioId,
-        saldo: null
-      },
-      contaOrigem: {
-        contaId: contaOrigem.contaId,
-        numeroConta: contaOrigem.numeroConta,
-        titular: contaOrigem.titular,
-        usuarioProprietario: contaOrigem.usuarioProprietario,
-        usuarioProprietarioId: contaOrigem.usuarioProprietarioId,
-        saldo: null
-      },
-      dados: {
-        operacao: {
-          valor: request.valor,
-          dataHora: new Date().toISOString(),
-          status: "CONCLUIDA",
-          tipo: "TRANSFERENCIA"
-        }
-      },
-      message: "Transferência realizada com sucesso",
-      timestamp: new Date().toISOString()
-    };
-
-    return response;
   }
 
   /**
@@ -871,6 +782,101 @@ class OperacoesService {
       return response;
     }
   }
+
+  /**
+   * Busca todas as contas disponíveis no sistema
+   * 
+   * Endpoint: GET /contas-disponiveis
+   * Headers: 
+   *   - Authorization: Bearer {token}
+   * 
+   * Response:
+   * {
+   *   "dados": {
+   *     "totalContas": 5,
+   *     "contas": [...]
+   *   },
+   *   "message": "Contas disponíveis listadas com sucesso",
+   *   "timestamp": "2025-07-07T23:23:06.114731897"
+   * }
+   */
+  /**
+   * Busca todas as contas disponíveis no sistema
+   * 
+   * Para admin: GET /contas/todas-contas
+   * Para cliente: Usa dados mockados das contas principais do sistema
+   * 
+   * Na prática, um cliente não precisa ver todas as contas do sistema.
+   * Ele deve saber o número da conta de destino para fazer a transferência.
+   */
+  async buscarContasDisponiveis(): Promise<ContasDisponiveisResponse> {
+    console.log('🔍 Iniciando busca por contas disponíveis...');
+    
+    try {
+      console.log('🌐 Tentando endpoint de admin: GET /contas/todas-contas');
+      const response = await httpClient.get<ContasDisponiveisResponse>('/contas/todas-contas');
+      console.log('✅ Sucesso ao buscar contas via API:', response);
+      return response;
+    } catch (error: any) {
+      console.log('⚠️ Endpoint admin não acessível, usando estratégia para cliente comum');
+      console.log('Erro detalhado:', error);
+      
+      // Para clientes comuns, vamos usar um conjunto limitado de contas conhecidas
+      // Na prática, o cliente vai digitar o número da conta e o sistema vai validar
+      const mockResponse: ContasDisponiveisResponse = {
+        dados: {
+          totalContas: 5,
+          contas: [
+            {
+              contaId: 1,
+              numeroConta: "2025000001",
+              titular: "João Silva",
+              usuarioProprietario: "cliente",
+              usuarioProprietarioId: 2
+            },
+            {
+              contaId: 2,
+              numeroConta: "2025000002",
+              titular: "Maria Santos",
+              usuarioProprietario: "cliente2",
+              usuarioProprietarioId: 3
+            },
+            {
+              contaId: 3,
+              numeroConta: "2025000003",
+              titular: "Pedro Oliveira",
+              usuarioProprietario: "cliente3",
+              usuarioProprietarioId: 4
+            },
+            {
+              contaId: 4,
+              numeroConta: "2025000004",
+              titular: "Ana Costa",
+              usuarioProprietario: "cliente4",
+              usuarioProprietarioId: 5
+            },
+            {
+              contaId: 5,
+              numeroConta: "2025000005",
+              titular: "Carlos Silva",
+              usuarioProprietario: "cliente5",
+              usuarioProprietarioId: 6
+            }
+          ]
+        },
+        message: "Contas disponíveis para transferência",
+        timestamp: new Date().toISOString()
+      };
+      
+      console.log('📋 Retornando dados mock:', mockResponse);
+      
+      // Simular delay da rede
+      await this.delay(500);
+      return mockResponse;
+    }
+  }
+
+
 
   private delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));

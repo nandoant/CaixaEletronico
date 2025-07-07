@@ -2,7 +2,7 @@
 export class HttpClient {
   private baseURL: string;
 
-  constructor(baseURL: string = process.env.REACT_APP_API_URL || 'http://localhost:8080/api') {
+  constructor(baseURL: string = process.env.REACT_APP_API_URL || 'http://localhost:8080') {
     this.baseURL = baseURL;
   }
 
@@ -20,7 +20,11 @@ export class HttpClient {
   }
 
   async get<T>(endpoint: string): Promise<T> {
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
+    const url = `${this.baseURL}${endpoint}`;
+    console.log('🌐 GET Request:', url);
+    console.log('📋 Headers:', this.getAuthHeaders());
+    
+    const response = await fetch(url, {
       method: 'GET',
       headers: this.getAuthHeaders(),
     });
@@ -58,6 +62,9 @@ export class HttpClient {
   }
 
   private async handleResponse<T>(response: Response): Promise<T> {
+    console.log('📡 Response status:', response.status, response.statusText);
+    console.log('📡 Response URL:', response.url);
+    
     if (response.status === 401) {
       // Token expirado ou inválido - fazer logout
       localStorage.removeItem('authToken');
@@ -69,14 +76,18 @@ export class HttpClient {
       let errorMessage = 'Erro na requisição';
       try {
         const errorData = await response.json();
+        console.log('🚨 Erro detalhado:', errorData);
         errorMessage = errorData.message || errorMessage;
       } catch {
         // Se não conseguir parsear o JSON, usa a mensagem padrão
+        console.log('🚨 Erro sem JSON, status:', response.status);
       }
       throw new Error(errorMessage);
     }
 
-    return await response.json();
+    const data = await response.json();
+    console.log('✅ Response data:', data);
+    return data;
   }
 }
 
