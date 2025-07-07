@@ -296,4 +296,165 @@ public interface PagamentoControllerApi {
         
         Authentication authentication
     );
+    
+    @Operation(
+        summary = "Listar pagamentos recebidos",
+        description = "Retorna todos os pagamentos agendados que uma conta específica está recebendo de outras contas.",
+        tags = {"Pagamentos"}
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Lista de pagamentos recebidos obtida com sucesso",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = Object.class),
+                examples = @ExampleObject(
+                    value = """
+                    {
+                        "contaId": 1,
+                        "pagamentosRecebidos": [
+                            {
+                                "id": 5,
+                                "contaOrigemId": 2,
+                                "contaDestinoId": 1,
+                                "valorTotal": 500.00,
+                                "valorParcela": 100.00,
+                                "quantidadeParcelas": 5,
+                                "parcelasRestantes": 3,
+                                "periodicidadeDias": 30,
+                                "dataProximaExecucao": "2025-08-07",
+                                "status": "ATIVO",
+                                "descricao": "Pagamento mensalidade"
+                            }
+                        ]
+                    }
+                    """
+                )
+            )
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Conta não encontrada ou não autorizada",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    value = """
+                    {
+                        "error": "Conta não encontrada ou não autorizada"
+                    }
+                    """
+                )
+            )
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Token de autenticação inválido",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    value = """
+                    {
+                        "error": "Acesso negado"
+                    }
+                    """
+                )
+            )
+        )
+    })
+    @GetMapping("/conta/{contaId}/recebidos")
+    ResponseEntity<?> listarPagamentosRecebidos(
+        @Parameter(description = "ID da conta", required = true)
+        @PathVariable Long contaId,
+        
+        Authentication authentication
+    );
+    
+    @Operation(
+        summary = "Listar todos os pagamentos da conta",
+        description = "Retorna todos os pagamentos agendados de uma conta específica, incluindo os enviados e recebidos.",
+        tags = {"Pagamentos"}
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Lista completa de pagamentos obtida com sucesso",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = Object.class),
+                examples = @ExampleObject(
+                    value = """
+                    {
+                        "contaId": 1,
+                        "pagamentosEnviados": [
+                            {
+                                "id": 1,
+                                "contaOrigemId": 1,
+                                "contaDestinoId": 2,
+                                "valorTotal": 300.00,
+                                "valorParcela": 100.00,
+                                "quantidadeParcelas": 3,
+                                "parcelasRestantes": 2,
+                                "periodicidadeDias": 30,
+                                "dataProximaExecucao": "2025-08-07",
+                                "status": "ATIVO",
+                                "descricao": "Transferência para conta 2"
+                            }
+                        ],
+                        "pagamentosRecebidos": [
+                            {
+                                "id": 5,
+                                "contaOrigemId": 3,
+                                "contaDestinoId": 1,
+                                "valorTotal": 500.00,
+                                "valorParcela": 100.00,
+                                "quantidadeParcelas": 5,
+                                "parcelasRestantes": 3,
+                                "periodicidadeDias": 30,
+                                "dataProximaExecucao": "2025-08-07",
+                                "status": "ATIVO",
+                                "descricao": "Pagamento mensalidade"
+                            }
+                        ]
+                    }
+                    """
+                )
+            )
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Conta não encontrada ou não autorizada",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    value = """
+                    {
+                        "error": "Conta não encontrada ou não autorizada"
+                    }
+                    """
+                )
+            )
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Token de autenticação inválido",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    value = """
+                    {
+                        "error": "Acesso negado"
+                    }
+                    """
+                )
+            )
+        )
+    })
+    @GetMapping("/conta/{contaId}/todos")
+    ResponseEntity<?> listarTodosPagamentosConta(
+        @Parameter(description = "ID da conta", required = true)
+        @PathVariable Long contaId,
+        
+        Authentication authentication
+    );
 }

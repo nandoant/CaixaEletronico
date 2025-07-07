@@ -18,6 +18,11 @@ public interface PagamentoAgendadoRepository extends JpaRepository<PagamentoAgen
     
     List<PagamentoAgendado> findByContaOrigemAndStatus(Conta conta, StatusAgendamento status);
     
+    // Novos métodos para pagamentos recebidos
+    List<PagamentoAgendado> findByContaDestino(Conta conta);
+    
+    List<PagamentoAgendado> findByContaDestinoAndStatus(Conta conta, StatusAgendamento status);
+    
     @Query("SELECT p FROM PagamentoAgendado p WHERE p.status = :status AND p.dataProximaExecucao <= :data")
     List<PagamentoAgendado> findByStatusAndDataProximaExecucaoLessThanEqual(
         @Param("status") StatusAgendamento status,

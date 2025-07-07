@@ -92,6 +92,15 @@ public class PaymentScheduleService {
         return pagamentoAgendadoRepository.findByContaOrigem(conta);
     }
     
+    // Novos métodos para pagamentos recebidos
+    public List<PagamentoAgendado> obterPagamentosRecebidos(Conta conta) {
+        return pagamentoAgendadoRepository.findByContaDestino(conta);
+    }
+    
+    public List<PagamentoAgendado> obterPagamentosRecebidosAtivos(Conta conta) {
+        return pagamentoAgendadoRepository.findByContaDestinoAndStatus(conta, StatusAgendamento.ATIVO);
+    }
+    
     // Novo método para criar transferência agendada
     public PagamentoAgendado criarTransferenciaAgendada(Conta contaOrigem, Conta contaDestino,
                                                        BigDecimal valorTotal, Integer quantidadeParcelas,

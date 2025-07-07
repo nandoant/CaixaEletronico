@@ -159,6 +159,86 @@ public class PagamentoController implements PagamentoControllerApi {
         }
     }
     
+    @GetMapping("/conta/{contaId}/recebidos")
+    public ResponseEntity<?> listarPagamentosRecebidos(
+            @PathVariable Long contaId,
+            Authentication authentication) {
+        try {
+            CustomUserDetailsService.CustomUserPrincipal principal = 
+                (CustomUserDetailsService.CustomUserPrincipal) authentication.getPrincipal();
+            Usuario usuario = principal.getUsuario();
+            
+            Conta conta = contaRepository.findById(contaId)
+                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+            
+            // Verifica se a conta pertence ao usuário
+            if (!conta.getUsuario().getId().equals(usuario.getId())) {
+                throw new RuntimeException("Acesso negado: você não tem permissão para acessar esta conta");
+            }
+            
+            List<PagamentoAgendado> pagamentosRecebidos = paymentScheduleService.obterPagamentosRecebidos(conta);
+            
+            // Converter para DTO para evitar problemas de serialização
+            List<PagamentoAgendadoDTO> pagamentosDTO = pagamentosRecebidos.stream()
+                .map(this::convertToDTO)
+                .toList();
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("contaId", conta.getId());
+            response.put("pagamentosRecebidos", pagamentosDTO);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+    
+    @GetMapping("/conta/{contaId}/todos")
+    public ResponseEntity<?> listarTodosPagamentosConta(
+            @PathVariable Long contaId,
+            Authentication authentication) {
+        try {
+            CustomUserDetailsService.CustomUserPrincipal principal = 
+                (CustomUserDetailsService.CustomUserPrincipal) authentication.getPrincipal();
+            Usuario usuario = principal.getUsuario();
+            
+            Conta conta = contaRepository.findById(contaId)
+                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+            
+            // Verifica se a conta pertence ao usuário
+            if (!conta.getUsuario().getId().equals(usuario.getId())) {
+                throw new RuntimeException("Acesso negado: você não tem permissão para acessar esta conta");
+            }
+            
+            List<PagamentoAgendado> pagamentosEnviados = paymentScheduleService.obterTodosPagamentos(conta);
+            List<PagamentoAgendado> pagamentosRecebidos = paymentScheduleService.obterPagamentosRecebidos(conta);
+            
+            // Converter para DTO para evitar problemas de serialização
+            List<PagamentoAgendadoDTO> pagamentosEnviadosDTO = pagamentosEnviados.stream()
+                .map(this::convertToDTO)
+                .toList();
+            
+            List<PagamentoAgendadoDTO> pagamentosRecebidosDTO = pagamentosRecebidos.stream()
+                .map(this::convertToDTO)
+                .toList();
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("contaId", conta.getId());
+            response.put("pagamentosEnviados", pagamentosEnviadosDTO);
+            response.put("pagamentosRecebidos", pagamentosRecebidosDTO);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+    
     @PostMapping("/{id}/cancelar")
     public ResponseEntity<?> cancelarPagamento(
             @PathVariable Long id,
