@@ -55,12 +55,7 @@ const ExtratoPage: React.FC = () => {
   };
 
   const buscarExtrato = async () => {
-    console.log("🔍 Iniciando busca do extrato...");
-    console.log("📊 Dados da conta:", conta);
-    console.log("🔧 Filtros:", filtros);
-
     if (!conta?.contaId) {
-      console.error("❌ ContaId não disponível:", conta);
       setError("Dados da conta não disponíveis.");
       return;
     }
@@ -89,28 +84,20 @@ const ExtratoPage: React.FC = () => {
         conta.contaId,
         filtros
       );
-      console.log("✅ Resposta do extrato:", response);
       setExtratoData(response);
     } catch (err) {
-      console.error("❌ Erro ao buscar extrato:", err);
       setError("Erro ao carregar extrato. Tente novamente.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Carregar extrato automaticamente quando as datas estiverem definidas
   useEffect(() => {
-    console.log("🔄 UseEffect do extrato executado:");
-    console.log("  - dataInicio:", filtros.dataInicio);
     console.log("  - dataFim:", filtros.dataFim);
     console.log("  - contaId:", conta?.contaId);
 
     if (filtros.dataInicio && filtros.dataFim && conta?.contaId) {
-      console.log("✅ Condições atendidas, buscando extrato...");
       buscarExtrato();
-    } else {
-      console.log("⚠️ Condições não atendidas para buscar extrato");
     }
   }, [filtros.dataInicio, filtros.dataFim, conta?.contaId]);
 

@@ -1,7 +1,6 @@
 import { DepositoRequest, DepositoResponse, SaqueRequest, SaqueOpcoesResponse, SaqueConfirmacaoRequest, SaqueResponse, ExtratoRequest, ExtratoResponse, ExtratoOperacao, EnviarExtratoEmailRequest, TransferenciaRequest, TransferenciaResponse, ContaInfo, ContasDisponiveisResponse, AgendamentoRequest, AgendamentoResponse, AgendamentoListItem, CancelamentoResponse, SaldoResponse, ExtratoFiltros, ExtratoNovoResponse, ExtratoBackendResponse } from '../types/operacoes';
 import { httpClient } from './httpClient';
 
-
 export interface PagamentoAgendado {
   id: number;
   contaOrigemId: number;
@@ -38,24 +37,17 @@ class OperacoesService {
 
   async solicitarOpcoesSaque(dados: SaqueRequest): Promise<SaqueOpcoesResponse> {
     try {
-      if (dados.valor % 10 !== 0) {
-        throw new Error('O valor deve ser múltiplo de R$ 10,00');
+      if (!dados.contaId || !dados.valor || dados.valor <= 0) {
+        throw new Error('Conta e valor são obrigatórios para solicitar opções de saque');
       }
 
-      if (dados.valor <= 0) {
-        throw new Error('O valor deve ser maior que zero');
-      }
-
-      const response = await httpClient.get<SaqueOpcoesResponse>(
-        `/operacoes/saque/opcoes?contaId=${dados.contaId}&valor=${dados.valor}`
-      );
-
+      const response = await httpClient.post<SaqueOpcoesResponse>('/operacoes/saque/opcoes', dados);
       return response;
     } catch (error: any) {
       if (error.message) {
         throw new Error(error.message);
       } else {
-        throw new Error('Erro inesperado ao buscar opções de saque. Tente novamente.');
+        throw new Error('Erro inesperado ao solicitar opções de saque. Tente novamente.');
       }
     }
   }
@@ -104,7 +96,7 @@ class OperacoesService {
       {
         id: 12,
         tipo: 'SAQUE',
-        dataHora: '2025-07-04T18:20:45.345678',
+        dataHora: '2025-07-04T11:22:44.456789',
         valor: 150,
         usuarioResponsavel: 'cliente',
         descricao: 'Saque no caixa eletrônico'
@@ -112,51 +104,41 @@ class OperacoesService {
       {
         id: 11,
         tipo: 'DEPOSITO',
-        dataHora: '2025-07-03T11:30:15.567890',
+        dataHora: '2025-07-03T08:05:55.321654',
         valor: 300,
         usuarioResponsavel: 'cliente',
         descricao: 'Depósito em cheque'
-      },
-      {
-        id: 10,
-        tipo: 'SAQUE',
-        dataHora: '2025-07-02T20:10:30.234567',
-        valor: 80,
-        usuarioResponsavel: 'cliente',
-        descricao: 'Saque no caixa eletrônico'
-      },
-      {
-        id: 9,
-        tipo: 'DEPOSITO',
-        dataHora: '2025-07-01T15:45:20.890123',
-        valor: 750,
-        usuarioResponsavel: 'cliente',
-        descricao: 'Depósito em dinheiro'
       }
     ];
 
-    const response: ExtratoResponse = {
+    const extratoFiltrado = operacoesMock.filter(op => {
+      const dataOp = new Date(op.dataHora);
+      const dataInicio = new Date(dados.dataInicio);
+      const dataFim = new Date(dados.dataFim);
+      
+      return dataOp >= dataInicio && dataOp <= dataFim;
+    }).slice(0, dados.limite);
+
+    return {
       dados: {
         periodo: {
-          dataInicio: `${dados.dataInicio}T00:00:00`,
-          dataFim: `${dados.dataFim}T23:59:59`
+          dataInicio: dados.dataInicio,
+          dataFim: dados.dataFim
         },
-        operacoes: operacoesMock.slice(0, dados.limite),
-        totalOperacoes: operacoesMock.length
+        operacoes: extratoFiltrado,
+        totalOperacoes: extratoFiltrado.length
       },
       conta: {
         contaId: 1,
-        numeroConta: '2025000001',
-        titular: 'João Silva',
-        usuarioProprietario: 'cliente',
-        usuarioProprietarioId: dados.id,
-        saldo: 4860
+        numeroConta: "123456",
+        titular: "Mock User",
+        usuarioProprietario: "mockuser",
+        usuarioProprietarioId: 1,
+        saldo: 1000
       },
-      message: 'Extrato obtido com sucesso',
+      message: "Extrato gerado com sucesso",
       timestamp: new Date().toISOString()
     };
-
-    return response;
   }
 
   async enviarExtratoPorEmail(dados: EnviarExtratoEmailRequest): Promise<{ success: boolean; message: string }> {
@@ -208,28 +190,25 @@ class OperacoesService {
   }
 
   async criarAgendamento(request: AgendamentoRequest): Promise<AgendamentoResponse> {
-    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080';
     const token = localStorage.getItem('authToken');
-    
-    if (!token) {
-      throw new Error('Nenhum token de autenticação encontrado. Faça login novamente.');
-    }
 
     if (token) {
       try {
         const tokenParts = token.split('.');
+
         if (tokenParts.length === 3) {
           const payload = JSON.parse(atob(tokenParts[1]));
+
           if (payload.exp && payload.exp * 1000 < Date.now()) {
             throw new Error('Token expirado. Faça login novamente.');
           }
         }
       } catch (tokenError) {
-        throw new Error('Token inválido. Faça login novamente.');
+        console.error('Erro ao decodificar token:', tokenError);
       }
+    } else {
+      throw new Error('Nenhum token de autenticação encontrado. Faça login novamente.');
     }
-
-    const fullUrl = `${apiUrl}/operacoes/agendamento`;
 
     try {
       try {
@@ -240,7 +219,7 @@ class OperacoesService {
           throw new Error(`Conta de destino ID ${request.contaDestinoId} não encontrada`);
         }
       } catch (validationError: any) {
-        // Continue with the request anyway
+        console.warn('Não foi possível validar conta de destino:', validationError.message);
       }
 
       const response = await httpClient.post<AgendamentoResponse>('/pagamentos/agendar', request);
@@ -321,7 +300,6 @@ class OperacoesService {
     }
 
     const valorParcela = request.valorTotal / request.quantidadeParcelas;
-
     const valorDebitadoAgora = request.debitarPrimeiraParcela ? valorParcela : 0;
 
     const dataInicio = new Date(request.dataInicio);
@@ -529,6 +507,64 @@ class OperacoesService {
     }
   }
 
+  async testarPermissoes(): Promise<{ [key: string]: boolean }> {
+    const resultados: { [key: string]: boolean } = {};
+
+    const endpoints = [
+      { nome: 'buscarContasDisponiveis', metodo: () => this.buscarContasDisponiveis() },
+      { nome: 'consultarSaldo', metodo: () => this.consultarSaldo(1) },
+      { nome: 'listarAgendamentos', metodo: () => this.listarAgendamentos() },
+      {
+        nome: 'realizarTransferencia',
+        metodo: () => this.realizarTransferencia({ contaOrigemId: 1, contaDestinoId: 2, valor: 0.01 }),
+        nota: 'Teste com valor mínimo - pode falhar por regras de negócio'
+      },
+    ];
+
+    for (const endpoint of endpoints) {
+      try {
+        await endpoint.metodo();
+        resultados[endpoint.nome] = true;
+      } catch (error: any) {
+        resultados[endpoint.nome] = false;
+      }
+    }
+
+    const sucessos = Object.values(resultados).filter(Boolean).length;
+    const total = Object.keys(resultados).length;
+
+    return resultados;
+  }
+
+  async testarAgendamentoMinimo(): Promise<boolean> {
+    try {
+      const contasDisponiveis = await this.buscarContasDisponiveis();
+      if (contasDisponiveis.dados.contas.length < 2) {
+        throw new Error('Precisa de pelo menos 2 contas no sistema para testar agendamento');
+      }
+
+      const contaUsuario = contasDisponiveis.dados.contas[0];
+      const contaDestino = contasDisponiveis.dados.contas[1];
+
+      const requestTeste: AgendamentoRequest = {
+        contaDestinoId: contaDestino.contaId,
+        valorTotal: 0.01,
+        quantidadeParcelas: 1,
+        periodicidadeDias: 30,
+        debitarPrimeiraParcela: false,
+        descricao: 'TESTE - Agendamento de diagnóstico',
+        dataInicio: new Date().toISOString().split('T')[0]
+      };
+
+      const response = await httpClient.post<AgendamentoResponse>('/pagamentos/agendar', requestTeste);
+
+      return true;
+
+    } catch (error: any) {
+      return false;
+    }
+  }
+
   async listarPagamentosAgendados(contaId: number): Promise<PagamentosAgendadosResponse> {
     try {
       const response = await httpClient.get<PagamentosAgendadosResponse>(`/pagamentos/conta/${contaId}/todos`);
@@ -572,6 +608,7 @@ class OperacoesService {
       throw new Error(`Erro ao carregar extrato: ${error instanceof Error ? error.message : 'Erro desconhecido'}. Verifique se o backend está rodando e o endpoint está implementado.`);
     }
   }
+
   private delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }

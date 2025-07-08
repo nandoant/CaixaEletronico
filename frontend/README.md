@@ -2,7 +2,7 @@
 
 Este é o frontend da aplicação de Caixa Eletrônico, desenvolvido em React com TypeScript e Material-UI.
 
-## 🛠️ Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
 - **React 18** com TypeScript
 - **Material-UI (MUI)** para componentes visuais
@@ -11,7 +11,7 @@ Este é o frontend da aplicação de Caixa Eletrônico, desenvolvido em React co
 - **React Hook Form** para formulários
 - **Axios** para requisições HTTP
 
-## 🏗️ Estrutura do Projeto
+## Estrutura do Projeto
 
 ```
 src/
@@ -30,7 +30,7 @@ src/
 └── services/           # Serviços de API (a implementar)
 ```
 
-## 🚀 Como Executar
+## Como Executar
 
 ### Com Docker (Recomendado)
 
@@ -62,7 +62,7 @@ npm start
 npm run build
 ```
 
-## 🔧 Configuração
+## Configuração
 
 ### Variáveis de Ambiente
 
@@ -74,7 +74,7 @@ npm run build
 - `.env.development` - Variáveis para desenvolvimento
 - `.env.production` - Variáveis para produção
 
-## 🎯 Páginas Disponíveis
+## Páginas Disponíveis
 
 1. **Login/Registro** (`/login`, `/register`)
 2. **Dashboard** (`/dashboard`) - Visão geral da conta
@@ -83,7 +83,7 @@ npm run build
 5. **Saldo** (`/saldo`) - Consulta de saldo
 6. **Agendamentos** (`/agendamentos`) - Pagamentos agendados
 
-## 🔗 Integração com Backend
+## Integração com Backend
 
 O frontend está preparado para consumir os seguintes endpoints:
 
@@ -98,7 +98,7 @@ O frontend está preparado para consumir os seguintes endpoints:
 - `POST /pagamentos/agendar` - Agendar pagamento
 - E mais...
 
-## 🐳 Docker
+## Docker
 
 ### Desenvolvimento
 ```bash

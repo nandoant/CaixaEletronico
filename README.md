@@ -1,11 +1,11 @@
-# 🏦 Sistema Caixa Eletrônico - Full Stack
+# Sistema Caixa Eletrônico - Full Stack
 
 Sistema completo de caixa eletrônico com backend Spring Boot e frontend React.<br><br>
 **Alunos**
 - Fernando Antonio
 - Michely Serras
 
-## 📁 Estrutura do Projeto
+## Estrutura do Projeto
 
 ```
 CaixaEletronico/
@@ -21,7 +21,7 @@ CaixaEletronico/
 ├── docker-compose.dev.yml # Desenvolvimento
 ```
 
-## 🛠️ Stack Tecnológica
+## Stack Tecnológica
 
 ### Backend
 - **Java 17** + **Spring Boot 3**
@@ -37,7 +37,7 @@ CaixaEletronico/
 - **React Query** para gerenciamento de estado
 - **Axios** para requisições HTTP
   
-## 🌐 URLs de Acesso
+## URLs de Acesso
 
 | Serviço | URL | Descrição |
 |---------|-----|-----------|
@@ -46,7 +46,7 @@ CaixaEletronico/
 | Swagger UI | http://localhost:8080/swagger-ui.html | Documentação da API |
 | Banco de Dados | localhost:5432 | PostgreSQL |
 
-## 🐳 Docker
+## Docker
 
 ### Variáveis de Ambiente
 
@@ -64,7 +64,7 @@ CaixaEletronico/
 - `postgres_data`: Dados persistentes do PostgreSQL
 - Hot reload para desenvolvimento
 
-## 📖 Documentação Adicional
+## Documentação Adicional
 
 - [Backend README](./backend/README.md) - Documentação detalhada da API
 - [Frontend README](./frontend/README.md) - Documentação do React app

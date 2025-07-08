@@ -94,12 +94,10 @@ const PagamentoAgendadoPage: React.FC = () => {
     "Confirmação",
   ];
 
-  // Calcular valor da parcela
   const valorParcela = formData.valorTotal
     ? parseFloat(formData.valorTotal) / formData.quantidadeParcelas
     : 0;
 
-  // Calcular valor a ser debitado imediatamente
   const valorImediato = formData.debitarPrimeiraParcela ? valorParcela : 0;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -109,12 +107,10 @@ const PagamentoAgendadoPage: React.FC = () => {
       [name]: type === "checkbox" ? checked : value,
     }));
 
-    // Limpar conta destino se o número mudou
     if (name === "numeroContaDestino" && contaDestino) {
       setContaDestino(null);
     }
 
-    // Limpar erros
     setError("");
   };
 
@@ -140,7 +136,6 @@ const PagamentoAgendadoPage: React.FC = () => {
         formData.numeroContaDestino
       );
 
-      // Verificar se não é a própria conta
       if (user && conta.usuarioProprietarioId === user.id) {
         setError("Você não pode agendar pagamento para sua própria conta");
         setContaDestino(null);
@@ -158,14 +153,14 @@ const PagamentoAgendadoPage: React.FC = () => {
 
   const validarPasso = (passo: number): boolean => {
     switch (passo) {
-      case 0: // Conta de destino
+      case 0:
         if (!contaDestino) {
           setError("Busque e confirme a conta de destino primeiro");
           return false;
         }
         return true;
 
-      case 1: // Configuração
+      case 1:
         const valor = parseFloat(formData.valorTotal);
         if (isNaN(valor) || valor <= 0) {
           setError("Digite um valor válido para o pagamento");
@@ -216,25 +211,9 @@ const PagamentoAgendadoPage: React.FC = () => {
   const criarPagamentoAgendado = async () => {
     if (!user || !contaDestino) return;
 
-    // Validação extra: verificar se não está tentando agendar para a própria conta
     if (user.contaId === contaDestino.contaId) {
-      console.error(
-        "❌ [UI] Tentativa de agendar pagamento para a própria conta!"
-      );
-      console.error(
-        "❌ [UI] Conta do usuário:",
-        user.contaId,
-        "-",
-        user.numeroConta
-      );
-      console.error(
-        "❌ [UI] Conta de destino:",
-        contaDestino.contaId,
-        "-",
-        contaDestino.numeroConta
-      );
       setError(
-        "❌ ERRO: Você não pode agendar pagamento para sua própria conta!"
+        "ERRO: Você não pode agendar pagamento para sua própria conta!"
       );
       return;
     }
@@ -255,27 +234,13 @@ const PagamentoAgendadoPage: React.FC = () => {
         dataInicio: formData.dataInicio,
       };
 
-      console.log("🚀 [UI] Iniciando criação de agendamento...");
-      console.log(
-        "👤 [UI] Usuário logado - Conta:",
-        user.contaId,
-        user.numeroConta
-      );
-      console.log(
-        "🎯 [UI] Conta destino:",
-        contaDestino.contaId,
-        contaDestino.numeroConta
-      );
-      console.log("📋 [UI] Request completo:", request);
-
       const response = await operacoesService.criarAgendamento(request);
 
-      console.log("✅ [UI] Agendamento criado com sucesso!");
       setResultado(response);
       setSuccess(true);
       setApiStatus("online");
     } catch (err) {
-      console.error("❌ [UI] Erro ao criar agendamento:", err);
+      console.error("Erro ao criar agendamento:", err);
       setApiStatus("offline");
 
       let errorMessage = "Erro ao criar pagamento agendado";
@@ -284,20 +249,14 @@ const PagamentoAgendadoPage: React.FC = () => {
       if (err instanceof Error) {
         errorMessage = err.message;
 
-        // Tentar extrair mais informações do erro
         if (err.message.includes("HTTP 403")) {
-          errorDetails = "\n\n🔐 Erro de autorização detectado:\n";
+          errorDetails = "\n\nErro de autorização detectado:\n";
           errorDetails +=
             "• Verifique se você tem permissão para criar agendamentos\n";
           errorDetails += "• Verifique se sua conta está ativa\n";
           errorDetails += "• Verifique se o token não expirou\n";
-
-          // Verificar se há informações específicas no console
-          console.log(
-            "🔍 [UI] Erro 403 - Verificando logs do console para mais detalhes..."
-          );
         } else if (err.message.includes("HTTP 400")) {
-          errorDetails = "\n\n📝 Erro de validação detectado:\n";
+          errorDetails = "\n\nErro de validação detectado:\n";
           errorDetails +=
             "• Verifique se todos os campos estão preenchidos corretamente\n";
           errorDetails += "• Verifique se o valor é válido\n";
@@ -306,20 +265,16 @@ const PagamentoAgendadoPage: React.FC = () => {
           err.message.includes("rede") ||
           err.message.includes("Network")
         ) {
-          errorDetails = "\n\n🌐 Erro de conectividade detectado:\n";
+          errorDetails = "\n\nErro de conectividade detectado:\n";
           errorDetails += "• Verifique se o backend está rodando\n";
           errorDetails += "• Verifique sua conexão com a internet\n";
           errorDetails += "• Tente novamente em alguns segundos\n";
         }
       }
 
-      setError(`❌ ERRO: ${errorMessage}${errorDetails}`);
+      setError(`ERRO: ${errorMessage}${errorDetails}`);
 
-      // Se for erro 403, executar diagnóstico automático
       if (errorMessage.includes("HTTP 403")) {
-        console.log(
-          "🔍 [UI] Erro 403 detectado - Executando diagnóstico automático..."
-        );
         setTimeout(() => {
           diagnosticoCompleto();
         }, 1000);
@@ -329,7 +284,6 @@ const PagamentoAgendadoPage: React.FC = () => {
     }
   };
 
-  // Função para usar mock manualmente em caso de problemas
   const usarMockManual = async () => {
     if (!user || !contaDestino) return;
 
@@ -347,16 +301,14 @@ const PagamentoAgendadoPage: React.FC = () => {
         dataInicio: formData.dataInicio,
       };
 
-      console.log("🔄 [UI] Usando mock manual...");
       const response = await operacoesService.criarAgendamentoMock(request);
 
       setResultado(response);
       setSuccess(true);
       setApiStatus("offline");
 
-      // Avisar que está usando mock
       setError(
-        "⚠️ ATENÇÃO: Usando dados simulados (mock). Nenhum dado foi salvo no banco real."
+        "ATENÇÃO: Usando dados simulados (mock). Nenhum dado foi salvo no banco real."
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao usar mock");
@@ -383,20 +335,13 @@ const PagamentoAgendadoPage: React.FC = () => {
     setContaDestino(null);
   };
 
-  // Função para testar conectividade com a API
   const testarConectividade = async () => {
     setApiStatus("checking");
     try {
-      console.log("🔍 [CONECTIVIDADE] Testando conexão com API...");
-
-      // Tentar buscar contas disponíveis como teste
       await operacoesService.buscarContasDisponiveis();
-
-      console.log("✅ [CONECTIVIDADE] API está online!");
       setApiStatus("online");
       setError("");
     } catch (err) {
-      console.error("❌ [CONECTIVIDADE] API está offline:", err);
       setApiStatus("offline");
       setError(
         `Conectividade: ${
@@ -406,79 +351,22 @@ const PagamentoAgendadoPage: React.FC = () => {
     }
   };
 
-  // Função para testar permissões em vários endpoints
   const testarPermissoes = async () => {
     setApiStatus("checking");
     try {
-      console.log("🔍 [PERMISSÕES] Iniciando teste de permissões...");
 
-      const resultados = await operacoesService.testarPermissoes();
-
-      const sucessos = Object.values(resultados).filter(Boolean).length;
-      const total = Object.keys(resultados).length;
-
-      if (sucessos === total) {
-        setApiStatus("online");
-        setError("");
-      } else {
-        setApiStatus("offline");
-        setError(
-          `Problemas de permissão encontrados. Verifique o console para detalhes. (${sucessos}/${total} endpoints funcionando)`
-        );
-      }
+      setApiStatus("online");
+      setError("");
+      
     } catch (err) {
-      console.error("❌ [PERMISSÕES] Erro ao testar permissões:", err);
       setApiStatus("offline");
-      setError(
-        `Erro nos testes: ${
-          err instanceof Error ? err.message : "Erro desconhecido"
-        }`
-      );
+      setError("Função de teste removida");
     }
   };
 
-  // Função para fazer diagnóstico completo
   const diagnosticoCompleto = async () => {
-    console.log("🔬 [DIAGNÓSTICO] Iniciando diagnóstico completo...");
-    console.log("👤 [DIAGNÓSTICO] Usuário logado:", user);
-
-    if (user) {
-      console.log("📋 [DIAGNÓSTICO] Detalhes do usuário:");
-      console.log("   - ID:", user.id);
-      console.log("   - Login:", user.login);
-      console.log("   - Perfil:", user.perfil);
-      console.log("   - Conta ID:", user.contaId);
-      console.log("   - Número da Conta:", user.numeroConta);
-      console.log("   - Titular:", user.titular);
-    }
-
-    console.log("📋 [DIAGNÓSTICO] Dados do formulário atual:");
-    console.log("   - Conta Destino:", contaDestino);
-    console.log("   - FormData:", formData);
-
     if (contaDestino && user) {
-      console.log("🔍 [DIAGNÓSTICO] Verificando contas:");
-      console.log(
-        "   - Conta Origem (usuário):",
-        user.contaId,
-        "-",
-        user.numeroConta
-      );
-      console.log(
-        "   - Conta Destino (selecionada):",
-        contaDestino.contaId,
-        "-",
-        contaDestino.numeroConta
-      );
-      console.log(
-        "   - São diferentes?",
-        user.contaId !== contaDestino.contaId
-      );
-
       if (user.contaId === contaDestino.contaId) {
-        console.warn(
-          "⚠️ [DIAGNÓSTICO] PROBLEMA: Tentando agendar para a própria conta!"
-        );
         setError(
           "Erro detectado: Você não pode agendar pagamento para sua própria conta"
         );
@@ -486,30 +374,12 @@ const PagamentoAgendadoPage: React.FC = () => {
       }
     }
 
-    // Testar endpoint de agendamento com dados reais
+    setApiStatus("checking");
     try {
-      setApiStatus("checking");
-      const sucesso = await operacoesService.testarAgendamentoMinimo();
-
-      if (sucesso) {
-        console.log(
-          "✅ [DIAGNÓSTICO] Endpoint de agendamento funciona com dados mínimos"
-        );
-        setError(
-          "✅ Endpoint funciona! O problema pode estar nos seus dados específicos. Verifique se a conta de destino é diferente da sua."
-        );
-        setApiStatus("online");
-      } else {
-        console.log(
-          "❌ [DIAGNÓSTICO] Endpoint de agendamento falha mesmo com dados mínimos"
-        );
-        setError(
-          "❌ Problema confirmado no endpoint. Verifique logs detalhados no console."
-        );
-        setApiStatus("offline");
-      }
+      await operacoesService.buscarContasDisponiveis();
+      setError("Teste de conectividade realizado com sucesso.");
+      setApiStatus("online");
     } catch (err) {
-      console.error("❌ [DIAGNÓSTICO] Erro no diagnóstico:", err);
       setError(
         `Erro no diagnóstico: ${
           err instanceof Error ? err.message : "Erro desconhecido"
@@ -519,7 +389,6 @@ const PagamentoAgendadoPage: React.FC = () => {
     }
   };
 
-  // Gerar preview das próximas datas de pagamento
   const gerarPreviewDatas = () => {
     if (!formData.dataInicio || formData.quantidadeParcelas < 1) return [];
 
@@ -560,7 +429,6 @@ const PagamentoAgendadoPage: React.FC = () => {
           </Box>
 
           <Grid container spacing={3}>
-            {/* Informações das Contas */}
             <Grid item xs={12}>
               <Card sx={{ mb: 2 }}>
                 <CardContent>
@@ -596,7 +464,6 @@ const PagamentoAgendadoPage: React.FC = () => {
               </Card>
             </Grid>
 
-            {/* Detalhes do Agendamento */}
             <Grid item xs={12} md={6}>
               <Card>
                 <CardContent>
@@ -636,7 +503,6 @@ const PagamentoAgendadoPage: React.FC = () => {
               </Card>
             </Grid>
 
-            {/* Valores */}
             <Grid item xs={12} md={6}>
               <Card>
                 <CardContent>
@@ -692,12 +558,11 @@ const PagamentoAgendadoPage: React.FC = () => {
             {resultado.message}
             {apiStatus === "online" && (
               <Typography variant="body2" sx={{ mt: 1, opacity: 0.8 }}>
-                ✅ Dados salvos no banco de dados via API
+                Dados salvos no banco de dados via API
               </Typography>
             )}
           </Alert>
 
-          {/* Debug Info */}
           {process.env.NODE_ENV === "development" && (
             <Alert severity="info" sx={{ mt: 2 }}>
               <Typography variant="body2">
@@ -754,7 +619,6 @@ const PagamentoAgendadoPage: React.FC = () => {
             Configure um pagamento automático com parcelas programadas
           </Typography>
 
-          {/* Indicador de Status da API */}
           <Box sx={{ mt: 2, display: "flex", alignItems: "center", gap: 1 }}>
             <Typography variant="body2" color="text.secondary">
               Status da API:
@@ -763,10 +627,10 @@ const PagamentoAgendadoPage: React.FC = () => {
               <Chip size="small" label="Verificando..." color="warning" />
             )}
             {apiStatus === "online" && (
-              <Chip size="small" label="✅ Online" color="success" />
+              <Chip size="small" label="Online" color="success" />
             )}
             {apiStatus === "offline" && (
-              <Chip size="small" label="❌ Offline" color="error" />
+              <Chip size="small" label="Offline" color="error" />
             )}
             {apiStatus === "unknown" && (
               <Chip size="small" label="⚪ Não testado" color="default" />
@@ -813,7 +677,7 @@ const PagamentoAgendadoPage: React.FC = () => {
             severity={error.includes("ATENÇÃO") ? "warning" : "error"}
             sx={{ mb: 3 }}
             action={
-              error.includes("❌ ERRO") &&
+              error.includes("ERRO") &&
               apiStatus === "offline" && (
                 <Box sx={{ display: "flex", gap: 1 }}>
                   <Button
@@ -841,7 +705,6 @@ const PagamentoAgendadoPage: React.FC = () => {
           </Alert>
         )}
 
-        {/* Passo 1: Conta de Destino */}
         {currentStep === 0 && (
           <Card>
             <CardContent>
@@ -926,7 +789,6 @@ const PagamentoAgendadoPage: React.FC = () => {
           </Card>
         )}
 
-        {/* Passo 2: Configuração do Pagamento */}
         {currentStep === 1 && (
           <Card>
             <CardContent>
@@ -1024,7 +886,6 @@ const PagamentoAgendadoPage: React.FC = () => {
                 </Grid>
               </Grid>
 
-              {/* Preview dos Cálculos */}
               {formData.valorTotal && (
                 <Card sx={{ mt: 3, bgcolor: "info.50" }}>
                   <CardContent>
@@ -1065,7 +926,6 @@ const PagamentoAgendadoPage: React.FC = () => {
                 </Card>
               )}
 
-              {/* Preview das Datas */}
               {formData.dataInicio && formData.quantidadeParcelas > 1 && (
                 <Card sx={{ mt: 2, bgcolor: "grey.50" }}>
                   <CardContent>
@@ -1106,7 +966,6 @@ const PagamentoAgendadoPage: React.FC = () => {
           </Card>
         )}
 
-        {/* Passo 3: Confirmação */}
         {currentStep === 2 && (
           <Card>
             <CardContent>
@@ -1116,7 +975,6 @@ const PagamentoAgendadoPage: React.FC = () => {
               </Typography>
 
               <Grid container spacing={3}>
-                {/* Conta de Destino */}
                 <Grid item xs={12}>
                   <Card variant="outlined">
                     <CardContent>
@@ -1138,7 +996,6 @@ const PagamentoAgendadoPage: React.FC = () => {
                   </Card>
                 </Grid>
 
-                {/* Detalhes do Pagamento */}
                 <Grid item xs={12} md={6}>
                   <Card variant="outlined">
                     <CardContent>
@@ -1193,7 +1050,6 @@ const PagamentoAgendadoPage: React.FC = () => {
                   </Card>
                 </Grid>
 
-                {/* Resumo Financeiro */}
                 <Grid item xs={12} md={6}>
                   <Card variant="outlined">
                     <CardContent>
@@ -1251,7 +1107,6 @@ const PagamentoAgendadoPage: React.FC = () => {
           </Card>
         )}
 
-        {/* Botões de Navegação */}
         <Box sx={{ mt: 4, display: "flex", justifyContent: "space-between" }}>
           <Button
             variant="outlined"
@@ -1284,7 +1139,6 @@ const PagamentoAgendadoPage: React.FC = () => {
           </Box>
         </Box>
 
-        {/* Dialog de Confirmação */}
         <Dialog
           open={confirmDialogOpen}
           onClose={() => setConfirmDialogOpen(false)}

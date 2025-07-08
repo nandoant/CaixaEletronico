@@ -43,12 +43,8 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({
   const [error, setError] = useState<string | null>(null);
   const { user, isAuthenticated } = useAuth();
 
-  // Carregar dados da conta quando o usuário estiver autenticado
   useEffect(() => {
     if (isAuthenticated && user?.contaId) {
-      console.log("🔍 Trigger para carregar dados da conta - isAuthenticated:", isAuthenticated, "contaId:", user?.contaId, "accountData exists:", !!accountData);
-      
-      // Se não temos dados da conta OU se mudou o usuário, carrega os dados
       if (!accountData || accountData.contaId !== user.contaId) {
         loadAccountData();
       }
@@ -57,17 +53,14 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({
 
   const loadAccountData = async () => {
     if (!user?.contaId) {
-      console.warn("⚠️ Tentativa de carregar dados sem contaId válido");
       return;
     }
 
-    console.log("🔍 Carregando dados da conta para contaId:", user.contaId);
     setIsLoading(true);
     setError(null);
 
     try {
       const response = await operacoesService.consultarSaldo(user.contaId);
-      console.log("✅ Resposta COMPLETA do backend:", JSON.stringify(response, null, 2));
 
       const newAccountData: AccountData = {
         contaId: response.conta.contaId,
@@ -79,17 +72,13 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({
         dataUltimaConsulta: response.dados.dataConsulta,
       };
 
-      console.log("💰 Dados da conta processados:", JSON.stringify(newAccountData, null, 2));
       setAccountData(newAccountData);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Erro ao carregar dados da conta";
-      console.error("❌ Erro ao carregar dados da conta:", err);
       setError(errorMessage);
       
-      // Em caso de erro, pelo menos definir dados básicos com saldo zero
       if (user?.contaId) {
-        console.log("🔄 Definindo dados básicos após erro");
         const basicAccountData: AccountData = {
           contaId: user.contaId,
           numeroConta: user.numeroConta || "",

@@ -626,22 +626,22 @@ const AgendamentosPage: React.FC = () => {
           {agendamentoParaCancelar && (
             <Paper sx={{ p: 2, mt: 2, backgroundColor: 'grey.50' }}>
               <Typography variant="subtitle2" gutterBottom>
-                📋 <strong>Descrição:</strong> {agendamentoParaCancelar.descricao}
+                <strong>Descrição:</strong> {agendamentoParaCancelar.descricao}
               </Typography>
               <Typography variant="body2" gutterBottom>
-                👤 <strong>Para:</strong> {agendamentoParaCancelar.contaDestino.titular} ({agendamentoParaCancelar.contaDestino.numeroConta})
+                <strong>Para:</strong> {agendamentoParaCancelar.contaDestino.titular} ({agendamentoParaCancelar.contaDestino.numeroConta})
               </Typography>
               <Typography variant="body2" gutterBottom>
-                💰 <strong>Valor:</strong> {agendamentoParaCancelar.quantidadeParcelas}x de R$ {agendamentoParaCancelar.valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                <strong>Valor:</strong> {agendamentoParaCancelar.quantidadeParcelas}x de R$ {agendamentoParaCancelar.valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </Typography>
               <Typography variant="body2">
-                📅 <strong>Próximo:</strong> {new Date(agendamentoParaCancelar.dataProximaExecucao).toLocaleDateString('pt-BR')}
+                <strong>Próximo:</strong> {new Date(agendamentoParaCancelar.dataProximaExecucao).toLocaleDateString('pt-BR')}
               </Typography>
             </Paper>
           )}
           
           <Alert severity="warning" sx={{ mt: 2 }}>
-            ⚠️ Esta ação não pode ser desfeita. As parcelas futuras não serão executadas.
+            Esta ação não pode ser desfeita. As parcelas futuras não serão executadas.
           </Alert>
         </DialogContent>
         <DialogActions>

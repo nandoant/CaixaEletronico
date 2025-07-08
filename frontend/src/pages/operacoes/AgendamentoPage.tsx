@@ -548,7 +548,7 @@ const AgendamentoPage: React.FC = () => {
               <Card sx={{ mt: 3 }}>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
-                    📅 Cronograma de Parcelas
+                    Cronograma de Parcelas
                   </Typography>
                   <List dense>
                     {calcularParcelas().map((parcela) => (
@@ -585,7 +585,7 @@ const AgendamentoPage: React.FC = () => {
                 <Card>
                   <CardContent>
                     <Typography variant="subtitle1" gutterBottom>
-                      💳 Resumo do Pagamento
+                      Resumo do Pagamento
                     </Typography>
                     <Typography variant="body2">
                       <strong>Para:</strong> {contaDestino?.titular}
@@ -610,7 +610,7 @@ const AgendamentoPage: React.FC = () => {
                 <Card>
                   <CardContent>
                     <Typography variant="subtitle1" gutterBottom>
-                      📅 Cronograma
+                      Cronograma
                     </Typography>
                     <Typography variant="body2">
                       <strong>Data de Início:</strong> {new Date(formData.dataInicio).toLocaleDateString('pt-BR')}

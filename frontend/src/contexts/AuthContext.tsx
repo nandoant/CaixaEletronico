@@ -49,12 +49,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (savedToken && authService.isTokenValid(savedToken)) {
         setToken(savedToken);
         try {
-          // Buscar dados do usuário usando o token
-          console.log("🔍 Buscando dados do usuário com token...");
           const response = await authService.me();
-          console.log("✅ Resposta completa do /auth/me:", JSON.stringify(response, null, 2));
           
-          // Mapear dados da resposta para o formato do contexto
           const userData: User = {
             id: response.dados.usuario.userId,
             login: response.dados.usuario.login,
@@ -65,12 +61,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             titular: response.dados.conta?.titular || "",
           };
           
-          console.log("👤 Dados do usuário mapeados:", userData);
           setUser(userData);
-          console.log("🔄 Dados do usuário restaurados após F5:", userData);
         } catch (error) {
-          console.error("❌ Erro ao restaurar dados do usuário:", error);
-          // Token inválido ou erro no servidor, limpar dados
           authService.removeToken();
           setToken(null);
           setUser(null);
