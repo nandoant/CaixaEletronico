@@ -104,6 +104,7 @@ const ExtratoPage: React.FC = () => {
     console.log("🔄 UseEffect do extrato executado:");
     console.log("  - dataInicio:", filtros.dataInicio);
     console.log("  - dataFim:", filtros.dataFim);
+    console.log("  - limite:", filtros.limite);
     console.log("  - contaId:", conta?.contaId);
 
     if (filtros.dataInicio && filtros.dataFim && conta?.contaId) {
@@ -112,7 +113,15 @@ const ExtratoPage: React.FC = () => {
     } else {
       console.log("⚠️ Condições não atendidas para buscar extrato");
     }
-  }, [filtros.dataInicio, filtros.dataFim, conta?.contaId]);
+  }, [filtros.dataInicio, filtros.dataFim, filtros.limite, conta?.contaId]);
+
+  // Função de controle de limite
+  const handleLimiteChange = (novoLimite: number) => {
+    setFiltros((prev) => ({
+      ...prev,
+      limite: novoLimite,
+    }));
+  };
 
   const calcularValorTotalMovimentado = (): number => {
     if (!extratoData?.operacoes) return 0;
@@ -141,7 +150,6 @@ const ExtratoPage: React.FC = () => {
       <ExtratoFiltros
         dataInicio={filtros.dataInicio || ""}
         dataFim={filtros.dataFim || ""}
-        limite={filtros.limite || 50}
         tipoOperacao="TODOS"
         loading={loading}
         onDataInicioChange={(data) =>
@@ -150,7 +158,6 @@ const ExtratoPage: React.FC = () => {
         onDataFimChange={(data) =>
           setFiltros((prev) => ({ ...prev, dataFim: data }))
         }
-        onLimiteChange={(limite) => setFiltros((prev) => ({ ...prev, limite }))}
         onTipoOperacaoChange={() => {}} // Não usado no novo endpoint
         onBuscar={buscarExtrato}
         onPeriodoPreDefinido={definirPeriodoPreDefinido}
@@ -191,6 +198,8 @@ const ExtratoPage: React.FC = () => {
         dataInicio={filtros.dataInicio || ""}
         dataFim={filtros.dataFim || ""}
         limite={filtros.limite || 50}
+        totalOperacoes={extratoData?.totalOperacoes || 0}
+        onLimiteChange={handleLimiteChange}
       />
     </Box>
   );

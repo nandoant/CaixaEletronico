@@ -38,6 +38,8 @@ interface ExtratoTabelaNovaProps {
   dataInicio: string;
   dataFim: string;
   limite: number;
+  totalOperacoes: number;
+  onLimiteChange: (novoLimite: number) => void;
 }
 
 const ExtratoTabelaNova: React.FC<ExtratoTabelaNovaProps> = ({
@@ -47,6 +49,8 @@ const ExtratoTabelaNova: React.FC<ExtratoTabelaNovaProps> = ({
   dataInicio,
   dataFim,
   limite,
+  totalOperacoes,
+  onLimiteChange,
 }) => {
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [email, setEmail] = useState("");
@@ -238,6 +242,43 @@ const ExtratoTabelaNova: React.FC<ExtratoTabelaNovaProps> = ({
             </TableBody>
           </Table>
         </TableContainer>
+
+        {/* Controle de limite de operações */}
+        <Box
+          sx={{
+            p: 2,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            borderTop: 1,
+            borderColor: "divider",
+          }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            Total de operações: {totalOperacoes}
+          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Typography variant="body2">Mostrar:</Typography>
+            <select
+              value={limite}
+              onChange={(e) => onLimiteChange(Number(e.target.value))}
+              style={{
+                padding: "4px 8px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                fontSize: "14px",
+              }}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value={250}>250</option>
+              <option value={500}>500</option>
+            </select>
+            <Typography variant="body2">operações</Typography>
+          </Box>
+        </Box>
       </Paper>
 
       {/* Dialog para envio por email */}
