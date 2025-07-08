@@ -5,7 +5,10 @@ import br.com.caixaeletronico.controller.api.OperacoesControllerApi;
 import br.com.caixaeletronico.model.TipoOperacao;
 import br.com.caixaeletronico.model.Usuario;
 import br.com.caixaeletronico.model.ValorCedula;
+import br.com.caixaeletronico.model.Conta;
+import br.com.caixaeletronico.repository.ContaRepository;
 import br.com.caixaeletronico.service.CommandManagerService;
+import br.com.caixaeletronico.util.ResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -21,6 +24,9 @@ public class OperacoesController implements OperacoesControllerApi {
     
     @Autowired
     private CommandManagerService commandManagerService;
+    
+    @Autowired
+    private ContaRepository contaRepository;
     
     @PostMapping("/deposito")
     public ResponseEntity<?> depositar(
@@ -48,9 +54,22 @@ public class OperacoesController implements OperacoesControllerApi {
                 cedulasDeposito
             );
             
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Depósito realizado com sucesso");
-            response.put("valor", request.getValor());
+            // Buscar conta para resposta padronizada
+            Conta conta = contaRepository.findById(request.getContaId())
+                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+            
+            Map<String, Object> dadosOperacao = new HashMap<>();
+            dadosOperacao.put("operacao", Map.of(
+                "tipo", "DEPOSITO",
+                "valor", request.getValor(),
+                "dataHora", java.time.LocalDateTime.now(),
+                "status", "CONCLUIDA"
+            ));
+            dadosOperacao.put("novoSaldoDisponivel", true);
+            
+            // Não exibe saldo na resposta para proteger informações sensíveis
+            Map<String, Object> response = ResponseUtil.criarRespostaPadraoComConta(
+                "Depósito realizado com sucesso", conta, false, dadosOperacao);
             
             return ResponseEntity.ok(response);
             
@@ -80,9 +99,23 @@ public class OperacoesController implements OperacoesControllerApi {
                 request.getValor()
             );
             
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Transferência realizada com sucesso");
-            response.put("valor", request.getValor());
+            // Buscar contas para resposta padronizada
+            Conta contaOrigem = contaRepository.findById(request.getContaOrigemId())
+                .orElseThrow(() -> new RuntimeException("Conta origem não encontrada"));
+            Conta contaDestino = contaRepository.findById(request.getContaDestinoId())
+                .orElseThrow(() -> new RuntimeException("Conta destino não encontrada"));
+            
+            Map<String, Object> dadosOperacao = new HashMap<>();
+            dadosOperacao.put("operacao", Map.of(
+                "tipo", "TRANSFERENCIA",
+                "valor", request.getValor(),
+                "dataHora", java.time.LocalDateTime.now(),
+                "status", "CONCLUIDA"
+            ));
+            
+            // Não exibe saldo na resposta para proteger informações sensíveis
+            Map<String, Object> response = ResponseUtil.criarRespostaPadraoComDuasContas(
+                "Transferência realizada com sucesso", contaOrigem, contaDestino, false, dadosOperacao);
             
             return ResponseEntity.ok(response);
             

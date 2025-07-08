@@ -1,0 +1,167 @@
+# ==============================================================================
+# GITIGNORE GERAL - PROJETO CAIXA ELETRÔNICO
+# ==============================================================================
+
+# Logs gerais
+*.log
+logs/
+
+# Arquivos temporários
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Arquivos de backup
+*.bak
+*.backup
+*~
+
+# Arquivos de sistema
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDEs e Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# Variáveis de ambiente
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Docker
+docker-compose.override.yml
+.docker/
+
+# Documentação gerada
+docs/build/
+docs/dist/
+
+# Arquivos de configuração local
+config/local.yml
+config/local.json
+*.local.conf
+
+# Certificados e chaves
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Dados sensíveis
+secrets/
+keys/
+certificates/
+
+# Arquivos compactados
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# Cache geral
+cache/
+.cache/
+
+# ==============================================================================
+# FRONTEND (React/Node.js)
+# ==============================================================================
+
+# Dependencies
+frontend/node_modules/
+frontend/.pnp
+frontend/.pnp.js
+
+# Production build
+frontend/build/
+frontend/dist/
+
+# Testing
+frontend/coverage/
+
+# Cache e logs do frontend
+frontend/.eslintcache
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# ==============================================================================
+# BACKEND (Java/Maven)
+# ==============================================================================
+
+# Compiled files
+backend/target/
+backend/**/*.class
+
+# Maven
+backend/.mvn/timing.properties
+backend/.mvn/wrapper/maven-wrapper.jar
+backend/dependency-reduced-pom.xml
+backend/buildNumber.properties
+
+# IDE files (Backend)
+backend/.project
+backend/.classpath
+backend/.settings/
+backend/.metadata
+backend/.recommenders
+backend/*.iws
+backend/*.iml
+
+# ==============================================================================
+# DOCKER
+# ==============================================================================
+
+# Volumes de dados
+data/
+volumes/
+
+# Logs do Docker
+docker-logs/
+
+# ==============================================================================
+# DATABASE
+# ==============================================================================
+
+# Arquivos de dump
+*.sql.backup
+*.dump
+db-backup/
+
+# Dados locais do banco
+postgres-data/
+mysql-data/
+
+# ==============================================================================
+# OUTROS
+# ==============================================================================
+
+# Arquivos de monitoramento
+monitoring/
+metrics/
+
+# Scripts de deploy locais
+deploy-local.sh
+deploy-local.bat
+
+# Arquivos de teste de carga
+load-test-results/
+
+# Relatórios
+reports/
+coverage-reports/

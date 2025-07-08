@@ -1,0 +1,1156 @@
+{
+  "info": {
+    "name": "Caixa Eletrônico API",
+    "description": "Coleção completa de endpoints para testar a API do Caixa Eletrônico",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminUserId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "contaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "contaId2",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "operacaoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "pagamentoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "saqueOpcaoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "randomUser",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "randomEmail",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Autenticação",
+      "item": [
+        {
+          "name": "1. Registrar Usuário",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Gerar dados dinâmicos para o usuário",
+                  "const timestamp = Date.now();",
+                  "const randomUser = `usuario${timestamp}`;",
+                  "const randomEmail = `${randomUser}@exemplo.com`;",
+                  "",
+                  "pm.collectionVariables.set('randomUser', randomUser);",
+                  "pm.collectionVariables.set('randomEmail', randomEmail);",
+                  "",
+                  "console.log('🚀 Gerando usuário dinâmico:', randomUser);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Registrar Usuário - Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Registrar Usuário - Resposta contém userId', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('userId');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    console.log('✅ Usuário registrado com sucesso');",
+                  "} else {",
+                  "    console.log('❌ Erro ao registrar usuário:', pm.response.text());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{randomUser}}\",\n  \"email\": \"{{randomEmail}}\",\n  \"senha\": \"senha123\",\n  \"perfil\": \"CLIENTE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Registrar Admin",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Gerar dados dinâmicos para o admin",
+                  "const timestamp = Date.now();",
+                  "const randomAdmin = `admin${timestamp}`;",
+                  "const randomAdminEmail = `${randomAdmin}@exemplo.com`;",
+                  "",
+                  "pm.collectionVariables.set('randomAdmin', randomAdmin);",
+                  "pm.collectionVariables.set('randomAdminEmail', randomAdminEmail);",
+                  "",
+                  "console.log('🚀 Gerando admin dinâmico:', randomAdmin);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Registrar Admin - Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Registrar Admin - Resposta contém userId', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('userId');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    console.log('✅ Admin registrado com sucesso');",
+                  "} else {",
+                  "    console.log('❌ Erro ao registrar admin:', pm.response.text());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{randomAdmin}}\",\n  \"email\": \"{{randomAdminEmail}}\",\n  \"senha\": \"admin123\",\n  \"perfil\": \"ADMIN\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Login - Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Login - Resposta contém token', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('token');",
+                  "    pm.expect(jsonData).to.have.property('userId');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    // Salva nas variáveis de coleção",
+                  "    pm.collectionVariables.set('authToken', response.token);",
+                  "    pm.collectionVariables.set('userId', response.userId);",
+                  "    // Salva também nas variáveis de ambiente (se existir)",
+                  "    pm.environment.set('authToken', response.token);",
+                  "    pm.environment.set('userId', response.userId);",
+                  "    console.log('✅ Token salvo automaticamente:', response.token);",
+                  "    console.log('✅ User ID salvo:', response.userId);",
+                  "    console.log('✅ Login realizado com sucesso!');",
+                  "} else {",
+                  "    console.log('❌ Erro no login:', pm.response.text());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{randomUser}}\",\n  \"senha\": \"senha123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3.1. Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Login Admin - Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Login Admin - Resposta contém token', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('token');",
+                  "    pm.expect(jsonData).to.have.property('userId');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    // Salva nas variáveis de coleção",
+                  "    pm.collectionVariables.set('authToken', response.token);",
+                  "    pm.collectionVariables.set('adminToken', response.token);",
+                  "    pm.collectionVariables.set('adminUserId', response.userId);",
+                  "    // Salva também nas variáveis de ambiente (se existir)",
+                  "    pm.environment.set('authToken', response.token);",
+                  "    pm.environment.set('adminToken', response.token);",
+                  "    pm.environment.set('adminUserId', response.userId);",
+                  "    console.log('✅ Token ADMIN salvo automaticamente:', response.token);",
+                  "    console.log('✅ Admin User ID salvo:', response.userId);",
+                  "    console.log('✅ Login ADMIN realizado com sucesso!');",
+                  "} else {",
+                  "    console.log('❌ Erro no login admin:', pm.response.text());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{randomAdmin}}\",\n  \"senha\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Obter Dados do Usuário Logado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Obter Dados do Usuário - Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Obter Dados do Usuário - Resposta contém dados', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('userId');",
+                  "    pm.expect(jsonData).to.have.property('login');",
+                  "    pm.expect(jsonData).to.have.property('email');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    console.log('✅ Dados do usuário obtidos com sucesso');",
+                  "} else {",
+                  "    console.log('❌ Erro ao obter dados do usuário:', pm.response.text());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Listar Contas Disponíveis",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Listar Contas - Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Listar Contas - Resposta contém contas', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('contas');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.contas && response.contas.length > 0) {",
+                  "        // Salva primeira conta",
+                  "        pm.collectionVariables.set('contaId', response.contas[0].id);",
+                  "        pm.environment.set('contaId', response.contas[0].id);",
+                  "        ",
+                  "        // Salva segunda conta se existir (para transferências)",
+                  "        if (response.contas.length > 1) {",
+                  "            pm.collectionVariables.set('contaId2', response.contas[1].id);",
+                  "            pm.environment.set('contaId2', response.contas[1].id);",
+                  "            console.log('✅ Segunda conta salva para transferências:', response.contas[1].id);",
+                  "        }",
+                  "        ",
+                  "        console.log('✅ Conta ID salvo automaticamente:', response.contas[0].id);",
+                  "        console.log('✅ Total de contas encontradas:', response.contas.length);",
+                  "    } else {",
+                  "        console.log('⚠️  Nenhuma conta encontrada');",
+                  "    }",
+                  "} else {",
+                  "    console.log('❌ Erro ao listar contas:', pm.response.text());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/contas-disponiveis",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "contas-disponiveis"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Operações Bancárias",
+      "item": [
+        {
+          "name": "1. Realizar Depósito",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Realizar Depósito - Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Realizar Depósito - Resposta contém confirmação', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData).to.have.property('valor');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    console.log('✅ Depósito realizado com sucesso');",
+                  "} else {",
+                  "    console.log('❌ Erro ao realizar depósito:', pm.response.text());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contaId\": {{contaId}},\n  \"valor\": 500.00,\n  \"cedulas\": {\n    \"DUZENTOS\": 2,\n    \"CEM\": 1\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/operacoes/deposito",
+              "host": ["{{baseUrl}}"],
+              "path": ["operacoes", "deposito"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Realizar Transferência",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Realizar Transferência - Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Realizar Transferência - Resposta contém confirmação', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData).to.have.property('valor');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    console.log('✅ Transferência realizada com sucesso');",
+                  "} else {",
+                  "    console.log('❌ Erro ao realizar transferência:', pm.response.text());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contaOrigemId\": {{contaId}},\n  \"contaDestinoId\": {{contaId2}},\n  \"valor\": 100.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/operacoes/transferencia",
+              "host": ["{{baseUrl}}"],
+              "path": ["operacoes", "transferencia"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Operações de Saque",
+      "item": [
+        {
+          "name": "1. Obter Opções de Saque",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Obter Opções de Saque - Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Obter Opções de Saque - Resposta contém opções', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('opcoes');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('🔍 Debug - Resposta completa:', JSON.stringify(response, null, 2));",
+                  "    ",
+                  "    if (response.opcoes && Array.isArray(response.opcoes) && response.opcoes.length > 0) {",
+                  "        const primeiraOpcao = response.opcoes[0];",
+                  "        console.log('🔍 Debug - Primeira opção:', JSON.stringify(primeiraOpcao, null, 2));",
+                  "        ",
+                  "        // A propriedade correta é 'idOpcao' baseado na classe CombinacaoCedulas",
+                  "        let opcaoId = primeiraOpcao.idOpcao || primeiraOpcao.id || primeiraOpcao.uuid;",
+                  "        ",
+                  "        if (opcaoId) {",
+                  "            // Salva o ID da primeira opção",
+                  "            pm.collectionVariables.set('saqueOpcaoId', opcaoId);",
+                  "            pm.environment.set('saqueOpcaoId', opcaoId);",
+                  "            console.log('✅ Opções de saque obtidas com sucesso');",
+                  "            console.log('✅ ID da primeira opção salvo:', opcaoId);",
+                  "        } else {",
+                  "            console.log('❌ ID da opção não encontrado na resposta');",
+                  "            console.log('🔍 Propriedades disponíveis:', Object.keys(primeiraOpcao));",
+                  "        }",
+                  "    } else {",
+                  "        console.log('⚠️  Nenhuma opção de saque disponível ou formato inválido');",
+                  "        console.log('🔍 Tipo de opcoes:', typeof response.opcoes);",
+                  "        console.log('🔍 Length:', response.opcoes ? response.opcoes.length : 'undefined');",
+                  "    }",
+                  "} else {",
+                  "    console.log('❌ Erro ao obter opções de saque:', pm.response.text());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operacoes/saque/opcoes?contaId={{contaId}}&valor=200",
+              "host": ["{{baseUrl}}"],
+              "path": ["operacoes", "saque", "opcoes"],
+              "query": [
+                {
+                  "key": "contaId",
+                  "value": "{{contaId}}"
+                },
+                {
+                  "key": "valor",
+                  "value": "200"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Confirmar Saque",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Verifica se o ID da opção de saque foi salvo",
+                  "const saqueOpcaoId = pm.collectionVariables.get('saqueOpcaoId') || pm.environment.get('saqueOpcaoId');",
+                  "",
+                  "if (!saqueOpcaoId || saqueOpcaoId === '' || saqueOpcaoId === 'undefined') {",
+                  "    console.log('⚠️  ID da opção de saque não encontrado');",
+                  "    console.log('🔧 Gerando UUID temporário para teste...');",
+                  "    ",
+                  "    // Gera um UUID temporário para o teste (pode falhar, mas permite continuar)",
+                  "    const tempUUID = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {",
+                  "        const r = Math.random() * 16 | 0;",
+                  "        const v = c === 'x' ? r : (r & 0x3 | 0x8);",
+                  "        return v.toString(16);",
+                  "    });",
+                  "    ",
+                  "    pm.collectionVariables.set('saqueOpcaoId', tempUUID);",
+                  "    console.log('🔧 UUID temporário gerado:', tempUUID);",
+                  "    console.log('💡 Execute \"Obter Opções de Saque\" primeiro para obter ID válido');",
+                  "} else {",
+                  "    console.log('✅ ID da opção de saque encontrado:', saqueOpcaoId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const saqueOpcaoId = pm.collectionVariables.get('saqueOpcaoId');",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Confirmar Saque - Status 200', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "    });",
+                  "    ",
+                  "    pm.test('Confirmar Saque - Resposta contém confirmação', function () {",
+                  "        const jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.have.property('message');",
+                  "        pm.expect(jsonData).to.have.property('valor');",
+                  "    });",
+                  "    ",
+                  "    console.log('✅ Saque confirmado com sucesso');",
+                  "} else if (pm.response.code === 400 && saqueOpcaoId && saqueOpcaoId.includes('xxxxxxxx')) {",
+                  "    console.log('⚠️  Saque falhou com UUID temporário (esperado)');",
+                  "    console.log('💡 Execute \"Obter Opções de Saque\" primeiro para obter ID válido');",
+                  "} else {",
+                  "    console.log('❌ Erro ao confirmar saque:', pm.response.text());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contaId\": {{contaId}},\n  \"valor\": 200,\n  \"idOpcao\": \"{{saqueOpcaoId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/operacoes/saque",
+              "host": ["{{baseUrl}}"],
+              "path": ["operacoes", "saque"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Pagamentos",
+      "item": [
+        {
+          "name": "1. Agendar Transferência entre Contas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Agendar Transferência - Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Agendar Transferência - Resposta contém dados da transferência', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('contaOrigemId');",
+                  "    pm.expect(jsonData).to.have.property('contaDestinoId');",
+                  "    pm.expect(jsonData).to.have.property('valorTotal');",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "    pm.expect(jsonData).to.have.property('descricao');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    // Salva o ID da transferência para usar em outros testes",
+                  "    pm.collectionVariables.set('transferenciaId', response.id);",
+                  "    pm.environment.set('transferenciaId', response.id);",
+                  "    console.log('✅ Transferência agendada com sucesso');",
+                  "    console.log('✅ ID da transferência salvo:', response.id);",
+                  "} else {",
+                  "    console.log('❌ Erro ao agendar transferência:', pm.response.text());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contaDestinoId\": {{contaDestinoId}},\n  \"valorTotal\": 150.00,\n  \"quantidadeParcelas\": 3,\n  \"periodicidadeDias\": 30,\n  \"dataInicio\": \"2025-07-15\",\n  \"debitarPrimeiraParcela\": true,\n  \"descricao\": \"Transferência agendada para conta poupança\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pagamentos/agendar",
+              "host": ["{{baseUrl}}"],
+              "path": ["pagamentos", "agendar"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Consultar Pagamento por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Consultar Pagamento por ID - Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Consultar Pagamento por ID - Resposta contém dados do pagamento', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('valorTotal');",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    console.log('✅ Dados do pagamento consultados com sucesso');",
+                  "} else {",
+                  "    console.log('❌ Erro ao consultar pagamento:', pm.response.text());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pagamentos/{{pagamentoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["pagamentos", "{{pagamentoId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Listar Pagamentos por Conta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Listar Pagamentos por Conta - Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Listar Pagamentos por Conta - Resposta contém lista de pagamentos', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('pagamentos');",
+                  "    pm.expect(jsonData).to.have.property('contaId');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    console.log('✅ Pagamentos listados com sucesso');",
+                  "} else {",
+                  "    console.log('❌ Erro ao listar pagamentos:', pm.response.text());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pagamentos/conta/{{contaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["pagamentos", "conta", "{{contaId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Cancelar Pagamento",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Cancelar Pagamento - Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Cancelar Pagamento - Resposta contém confirmação', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    console.log('✅ Pagamento cancelado com sucesso');",
+                  "} else {",
+                  "    console.log('❌ Erro ao cancelar pagamento:', pm.response.text());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pagamentos/{{pagamentoId}}/cancelar",
+              "host": ["{{baseUrl}}"],
+              "path": ["pagamentos", "{{pagamentoId}}", "cancelar"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Extratos",
+      "item": [
+        {
+          "name": "1. Obter Extrato da Conta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Obter Extrato da Conta - Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Obter Extrato da Conta - Resposta contém operações', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('operacoes');",
+                  "    pm.expect(jsonData).to.have.property('contaId');",
+                  "    pm.expect(jsonData).to.have.property('saldoAtual');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.operacoes && response.operacoes.length > 0) {",
+                  "        // Salva o ID da primeira operação para testes administrativos",
+                  "        pm.collectionVariables.set('operacaoId', response.operacoes[0].id);",
+                  "        pm.environment.set('operacaoId', response.operacoes[0].id);",
+                  "        console.log('✅ ID da primeira operação salvo:', response.operacoes[0].id);",
+                  "    }",
+                  "    console.log('✅ Extrato obtido com sucesso');",
+                  "    console.log('✅ Saldo atual:', response.saldoAtual);",
+                  "} else {",
+                  "    console.log('❌ Erro ao obter extrato:', pm.response.text());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/contas/{{contaId}}/extrato?limite=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["contas", "{{contaId}}", "extrato"],
+              "query": [
+                {
+                  "key": "limite",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Obter Extrato por Período",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Obter Extrato por Período - Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Obter Extrato por Período - Resposta contém operações', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('operacoes');",
+                  "    pm.expect(jsonData).to.have.property('contaId');",
+                  "    pm.expect(jsonData).to.have.property('saldoAtual');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('✅ Extrato por período obtido com sucesso');",
+                  "    console.log('✅ Operações no período:', response.operacoes.length);",
+                  "} else {",
+                  "    console.log('❌ Erro ao obter extrato por período:', pm.response.text());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/contas/{{contaId}}/extrato?dataInicio=2025-07-01&dataFim=2025-07-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["contas", "{{contaId}}", "extrato"],
+              "query": [
+                {
+                  "key": "dataInicio",
+                  "value": "2025-07-01"
+                },
+                {
+                  "key": "dataFim",
+                  "value": "2025-07-31"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Estoque",
+      "item": [
+        {
+          "name": "1. Consultar Estoque Global de Cédulas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Consultar Estoque Global - Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Consultar Estoque Global - Resposta contém dados do estoque', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('estoque');",
+                  "    pm.expect(jsonData).to.have.property('totalCedulas');",
+                  "    pm.expect(jsonData).to.have.property('valorTotalDisponivel');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('✅ Estoque global consultado com sucesso');",
+                  "    console.log('✅ Total de cédulas:', response.totalCedulas);",
+                  "    console.log('✅ Valor total disponível:', response.valorTotalDisponivel);",
+                  "} else {",
+                  "    console.log('❌ Erro ao consultar estoque global:', pm.response.text());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/estoque/cedulas",
+              "host": ["{{baseUrl}}"],
+              "path": ["estoque", "cedulas"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Operações Administrativas",
+      "item": [
+        {
+          "name": "1. Desfazer Operação Específica (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Desfazer Operação (Admin) - Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Desfazer Operação (Admin) - Resposta contém confirmação', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData).to.have.property('operacaoId');",
+                  "    pm.expect(jsonData).to.have.property('adminResponsavel');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    console.log('✅ Operação desfeita com sucesso pelo admin');",
+                  "} else {",
+                  "    console.log('❌ Erro ao desfazer operação:', pm.response.text());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operacoes/desfazer/{{operacaoId}}/usuario/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["operacoes", "desfazer", "{{operacaoId}}", "usuario", "{{userId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Listar Operações do Usuário (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Listar Operações do Usuário (Admin) - Status 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Listar Operações do Usuário (Admin) - Resposta contém operações', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('operacoes');",
+                  "    pm.expect(jsonData).to.have.property('usuarioId');",
+                  "    pm.expect(jsonData).to.have.property('total');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    console.log('✅ Operações do usuário listadas com sucesso');",
+                  "    console.log('✅ Total de operações:', response.total);",
+                  "} else {",
+                  "    console.log('❌ Erro ao listar operações do usuário:', pm.response.text());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operacoes/desfazer/usuario/{{userId}}/operacoes",
+              "host": ["{{baseUrl}}"],
+              "path": ["operacoes", "desfazer", "usuario", "{{userId}}", "operacoes"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

@@ -32,6 +32,9 @@ public class Usuario {
     @Enumerated(EnumType.STRING)
     private PerfilUsuario perfil;
     
+    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Conta conta;
+    
     // Constructors
     public Usuario() {}
     
@@ -81,5 +84,13 @@ public class Usuario {
     
     public void setPerfil(PerfilUsuario perfil) {
         this.perfil = perfil;
+    }
+    
+    public Conta getConta() {
+        return conta;
+    }
+    
+    public void setConta(Conta conta) {
+        this.conta = conta;
     }
 }

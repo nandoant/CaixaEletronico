@@ -1,0 +1,37 @@
+{
+  "id": "caixa-eletronico-env",
+  "name": "Caixa Eletrônico - Ambiente Local",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "contaId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}

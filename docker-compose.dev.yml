@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  # Banco de dados PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: caixaeletronico-postgres-dev
+    environment:
+      POSTGRES_DB: caixaeletronico
+      POSTGRES_USER: caixaeletronico
+      POSTGRES_PASSWORD: caixaeletronico123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+      - ./backend/init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - caixaeletronico-network-dev
+    restart: unless-stopped
+
+  # Aplicação Spring Boot (desenvolvimento)
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: caixaeletronico-backend-dev
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_USERNAME=caixaeletronico
+      - DB_PASSWORD=caixaeletronico123
+      - JWT_SECRET=minha-chave-secreta-super-segura-para-jwt-que-deve-ter-pelo-menos-256-bits
+      - JWT_EXPIRATION=86400000
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - caixaeletronico-network-dev
+    restart: unless-stopped
+    volumes:
+      - ./backend:/app
+      - /app/target
+
+  # Frontend React (desenvolvimento)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: caixaeletronico-frontend-dev
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - caixaeletronico-network-dev
+    restart: unless-stopped
+    environment:
+      - REACT_APP_API_URL=http://localhost:8080
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data_dev:
+
+networks:
+  caixaeletronico-network-dev:
+    driver: bridge

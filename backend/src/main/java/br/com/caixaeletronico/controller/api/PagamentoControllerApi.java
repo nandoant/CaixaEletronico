@@ -25,28 +25,32 @@ import org.springframework.web.bind.annotation.*;
 public interface PagamentoControllerApi {
 
     @Operation(
-        summary = "Agendar pagamento parcelado",
-        description = "Agenda um pagamento parcelado que será executado automaticamente nas datas especificadas. " +
-                     "O sistema debita automaticamente o valor da parcela na data de execução.",
+        summary = "Agendar transferência entre contas",
+        description = "Agenda uma transferência parcelada entre contas que será executada automaticamente nas datas especificadas. " +
+                     "Permite especificar conta destino, valor, parcelas e periodicidade.",
         tags = {"Pagamentos"}
     )
     @ApiResponses({
         @ApiResponse(
             responseCode = "200",
-            description = "Pagamento agendado com sucesso",
+            description = "Transferência agendada com sucesso",
             content = @Content(
                 mediaType = "application/json",
                 schema = @Schema(implementation = Object.class),
                 examples = @ExampleObject(
                     value = """
                     {
-                        "message": "Pagamento agendado com sucesso",
+                        "message": "Transferência agendada com sucesso",
                         "id": 1,
-                        "valorTotal": 1200.00,
-                        "valorParcela": 200.00,
-                        "quantidadeParcelas": 6,
-                        "dataProximaExecucao": "2024-02-01",
-                        "status": "ATIVO"
+                        "contaOrigemId": 1,
+                        "contaDestinoId": 2,
+                        "valorTotal": 150.00,
+                        "valorParcela": 50.00,
+                        "quantidadeParcelas": 3,
+                        "dataProximaExecucao": "2025-07-15",
+                        "status": "ATIVO",
+                        "descricao": "Transferência agendada",
+                        "primeiraParcelaDebitada": true
                     }
                     """
                 )
@@ -60,7 +64,7 @@ public interface PagamentoControllerApi {
                 examples = @ExampleObject(
                     value = """
                     {
-                        "error": "Conta não encontrada ou não autorizada"
+                        "error": "Conta destino não encontrada"
                     }
                     """
                 )
@@ -82,19 +86,21 @@ public interface PagamentoControllerApi {
         )
     })
     @PostMapping("/agendar")
-    ResponseEntity<?> agendarPagamento(
-        @Parameter(description = "Dados do pagamento a ser agendado", required = true,
-                  schema = @Schema(implementation = PagamentoController.PagamentoRequest.class,
+    ResponseEntity<?> agendarTransferencia(
+        @Parameter(description = "Dados da transferência a ser agendada", required = true,
+                  schema = @Schema(implementation = PagamentoController.TransferenciaAgendadaRequest.class,
                                  example = """
                                  {
-                                     "contaId": 1,
-                                     "valorTotal": 1200.00,
-                                     "quantidadeParcelas": 6,
-                                     "periodicidadeDias": 30,
-                                     "dataInicio": "2024-02-01"
+                                     "contaDestinoId": 5,
+                                     "valorTotal": 100.00,
+                                     "quantidadeParcelas": 1,
+                                     "periodicidadeDias": 1,
+                                     "dataInicio": "2025-07-07",
+                                     "debitarPrimeiraParcela": true,
+                                     "descricao": "Pagamento único"
                                  }
                                  """))
-        @RequestBody PagamentoController.PagamentoRequest request,
+        @RequestBody PagamentoController.TransferenciaAgendadaRequest request,
         
         Authentication authentication
     );
@@ -287,6 +293,167 @@ public interface PagamentoControllerApi {
     ResponseEntity<?> cancelarPagamento(
         @Parameter(description = "ID do pagamento a ser cancelado", required = true)
         @PathVariable Long id,
+        
+        Authentication authentication
+    );
+    
+    @Operation(
+        summary = "Listar pagamentos recebidos",
+        description = "Retorna todos os pagamentos agendados que uma conta específica está recebendo de outras contas.",
+        tags = {"Pagamentos"}
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Lista de pagamentos recebidos obtida com sucesso",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = Object.class),
+                examples = @ExampleObject(
+                    value = """
+                    {
+                        "contaId": 1,
+                        "pagamentosRecebidos": [
+                            {
+                                "id": 5,
+                                "contaOrigemId": 2,
+                                "contaDestinoId": 1,
+                                "valorTotal": 500.00,
+                                "valorParcela": 100.00,
+                                "quantidadeParcelas": 5,
+                                "parcelasRestantes": 3,
+                                "periodicidadeDias": 30,
+                                "dataProximaExecucao": "2025-08-07",
+                                "status": "ATIVO",
+                                "descricao": "Pagamento mensalidade"
+                            }
+                        ]
+                    }
+                    """
+                )
+            )
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Conta não encontrada ou não autorizada",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    value = """
+                    {
+                        "error": "Conta não encontrada ou não autorizada"
+                    }
+                    """
+                )
+            )
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Token de autenticação inválido",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    value = """
+                    {
+                        "error": "Acesso negado"
+                    }
+                    """
+                )
+            )
+        )
+    })
+    @GetMapping("/conta/{contaId}/recebidos")
+    ResponseEntity<?> listarPagamentosRecebidos(
+        @Parameter(description = "ID da conta", required = true)
+        @PathVariable Long contaId,
+        
+        Authentication authentication
+    );
+    
+    @Operation(
+        summary = "Listar todos os pagamentos da conta",
+        description = "Retorna todos os pagamentos agendados de uma conta específica, incluindo os enviados e recebidos.",
+        tags = {"Pagamentos"}
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Lista completa de pagamentos obtida com sucesso",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = Object.class),
+                examples = @ExampleObject(
+                    value = """
+                    {
+                        "contaId": 1,
+                        "pagamentosEnviados": [
+                            {
+                                "id": 1,
+                                "contaOrigemId": 1,
+                                "contaDestinoId": 2,
+                                "valorTotal": 300.00,
+                                "valorParcela": 100.00,
+                                "quantidadeParcelas": 3,
+                                "parcelasRestantes": 2,
+                                "periodicidadeDias": 30,
+                                "dataProximaExecucao": "2025-08-07",
+                                "status": "ATIVO",
+                                "descricao": "Transferência para conta 2"
+                            }
+                        ],
+                        "pagamentosRecebidos": [
+                            {
+                                "id": 5,
+                                "contaOrigemId": 3,
+                                "contaDestinoId": 1,
+                                "valorTotal": 500.00,
+                                "valorParcela": 100.00,
+                                "quantidadeParcelas": 5,
+                                "parcelasRestantes": 3,
+                                "periodicidadeDias": 30,
+                                "dataProximaExecucao": "2025-08-07",
+                                "status": "ATIVO",
+                                "descricao": "Pagamento mensalidade"
+                            }
+                        ]
+                    }
+                    """
+                )
+            )
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Conta não encontrada ou não autorizada",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    value = """
+                    {
+                        "error": "Conta não encontrada ou não autorizada"
+                    }
+                    """
+                )
+            )
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Token de autenticação inválido",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(
+                    value = """
+                    {
+                        "error": "Acesso negado"
+                    }
+                    """
+                )
+            )
+        )
+    })
+    @GetMapping("/conta/{contaId}/todos")
+    ResponseEntity<?> listarTodosPagamentosConta(
+        @Parameter(description = "ID da conta", required = true)
+        @PathVariable Long contaId,
         
         Authentication authentication
     );

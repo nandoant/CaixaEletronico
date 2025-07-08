@@ -33,6 +33,9 @@ public interface OperacaoRepository extends JpaRepository<Operacao, Long> {
     
     List<Operacao> findByUsuarioResponsavelOrderByDataHoraDesc(String usuarioResponsavel);
     
+    @Query("SELECT o FROM Operacao o LEFT JOIN FETCH o.contaOrigem LEFT JOIN FETCH o.contaDestino WHERE o.usuarioResponsavel = :usuarioResponsavel ORDER BY o.dataHora DESC")
+    List<Operacao> findByUsuarioResponsavelWithContasOrderByDataHoraDesc(@Param("usuarioResponsavel") String usuarioResponsavel);
+    
     @Query("SELECT o FROM Operacao o WHERE o.usuarioResponsavel = :usuarioResponsavel AND o.desfeita = false ORDER BY o.dataHora DESC")
     List<Operacao> findByUsuarioResponsavelAndNaoDesfeita(@Param("usuarioResponsavel") String usuarioResponsavel);
     

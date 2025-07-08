@@ -5,8 +5,11 @@ import br.com.caixaeletronico.controller.api.SaqueControllerApi;
 import br.com.caixaeletronico.model.CombinacaoCedulas;
 import br.com.caixaeletronico.model.TipoOperacao;
 import br.com.caixaeletronico.model.Usuario;
+import br.com.caixaeletronico.model.Conta;
+import br.com.caixaeletronico.repository.ContaRepository;
 import br.com.caixaeletronico.service.CommandManagerService;
 import br.com.caixaeletronico.service.SaqueOptionService;
+import br.com.caixaeletronico.util.ResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -28,6 +31,9 @@ public class SaqueController implements SaqueControllerApi {
     @Autowired
     private CommandManagerService commandManagerService;
     
+    @Autowired
+    private ContaRepository contaRepository;
+    
     @GetMapping("/opcoes")
     public ResponseEntity<?> obterOpcoesSaque(
             @RequestParam Long contaId,
@@ -36,10 +42,19 @@ public class SaqueController implements SaqueControllerApi {
         try {
             List<CombinacaoCedulas> opcoes = saqueOptionService.obterOpcoesRaques(contaId, valor);
             
-            Map<String, Object> response = new HashMap<>();
-            response.put("opcoes", opcoes);
-            response.put("contaId", contaId);
-            response.put("valor", valor);
+            // Buscar conta para resposta padronizada
+            Conta conta = contaRepository.findById(contaId)
+                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+            
+            Map<String, Object> dadosOpcoes = new HashMap<>();
+            dadosOpcoes.put("valorSolicitado", valor);
+            dadosOpcoes.put("opcoes", opcoes);
+            dadosOpcoes.put("totalOpcoes", opcoes.size());
+            dadosOpcoes.put("saldoSuficiente", true);
+            
+            // Não exibe saldo na resposta para proteger informações sensíveis
+            Map<String, Object> response = ResponseUtil.criarRespostaPadraoComConta(
+                "Opções de saque calculadas com sucesso", conta, false, dadosOpcoes);
             
             return ResponseEntity.ok(response);
             
@@ -73,10 +88,22 @@ public class SaqueController implements SaqueControllerApi {
                 combinacao.getMapaCedulas()
             );
             
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Saque realizado com sucesso");
-            response.put("valor", request.getValor());
-            response.put("combinacao", combinacao.getDescricaoLegivel());
+            // Buscar conta para resposta padronizada
+            Conta conta = contaRepository.findById(request.getContaId())
+                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+            
+            Map<String, Object> dadosOperacao = new HashMap<>();
+            dadosOperacao.put("operacao", Map.of(
+                "tipo", "SAQUE",
+                "valor", request.getValor(),
+                "dataHora", java.time.LocalDateTime.now(),
+                "combinacaoEscolhida", combinacao.getDescricaoLegivel(),
+                "status", "CONCLUIDA"
+            ));
+            
+            // Não exibe saldo na resposta para proteger informações sensíveis
+            Map<String, Object> response = ResponseUtil.criarRespostaPadraoComConta(
+                "Saque realizado com sucesso", conta, false, dadosOperacao);
             
             return ResponseEntity.ok(response);
             
