@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -29,30 +29,30 @@ import {
   ListItemText,
   ListItemIcon,
   Divider,
-  Skeleton
-} from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { operacoesService } from '../../services/operacoesService';
-import { 
-  AgendamentoRequest, 
-  AgendamentoResponse, 
-  ContaInfo, 
-  PERIODICIDADE_OPTIONS 
-} from '../../types/operacoes';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
-import { 
-  CalendarToday, 
-  Schedule, 
-  Payment, 
+  Skeleton,
+} from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import { operacoesService } from "../../services/operacoesService";
+import {
+  AgendamentoRequest,
+  AgendamentoResponse,
+  ContaInfo,
+  PERIODICIDADE_OPTIONS,
+} from "../../types/operacoes";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
+import {
+  CalendarToday,
+  Schedule,
+  Payment,
   AccountBalance,
   CheckCircle,
   ArrowBack,
   Search,
   Person,
   CreditCard,
-  TrendingUp
-} from '@mui/icons-material';
+  TrendingUp,
+} from "@mui/icons-material";
 
 interface FormData {
   numeroContaDestino: string;
@@ -69,78 +69,87 @@ const PagamentoAgendadoPage: React.FC = () => {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<FormData>({
-    numeroContaDestino: '',
-    valorTotal: '',
+    numeroContaDestino: "",
+    valorTotal: "",
     quantidadeParcelas: 1,
     periodicidadeDias: 30,
     debitarPrimeiraParcela: true,
-    descricao: '',
-    dataInicio: new Date().toISOString().split('T')[0]
+    descricao: "",
+    dataInicio: new Date().toISOString().split("T")[0],
   });
   const [contaDestino, setContaDestino] = useState<ContaInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [buscandoConta, setBuscandoConta] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [resultado, setResultado] = useState<AgendamentoResponse | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [apiStatus, setApiStatus] = useState<'unknown' | 'checking' | 'online' | 'offline'>('unknown');
+  const [apiStatus, setApiStatus] = useState<
+    "unknown" | "checking" | "online" | "offline"
+  >("unknown");
 
-  const steps = ['Conta de Destino', 'Configuração do Pagamento', 'Confirmação'];
+  const steps = [
+    "Conta de Destino",
+    "Configuração do Pagamento",
+    "Confirmação",
+  ];
 
   // Calcular valor da parcela
-  const valorParcela = formData.valorTotal ? 
-    (parseFloat(formData.valorTotal) / formData.quantidadeParcelas) : 0;
+  const valorParcela = formData.valorTotal
+    ? parseFloat(formData.valorTotal) / formData.quantidadeParcelas
+    : 0;
 
   // Calcular valor a ser debitado imediatamente
   const valorImediato = formData.debitarPrimeiraParcela ? valorParcela : 0;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
-    
+
     // Limpar conta destino se o número mudou
-    if (name === 'numeroContaDestino' && contaDestino) {
+    if (name === "numeroContaDestino" && contaDestino) {
       setContaDestino(null);
     }
-    
+
     // Limpar erros
-    setError('');
+    setError("");
   };
 
   const handleSelectChange = (name: string, value: any) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-    setError('');
+    setError("");
   };
 
   const buscarContaDestino = async () => {
     if (!formData.numeroContaDestino.trim()) {
-      setError('Digite o número da conta de destino');
+      setError("Digite o número da conta de destino");
       return;
     }
 
     setBuscandoConta(true);
-    setError('');
+    setError("");
 
     try {
-      const conta = await operacoesService.buscarContaPorNumero(formData.numeroContaDestino);
+      const conta = await operacoesService.buscarContaPorNumero(
+        formData.numeroContaDestino
+      );
 
       // Verificar se não é a própria conta
       if (user && conta.usuarioProprietarioId === user.id) {
-        setError('Você não pode agendar pagamento para sua própria conta');
+        setError("Você não pode agendar pagamento para sua própria conta");
         setContaDestino(null);
         return;
       }
 
       setContaDestino(conta);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao buscar conta');
+      setError(err instanceof Error ? err.message : "Erro ao buscar conta");
       setContaDestino(null);
     } finally {
       setBuscandoConta(false);
@@ -151,7 +160,7 @@ const PagamentoAgendadoPage: React.FC = () => {
     switch (passo) {
       case 0: // Conta de destino
         if (!contaDestino) {
-          setError('Busque e confirme a conta de destino primeiro');
+          setError("Busque e confirme a conta de destino primeiro");
           return false;
         }
         return true;
@@ -159,26 +168,26 @@ const PagamentoAgendadoPage: React.FC = () => {
       case 1: // Configuração
         const valor = parseFloat(formData.valorTotal);
         if (isNaN(valor) || valor <= 0) {
-          setError('Digite um valor válido para o pagamento');
+          setError("Digite um valor válido para o pagamento");
           return false;
         }
         if (valor < 0.01) {
-          setError('O valor mínimo para pagamento é R$ 0,01');
+          setError("O valor mínimo para pagamento é R$ 0,01");
           return false;
         }
         if (formData.quantidadeParcelas < 1) {
-          setError('A quantidade de parcelas deve ser no mínimo 1');
+          setError("A quantidade de parcelas deve ser no mínimo 1");
           return false;
         }
         if (!formData.descricao.trim()) {
-          setError('Digite uma descrição para o pagamento');
+          setError("Digite uma descrição para o pagamento");
           return false;
         }
         const dataInicio = new Date(formData.dataInicio);
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0);
         if (dataInicio < hoje) {
-          setError('A data de início não pode ser anterior ao dia atual');
+          setError("A data de início não pode ser anterior ao dia atual");
           return false;
         }
         return true;
@@ -190,13 +199,13 @@ const PagamentoAgendadoPage: React.FC = () => {
 
   const proximoPasso = () => {
     if (validarPasso(currentStep)) {
-      setCurrentStep(prev => Math.min(prev + 1, steps.length - 1));
+      setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
     }
   };
 
   const passoAnterior = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 0));
-    setError('');
+    setCurrentStep((prev) => Math.max(prev - 1, 0));
+    setError("");
   };
 
   const handleConfirmarPagamento = () => {
@@ -209,17 +218,31 @@ const PagamentoAgendadoPage: React.FC = () => {
 
     // Validação extra: verificar se não está tentando agendar para a própria conta
     if (user.contaId === contaDestino.contaId) {
-      console.error('❌ [UI] Tentativa de agendar pagamento para a própria conta!');
-      console.error('❌ [UI] Conta do usuário:', user.contaId, '-', user.numeroConta);
-      console.error('❌ [UI] Conta de destino:', contaDestino.contaId, '-', contaDestino.numeroConta);
-      setError('❌ ERRO: Você não pode agendar pagamento para sua própria conta!');
+      console.error(
+        "❌ [UI] Tentativa de agendar pagamento para a própria conta!"
+      );
+      console.error(
+        "❌ [UI] Conta do usuário:",
+        user.contaId,
+        "-",
+        user.numeroConta
+      );
+      console.error(
+        "❌ [UI] Conta de destino:",
+        contaDestino.contaId,
+        "-",
+        contaDestino.numeroConta
+      );
+      setError(
+        "❌ ERRO: Você não pode agendar pagamento para sua própria conta!"
+      );
       return;
     }
 
     setLoading(true);
-    setError('');
+    setError("");
     setConfirmDialogOpen(false);
-    setApiStatus('checking');
+    setApiStatus("checking");
 
     try {
       const request: AgendamentoRequest = {
@@ -229,58 +252,74 @@ const PagamentoAgendadoPage: React.FC = () => {
         periodicidadeDias: formData.periodicidadeDias,
         debitarPrimeiraParcela: formData.debitarPrimeiraParcela,
         descricao: formData.descricao,
-        dataInicio: formData.dataInicio
+        dataInicio: formData.dataInicio,
       };
 
-      console.log('🚀 [UI] Iniciando criação de agendamento...');
-      console.log('👤 [UI] Usuário logado - Conta:', user.contaId, user.numeroConta);
-      console.log('🎯 [UI] Conta destino:', contaDestino.contaId, contaDestino.numeroConta);
-      console.log('📋 [UI] Request completo:', request);
-      
+      console.log("🚀 [UI] Iniciando criação de agendamento...");
+      console.log(
+        "👤 [UI] Usuário logado - Conta:",
+        user.contaId,
+        user.numeroConta
+      );
+      console.log(
+        "🎯 [UI] Conta destino:",
+        contaDestino.contaId,
+        contaDestino.numeroConta
+      );
+      console.log("📋 [UI] Request completo:", request);
+
       const response = await operacoesService.criarAgendamento(request);
-      
-      console.log('✅ [UI] Agendamento criado com sucesso!');
+
+      console.log("✅ [UI] Agendamento criado com sucesso!");
       setResultado(response);
       setSuccess(true);
-      setApiStatus('online');
-      
+      setApiStatus("online");
     } catch (err) {
-      console.error('❌ [UI] Erro ao criar agendamento:', err);
-      setApiStatus('offline');
-      
-      let errorMessage = 'Erro ao criar pagamento agendado';
-      let errorDetails = '';
-      
+      console.error("❌ [UI] Erro ao criar agendamento:", err);
+      setApiStatus("offline");
+
+      let errorMessage = "Erro ao criar pagamento agendado";
+      let errorDetails = "";
+
       if (err instanceof Error) {
         errorMessage = err.message;
-        
+
         // Tentar extrair mais informações do erro
-        if (err.message.includes('HTTP 403')) {
-          errorDetails = '\n\n🔐 Erro de autorização detectado:\n';
-          errorDetails += '• Verifique se você tem permissão para criar agendamentos\n';
-          errorDetails += '• Verifique se sua conta está ativa\n';
-          errorDetails += '• Verifique se o token não expirou\n';
-          
+        if (err.message.includes("HTTP 403")) {
+          errorDetails = "\n\n🔐 Erro de autorização detectado:\n";
+          errorDetails +=
+            "• Verifique se você tem permissão para criar agendamentos\n";
+          errorDetails += "• Verifique se sua conta está ativa\n";
+          errorDetails += "• Verifique se o token não expirou\n";
+
           // Verificar se há informações específicas no console
-          console.log('🔍 [UI] Erro 403 - Verificando logs do console para mais detalhes...');
-        } else if (err.message.includes('HTTP 400')) {
-          errorDetails = '\n\n📝 Erro de validação detectado:\n';
-          errorDetails += '• Verifique se todos os campos estão preenchidos corretamente\n';
-          errorDetails += '• Verifique se o valor é válido\n';
-          errorDetails += '• Verifique se a data é válida\n';
-        } else if (err.message.includes('rede') || err.message.includes('Network')) {
-          errorDetails = '\n\n🌐 Erro de conectividade detectado:\n';
-          errorDetails += '• Verifique se o backend está rodando\n';
-          errorDetails += '• Verifique sua conexão com a internet\n';
-          errorDetails += '• Tente novamente em alguns segundos\n';
+          console.log(
+            "🔍 [UI] Erro 403 - Verificando logs do console para mais detalhes..."
+          );
+        } else if (err.message.includes("HTTP 400")) {
+          errorDetails = "\n\n📝 Erro de validação detectado:\n";
+          errorDetails +=
+            "• Verifique se todos os campos estão preenchidos corretamente\n";
+          errorDetails += "• Verifique se o valor é válido\n";
+          errorDetails += "• Verifique se a data é válida\n";
+        } else if (
+          err.message.includes("rede") ||
+          err.message.includes("Network")
+        ) {
+          errorDetails = "\n\n🌐 Erro de conectividade detectado:\n";
+          errorDetails += "• Verifique se o backend está rodando\n";
+          errorDetails += "• Verifique sua conexão com a internet\n";
+          errorDetails += "• Tente novamente em alguns segundos\n";
         }
       }
-      
+
       setError(`❌ ERRO: ${errorMessage}${errorDetails}`);
-      
+
       // Se for erro 403, executar diagnóstico automático
-      if (errorMessage.includes('HTTP 403')) {
-        console.log('🔍 [UI] Erro 403 detectado - Executando diagnóstico automático...');
+      if (errorMessage.includes("HTTP 403")) {
+        console.log(
+          "🔍 [UI] Erro 403 detectado - Executando diagnóstico automático..."
+        );
         setTimeout(() => {
           diagnosticoCompleto();
         }, 1000);
@@ -295,7 +334,7 @@ const PagamentoAgendadoPage: React.FC = () => {
     if (!user || !contaDestino) return;
 
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
       const request: AgendamentoRequest = {
@@ -305,21 +344,22 @@ const PagamentoAgendadoPage: React.FC = () => {
         periodicidadeDias: formData.periodicidadeDias,
         debitarPrimeiraParcela: formData.debitarPrimeiraParcela,
         descricao: formData.descricao,
-        dataInicio: formData.dataInicio
+        dataInicio: formData.dataInicio,
       };
 
-      console.log('🔄 [UI] Usando mock manual...');
+      console.log("🔄 [UI] Usando mock manual...");
       const response = await operacoesService.criarAgendamentoMock(request);
-      
+
       setResultado(response);
       setSuccess(true);
-      setApiStatus('offline');
-      
+      setApiStatus("offline");
+
       // Avisar que está usando mock
-      setError('⚠️ ATENÇÃO: Usando dados simulados (mock). Nenhum dado foi salvo no banco real.');
-      
+      setError(
+        "⚠️ ATENÇÃO: Usando dados simulados (mock). Nenhum dado foi salvo no banco real."
+      );
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao usar mock');
+      setError(err instanceof Error ? err.message : "Erro ao usar mock");
     } finally {
       setLoading(false);
     }
@@ -328,132 +368,170 @@ const PagamentoAgendadoPage: React.FC = () => {
   const novoPagamento = () => {
     setSuccess(false);
     setResultado(null);
-    setError('');
+    setError("");
     setCurrentStep(0);
-    setApiStatus('unknown');
+    setApiStatus("unknown");
     setFormData({
-      numeroContaDestino: '',
-      valorTotal: '',
+      numeroContaDestino: "",
+      valorTotal: "",
       quantidadeParcelas: 1,
       periodicidadeDias: 30,
       debitarPrimeiraParcela: true,
-      descricao: '',
-      dataInicio: new Date().toISOString().split('T')[0]
+      descricao: "",
+      dataInicio: new Date().toISOString().split("T")[0],
     });
     setContaDestino(null);
   };
 
   // Função para testar conectividade com a API
   const testarConectividade = async () => {
-    setApiStatus('checking');
+    setApiStatus("checking");
     try {
-      console.log('🔍 [CONECTIVIDADE] Testando conexão com API...');
-      
+      console.log("🔍 [CONECTIVIDADE] Testando conexão com API...");
+
       // Tentar buscar contas disponíveis como teste
       await operacoesService.buscarContasDisponiveis();
-      
-      console.log('✅ [CONECTIVIDADE] API está online!');
-      setApiStatus('online');
-      setError('');
+
+      console.log("✅ [CONECTIVIDADE] API está online!");
+      setApiStatus("online");
+      setError("");
     } catch (err) {
-      console.error('❌ [CONECTIVIDADE] API está offline:', err);
-      setApiStatus('offline');
-      setError(`Conectividade: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
+      console.error("❌ [CONECTIVIDADE] API está offline:", err);
+      setApiStatus("offline");
+      setError(
+        `Conectividade: ${
+          err instanceof Error ? err.message : "Erro desconhecido"
+        }`
+      );
     }
   };
 
   // Função para testar permissões em vários endpoints
   const testarPermissoes = async () => {
-    setApiStatus('checking');
+    setApiStatus("checking");
     try {
-      console.log('🔍 [PERMISSÕES] Iniciando teste de permissões...');
-      
+      console.log("🔍 [PERMISSÕES] Iniciando teste de permissões...");
+
       const resultados = await operacoesService.testarPermissoes();
-      
+
       const sucessos = Object.values(resultados).filter(Boolean).length;
       const total = Object.keys(resultados).length;
-      
+
       if (sucessos === total) {
-        setApiStatus('online');
-        setError('');
+        setApiStatus("online");
+        setError("");
       } else {
-        setApiStatus('offline');
-        setError(`Problemas de permissão encontrados. Verifique o console para detalhes. (${sucessos}/${total} endpoints funcionando)`);
+        setApiStatus("offline");
+        setError(
+          `Problemas de permissão encontrados. Verifique o console para detalhes. (${sucessos}/${total} endpoints funcionando)`
+        );
       }
-      
     } catch (err) {
-      console.error('❌ [PERMISSÕES] Erro ao testar permissões:', err);
-      setApiStatus('offline');
-      setError(`Erro nos testes: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
+      console.error("❌ [PERMISSÕES] Erro ao testar permissões:", err);
+      setApiStatus("offline");
+      setError(
+        `Erro nos testes: ${
+          err instanceof Error ? err.message : "Erro desconhecido"
+        }`
+      );
     }
   };
 
   // Função para fazer diagnóstico completo
   const diagnosticoCompleto = async () => {
-    console.log('🔬 [DIAGNÓSTICO] Iniciando diagnóstico completo...');
-    console.log('👤 [DIAGNÓSTICO] Usuário logado:', user);
-    
+    console.log("🔬 [DIAGNÓSTICO] Iniciando diagnóstico completo...");
+    console.log("👤 [DIAGNÓSTICO] Usuário logado:", user);
+
     if (user) {
-      console.log('📋 [DIAGNÓSTICO] Detalhes do usuário:');
-      console.log('   - ID:', user.id);
-      console.log('   - Login:', user.login);
-      console.log('   - Perfil:', user.perfil);
-      console.log('   - Conta ID:', user.contaId);
-      console.log('   - Número da Conta:', user.numeroConta);
-      console.log('   - Titular:', user.titular);
+      console.log("📋 [DIAGNÓSTICO] Detalhes do usuário:");
+      console.log("   - ID:", user.id);
+      console.log("   - Login:", user.login);
+      console.log("   - Perfil:", user.perfil);
+      console.log("   - Conta ID:", user.contaId);
+      console.log("   - Número da Conta:", user.numeroConta);
+      console.log("   - Titular:", user.titular);
     }
-    
-    console.log('📋 [DIAGNÓSTICO] Dados do formulário atual:');
-    console.log('   - Conta Destino:', contaDestino);
-    console.log('   - FormData:', formData);
-    
+
+    console.log("📋 [DIAGNÓSTICO] Dados do formulário atual:");
+    console.log("   - Conta Destino:", contaDestino);
+    console.log("   - FormData:", formData);
+
     if (contaDestino && user) {
-      console.log('🔍 [DIAGNÓSTICO] Verificando contas:');
-      console.log('   - Conta Origem (usuário):', user.contaId, '-', user.numeroConta);
-      console.log('   - Conta Destino (selecionada):', contaDestino.contaId, '-', contaDestino.numeroConta);
-      console.log('   - São diferentes?', user.contaId !== contaDestino.contaId);
-      
+      console.log("🔍 [DIAGNÓSTICO] Verificando contas:");
+      console.log(
+        "   - Conta Origem (usuário):",
+        user.contaId,
+        "-",
+        user.numeroConta
+      );
+      console.log(
+        "   - Conta Destino (selecionada):",
+        contaDestino.contaId,
+        "-",
+        contaDestino.numeroConta
+      );
+      console.log(
+        "   - São diferentes?",
+        user.contaId !== contaDestino.contaId
+      );
+
       if (user.contaId === contaDestino.contaId) {
-        console.warn('⚠️ [DIAGNÓSTICO] PROBLEMA: Tentando agendar para a própria conta!');
-        setError('Erro detectado: Você não pode agendar pagamento para sua própria conta');
+        console.warn(
+          "⚠️ [DIAGNÓSTICO] PROBLEMA: Tentando agendar para a própria conta!"
+        );
+        setError(
+          "Erro detectado: Você não pode agendar pagamento para sua própria conta"
+        );
         return;
       }
     }
-    
+
     // Testar endpoint de agendamento com dados reais
     try {
-      setApiStatus('checking');
+      setApiStatus("checking");
       const sucesso = await operacoesService.testarAgendamentoMinimo();
-      
+
       if (sucesso) {
-        console.log('✅ [DIAGNÓSTICO] Endpoint de agendamento funciona com dados mínimos');
-        setError('✅ Endpoint funciona! O problema pode estar nos seus dados específicos. Verifique se a conta de destino é diferente da sua.');
-        setApiStatus('online');
+        console.log(
+          "✅ [DIAGNÓSTICO] Endpoint de agendamento funciona com dados mínimos"
+        );
+        setError(
+          "✅ Endpoint funciona! O problema pode estar nos seus dados específicos. Verifique se a conta de destino é diferente da sua."
+        );
+        setApiStatus("online");
       } else {
-        console.log('❌ [DIAGNÓSTICO] Endpoint de agendamento falha mesmo com dados mínimos');
-        setError('❌ Problema confirmado no endpoint. Verifique logs detalhados no console.');
-        setApiStatus('offline');
+        console.log(
+          "❌ [DIAGNÓSTICO] Endpoint de agendamento falha mesmo com dados mínimos"
+        );
+        setError(
+          "❌ Problema confirmado no endpoint. Verifique logs detalhados no console."
+        );
+        setApiStatus("offline");
       }
     } catch (err) {
-      console.error('❌ [DIAGNÓSTICO] Erro no diagnóstico:', err);
-      setError(`Erro no diagnóstico: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
-      setApiStatus('offline');
+      console.error("❌ [DIAGNÓSTICO] Erro no diagnóstico:", err);
+      setError(
+        `Erro no diagnóstico: ${
+          err instanceof Error ? err.message : "Erro desconhecido"
+        }`
+      );
+      setApiStatus("offline");
     }
   };
 
   // Gerar preview das próximas datas de pagamento
   const gerarPreviewDatas = () => {
     if (!formData.dataInicio || formData.quantidadeParcelas < 1) return [];
-    
+
     const datas = [];
     const dataBase = new Date(formData.dataInicio);
-    
+
     for (let i = 0; i < Math.min(formData.quantidadeParcelas, 5); i++) {
       const data = new Date(dataBase);
-      data.setDate(data.getDate() + (i * formData.periodicidadeDias));
+      data.setDate(data.getDate() + i * formData.periodicidadeDias);
       datas.push(data);
     }
-    
+
     return datas;
   };
 
@@ -464,16 +542,20 @@ const PagamentoAgendadoPage: React.FC = () => {
   if (success && resultado) {
     return (
       <Box sx={{ p: 3 }}>
-        <Paper sx={{ p: 4, maxWidth: 700, mx: 'auto' }}>
-          <Box sx={{ textAlign: 'center', mb: 3 }}>
-            <CheckCircle sx={{ fontSize: 64, color: 'success.main', mb: 2 }} />
+        <Paper sx={{ p: 4, maxWidth: 700, mx: "auto" }}>
+          <Box sx={{ textAlign: "center", mb: 3 }}>
+            <CheckCircle sx={{ fontSize: 64, color: "success.main", mb: 2 }} />
             <Typography variant="h4" gutterBottom color="success.main">
               Pagamento Agendado com Sucesso!
             </Typography>
-            <Chip 
-              label={resultado.dados.agendamento.status} 
-              color={resultado.dados.agendamento.status === 'ATIVO' ? 'primary' : 'success'} 
-              sx={{ mb: 2 }} 
+            <Chip
+              label={resultado.dados.agendamento.status}
+              color={
+                resultado.dados.agendamento.status === "ATIVO"
+                  ? "primary"
+                  : "success"
+              }
+              sx={{ mb: 2 }}
             />
           </Box>
 
@@ -483,12 +565,14 @@ const PagamentoAgendadoPage: React.FC = () => {
               <Card sx={{ mb: 2 }}>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
-                    <AccountBalance sx={{ mr: 1, verticalAlign: 'middle' }} />
+                    <AccountBalance sx={{ mr: 1, verticalAlign: "middle" }} />
                     Informações das Contas
                   </Typography>
                   <Grid container spacing={2}>
                     <Grid item xs={6}>
-                      <Typography variant="body2" color="text.secondary">Conta Origem</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Conta Origem
+                      </Typography>
                       <Typography variant="body1" fontWeight="bold">
                         {resultado.contaOrigem.titular}
                       </Typography>
@@ -497,7 +581,9 @@ const PagamentoAgendadoPage: React.FC = () => {
                       </Typography>
                     </Grid>
                     <Grid item xs={6}>
-                      <Typography variant="body2" color="text.secondary">Conta Destino</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Conta Destino
+                      </Typography>
                       <Typography variant="body1" fontWeight="bold">
                         {resultado.contaDestino.titular}
                       </Typography>
@@ -515,32 +601,34 @@ const PagamentoAgendadoPage: React.FC = () => {
               <Card>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
-                    <Schedule sx={{ mr: 1, verticalAlign: 'middle' }} />
+                    <Schedule sx={{ mr: 1, verticalAlign: "middle" }} />
                     Detalhes do Agendamento
                   </Typography>
                   <List dense>
                     <ListItem>
-                      <ListItemText 
-                        primary="ID do Agendamento" 
-                        secondary={`#${resultado.dados.agendamento.id}`} 
+                      <ListItemText
+                        primary="ID do Agendamento"
+                        secondary={`#${resultado.dados.agendamento.id}`}
                       />
                     </ListItem>
                     <ListItem>
-                      <ListItemText 
-                        primary="Descrição" 
-                        secondary={resultado.dados.agendamento.descricao} 
+                      <ListItemText
+                        primary="Descrição"
+                        secondary={resultado.dados.agendamento.descricao}
                       />
                     </ListItem>
                     <ListItem>
-                      <ListItemText 
-                        primary="Status" 
-                        secondary={resultado.dados.agendamento.status} 
+                      <ListItemText
+                        primary="Status"
+                        secondary={resultado.dados.agendamento.status}
                       />
                     </ListItem>
                     <ListItem>
-                      <ListItemText 
-                        primary="Próxima Execução" 
-                        secondary={new Date(resultado.dados.agendamento.dataProximaExecucao).toLocaleDateString('pt-BR')} 
+                      <ListItemText
+                        primary="Próxima Execução"
+                        secondary={new Date(
+                          resultado.dados.agendamento.dataProximaExecucao
+                        ).toLocaleDateString("pt-BR")}
                       />
                     </ListItem>
                   </List>
@@ -553,33 +641,44 @@ const PagamentoAgendadoPage: React.FC = () => {
               <Card>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
-                    <Payment sx={{ mr: 1, verticalAlign: 'middle' }} />
+                    <Payment sx={{ mr: 1, verticalAlign: "middle" }} />
                     Valores
                   </Typography>
                   <List dense>
                     <ListItem>
-                      <ListItemText 
-                        primary="Valor Total" 
-                        secondary={`R$ ${resultado.dados.agendamento.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} 
+                      <ListItemText
+                        primary="Valor Total"
+                        secondary={`R$ ${resultado.dados.agendamento.valorTotal.toLocaleString(
+                          "pt-BR",
+                          { minimumFractionDigits: 2 }
+                        )}`}
                       />
                     </ListItem>
                     <ListItem>
-                      <ListItemText 
-                        primary="Valor da Parcela" 
-                        secondary={`R$ ${resultado.dados.agendamento.valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} 
+                      <ListItemText
+                        primary="Valor da Parcela"
+                        secondary={`R$ ${resultado.dados.agendamento.valorParcela.toLocaleString(
+                          "pt-BR",
+                          { minimumFractionDigits: 2 }
+                        )}`}
                       />
                     </ListItem>
                     <ListItem>
-                      <ListItemText 
-                        primary="Quantidade de Parcelas" 
-                        secondary={resultado.dados.agendamento.quantidadeParcelas} 
+                      <ListItemText
+                        primary="Quantidade de Parcelas"
+                        secondary={
+                          resultado.dados.agendamento.quantidadeParcelas
+                        }
                       />
                     </ListItem>
                     {resultado.dados.valorDebitadoAgora > 0 && (
                       <ListItem>
-                        <ListItemText 
-                          primary="Valor Debitado Hoje" 
-                          secondary={`R$ ${resultado.dados.valorDebitadoAgora.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} 
+                        <ListItemText
+                          primary="Valor Debitado Hoje"
+                          secondary={`R$ ${resultado.dados.valorDebitadoAgora.toLocaleString(
+                            "pt-BR",
+                            { minimumFractionDigits: 2 }
+                          )}`}
                         />
                       </ListItem>
                     )}
@@ -591,7 +690,7 @@ const PagamentoAgendadoPage: React.FC = () => {
 
           <Alert severity="success" sx={{ mt: 3 }}>
             {resultado.message}
-            {apiStatus === 'online' && (
+            {apiStatus === "online" && (
               <Typography variant="body2" sx={{ mt: 1, opacity: 0.8 }}>
                 ✅ Dados salvos no banco de dados via API
               </Typography>
@@ -599,18 +698,23 @@ const PagamentoAgendadoPage: React.FC = () => {
           </Alert>
 
           {/* Debug Info */}
-          {process.env.NODE_ENV === 'development' && (
+          {process.env.NODE_ENV === "development" && (
             <Alert severity="info" sx={{ mt: 2 }}>
               <Typography variant="body2">
-                <strong>Debug Info:</strong><br/>
-                API Status: {apiStatus}<br/>
-                Agendamento ID: {resultado.dados.agendamento.id}<br/>
+                <strong>Debug Info:</strong>
+                <br />
+                API Status: {apiStatus}
+                <br />
+                Agendamento ID: {resultado.dados.agendamento.id}
+                <br />
                 Timestamp: {resultado.timestamp}
               </Typography>
             </Alert>
           )}
 
-          <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'center' }}>
+          <Box
+            sx={{ mt: 3, display: "flex", gap: 2, justifyContent: "center" }}
+          >
             <Button
               variant="outlined"
               onClick={novoPagamento}
@@ -620,14 +724,14 @@ const PagamentoAgendadoPage: React.FC = () => {
             </Button>
             <Button
               variant="contained"
-              onClick={() => navigate('/agendamentos')}
+              onClick={() => navigate("/agendamentos")}
               startIcon={<Schedule />}
             >
               Ver Agendamentos
             </Button>
             <Button
               variant="outlined"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate("/dashboard")}
               startIcon={<ArrowBack />}
             >
               Voltar ao Dashboard
@@ -640,56 +744,56 @@ const PagamentoAgendadoPage: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Paper sx={{ p: 4, maxWidth: 800, mx: 'auto' }}>
+      <Paper sx={{ p: 4, maxWidth: 800, mx: "auto" }}>
         <Box sx={{ mb: 4 }}>
           <Typography variant="h4" gutterBottom>
-            <Payment sx={{ mr: 2, verticalAlign: 'middle' }} />
+            <Payment sx={{ mr: 2, verticalAlign: "middle" }} />
             Agendamento de Pagamento
           </Typography>
           <Typography variant="body1" color="text.secondary">
             Configure um pagamento automático com parcelas programadas
           </Typography>
-          
+
           {/* Indicador de Status da API */}
-          <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ mt: 2, display: "flex", alignItems: "center", gap: 1 }}>
             <Typography variant="body2" color="text.secondary">
               Status da API:
             </Typography>
-            {apiStatus === 'checking' && (
+            {apiStatus === "checking" && (
               <Chip size="small" label="Verificando..." color="warning" />
             )}
-            {apiStatus === 'online' && (
+            {apiStatus === "online" && (
               <Chip size="small" label="✅ Online" color="success" />
             )}
-            {apiStatus === 'offline' && (
+            {apiStatus === "offline" && (
               <Chip size="small" label="❌ Offline" color="error" />
             )}
-            {apiStatus === 'unknown' && (
+            {apiStatus === "unknown" && (
               <Chip size="small" label="⚪ Não testado" color="default" />
             )}
-            <Button 
-              size="small" 
-              variant="outlined" 
+            <Button
+              size="small"
+              variant="outlined"
               onClick={testarConectividade}
-              disabled={apiStatus === 'checking'}
+              disabled={apiStatus === "checking"}
             >
               Testar API
             </Button>
-            <Button 
-              size="small" 
-              variant="outlined" 
+            <Button
+              size="small"
+              variant="outlined"
               color="secondary"
               onClick={testarPermissoes}
-              disabled={apiStatus === 'checking'}
+              disabled={apiStatus === "checking"}
             >
               Testar Permissões
             </Button>
-            <Button 
-              size="small" 
-              variant="outlined" 
+            <Button
+              size="small"
+              variant="outlined"
               color="warning"
               onClick={diagnosticoCompleto}
-              disabled={apiStatus === 'checking'}
+              disabled={apiStatus === "checking"}
             >
               Diagnóstico Completo
             </Button>
@@ -705,12 +809,13 @@ const PagamentoAgendadoPage: React.FC = () => {
         </Stepper>
 
         {error && (
-          <Alert 
-            severity={error.includes('ATENÇÃO') ? 'warning' : 'error'} 
+          <Alert
+            severity={error.includes("ATENÇÃO") ? "warning" : "error"}
             sx={{ mb: 3 }}
             action={
-              error.includes('❌ ERRO') && apiStatus === 'offline' && (
-                <Box sx={{ display: 'flex', gap: 1 }}>
+              error.includes("❌ ERRO") &&
+              apiStatus === "offline" && (
+                <Box sx={{ display: "flex", gap: 1 }}>
                   <Button
                     size="small"
                     variant="outlined"
@@ -741,10 +846,10 @@ const PagamentoAgendadoPage: React.FC = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                <AccountBalance sx={{ mr: 1, verticalAlign: 'middle' }} />
+                <AccountBalance sx={{ mr: 1, verticalAlign: "middle" }} />
                 Conta de Destino
               </Typography>
-              
+
               <Grid container spacing={3}>
                 <Grid item xs={12} md={8}>
                   <TextField
@@ -768,11 +873,13 @@ const PagamentoAgendadoPage: React.FC = () => {
                     fullWidth
                     variant="contained"
                     onClick={buscarContaDestino}
-                    disabled={buscandoConta || !formData.numeroContaDestino.trim()}
+                    disabled={
+                      buscandoConta || !formData.numeroContaDestino.trim()
+                    }
                     startIcon={buscandoConta ? <></> : <Search />}
-                    sx={{ height: '56px' }}
+                    sx={{ height: "56px" }}
                   >
-                    {buscandoConta ? 'Buscando...' : 'Buscar Conta'}
+                    {buscandoConta ? "Buscando..." : "Buscar Conta"}
                   </Button>
                 </Grid>
               </Grid>
@@ -784,10 +891,10 @@ const PagamentoAgendadoPage: React.FC = () => {
               )}
 
               {contaDestino && (
-                <Card sx={{ mt: 3, bgcolor: 'success.50' }}>
+                <Card sx={{ mt: 3, bgcolor: "success.50" }}>
                   <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <CheckCircle sx={{ color: 'success.main', mr: 1 }} />
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                      <CheckCircle sx={{ color: "success.main", mr: 1 }} />
                       <Typography variant="h6" color="success.main">
                         Conta Encontrada
                       </Typography>
@@ -798,7 +905,7 @@ const PagamentoAgendadoPage: React.FC = () => {
                           Titular
                         </Typography>
                         <Typography variant="h6">
-                          <Person sx={{ mr: 1, verticalAlign: 'middle' }} />
+                          <Person sx={{ mr: 1, verticalAlign: "middle" }} />
                           {contaDestino.titular}
                         </Typography>
                       </Grid>
@@ -807,7 +914,7 @@ const PagamentoAgendadoPage: React.FC = () => {
                           Número da Conta
                         </Typography>
                         <Typography variant="h6">
-                          <CreditCard sx={{ mr: 1, verticalAlign: 'middle' }} />
+                          <CreditCard sx={{ mr: 1, verticalAlign: "middle" }} />
                           {contaDestino.numeroConta}
                         </Typography>
                       </Grid>
@@ -824,10 +931,10 @@ const PagamentoAgendadoPage: React.FC = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                <Schedule sx={{ mr: 1, verticalAlign: 'middle' }} />
+                <Schedule sx={{ mr: 1, verticalAlign: "middle" }} />
                 Configuração do Pagamento
               </Typography>
-              
+
               <Grid container spacing={3}>
                 <Grid item xs={12} md={6}>
                   <TextField
@@ -838,12 +945,14 @@ const PagamentoAgendadoPage: React.FC = () => {
                     value={formData.valorTotal}
                     onChange={handleInputChange}
                     InputProps={{
-                      startAdornment: <InputAdornment position="start">R$</InputAdornment>,
+                      startAdornment: (
+                        <InputAdornment position="start">R$</InputAdornment>
+                      ),
                     }}
                     inputProps={{ min: 0.01, step: 0.01 }}
                   />
                 </Grid>
-                
+
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
@@ -862,7 +971,9 @@ const PagamentoAgendadoPage: React.FC = () => {
                     <Select
                       value={formData.periodicidadeDias}
                       label="Periodicidade"
-                      onChange={(e) => handleSelectChange('periodicidadeDias', e.target.value)}
+                      onChange={(e) =>
+                        handleSelectChange("periodicidadeDias", e.target.value)
+                      }
                     >
                       {PERIODICIDADE_OPTIONS.map((option) => (
                         <MenuItem key={option.value} value={option.value}>
@@ -882,7 +993,7 @@ const PagamentoAgendadoPage: React.FC = () => {
                     value={formData.dataInicio}
                     onChange={handleInputChange}
                     InputLabelProps={{ shrink: true }}
-                    inputProps={{ min: new Date().toISOString().split('T')[0] }}
+                    inputProps={{ min: new Date().toISOString().split("T")[0] }}
                   />
                 </Grid>
 
@@ -915,10 +1026,10 @@ const PagamentoAgendadoPage: React.FC = () => {
 
               {/* Preview dos Cálculos */}
               {formData.valorTotal && (
-                <Card sx={{ mt: 3, bgcolor: 'info.50' }}>
+                <Card sx={{ mt: 3, bgcolor: "info.50" }}>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      <TrendingUp sx={{ mr: 1, verticalAlign: 'middle' }} />
+                      <TrendingUp sx={{ mr: 1, verticalAlign: "middle" }} />
                       Resumo dos Valores
                     </Typography>
                     <Grid container spacing={2}>
@@ -927,15 +1038,26 @@ const PagamentoAgendadoPage: React.FC = () => {
                           Valor da Parcela
                         </Typography>
                         <Typography variant="h6">
-                          R$ {valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          R${" "}
+                          {valorParcela.toLocaleString("pt-BR", {
+                            minimumFractionDigits: 2,
+                          })}
                         </Typography>
                       </Grid>
                       <Grid item xs={6}>
                         <Typography variant="body2" color="text.secondary">
                           Valor Imediato
                         </Typography>
-                        <Typography variant="h6" color={valorImediato > 0 ? 'warning.main' : 'text.primary'}>
-                          R$ {valorImediato.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        <Typography
+                          variant="h6"
+                          color={
+                            valorImediato > 0 ? "warning.main" : "text.primary"
+                          }
+                        >
+                          R${" "}
+                          {valorImediato.toLocaleString("pt-BR", {
+                            minimumFractionDigits: 2,
+                          })}
                         </Typography>
                       </Grid>
                     </Grid>
@@ -945,27 +1067,34 @@ const PagamentoAgendadoPage: React.FC = () => {
 
               {/* Preview das Datas */}
               {formData.dataInicio && formData.quantidadeParcelas > 1 && (
-                <Card sx={{ mt: 2, bgcolor: 'grey.50' }}>
+                <Card sx={{ mt: 2, bgcolor: "grey.50" }}>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      <CalendarToday sx={{ mr: 1, verticalAlign: 'middle' }} />
+                      <CalendarToday sx={{ mr: 1, verticalAlign: "middle" }} />
                       Próximas Datas de Pagamento
                     </Typography>
                     <Grid container spacing={1}>
                       {gerarPreviewDatas().map((data, index) => (
                         <Grid item xs={6} md={4} key={index}>
                           <Chip
-                            label={`${index + 1}ª: ${data.toLocaleDateString('pt-BR')}`}
+                            label={`${index + 1}ª: ${data.toLocaleDateString(
+                              "pt-BR"
+                            )}`}
                             variant="outlined"
                             size="small"
-                            color={index === 0 && formData.debitarPrimeiraParcela ? 'warning' : 'default'}
+                            color={
+                              index === 0 && formData.debitarPrimeiraParcela
+                                ? "warning"
+                                : "default"
+                            }
                           />
                         </Grid>
                       ))}
                       {formData.quantidadeParcelas > 5 && (
                         <Grid item xs={12}>
                           <Typography variant="body2" color="text.secondary">
-                            ... e mais {formData.quantidadeParcelas - 5} parcelas
+                            ... e mais {formData.quantidadeParcelas - 5}{" "}
+                            parcelas
                           </Typography>
                         </Grid>
                       )}
@@ -982,20 +1111,24 @@ const PagamentoAgendadoPage: React.FC = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                <CheckCircle sx={{ mr: 1, verticalAlign: 'middle' }} />
+                <CheckCircle sx={{ mr: 1, verticalAlign: "middle" }} />
                 Confirmação dos Dados
               </Typography>
-              
+
               <Grid container spacing={3}>
                 {/* Conta de Destino */}
                 <Grid item xs={12}>
                   <Card variant="outlined">
                     <CardContent>
-                      <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight="bold"
+                        gutterBottom
+                      >
                         Conta de Destino
                       </Typography>
                       <Typography variant="body1">
-                        <Person sx={{ mr: 1, verticalAlign: 'middle' }} />
+                        <Person sx={{ mr: 1, verticalAlign: "middle" }} />
                         {contaDestino?.titular}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
@@ -1009,32 +1142,50 @@ const PagamentoAgendadoPage: React.FC = () => {
                 <Grid item xs={12} md={6}>
                   <Card variant="outlined">
                     <CardContent>
-                      <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight="bold"
+                        gutterBottom
+                      >
                         Detalhes do Pagamento
                       </Typography>
                       <List dense>
                         <ListItem>
-                          <ListItemText 
-                            primary="Valor Total" 
-                            secondary={`R$ ${parseFloat(formData.valorTotal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} 
+                          <ListItemText
+                            primary="Valor Total"
+                            secondary={`R$ ${parseFloat(
+                              formData.valorTotal
+                            ).toLocaleString("pt-BR", {
+                              minimumFractionDigits: 2,
+                            })}`}
                           />
                         </ListItem>
                         <ListItem>
-                          <ListItemText 
-                            primary="Parcelas" 
-                            secondary={`${formData.quantidadeParcelas}x de R$ ${valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} 
+                          <ListItemText
+                            primary="Parcelas"
+                            secondary={`${
+                              formData.quantidadeParcelas
+                            }x de R$ ${valorParcela.toLocaleString("pt-BR", {
+                              minimumFractionDigits: 2,
+                            })}`}
                           />
                         </ListItem>
                         <ListItem>
-                          <ListItemText 
-                            primary="Periodicidade" 
-                            secondary={PERIODICIDADE_OPTIONS.find(p => p.value === formData.periodicidadeDias)?.label} 
+                          <ListItemText
+                            primary="Periodicidade"
+                            secondary={
+                              PERIODICIDADE_OPTIONS.find(
+                                (p) => p.value === formData.periodicidadeDias
+                              )?.label
+                            }
                           />
                         </ListItem>
                         <ListItem>
-                          <ListItemText 
-                            primary="Data de Início" 
-                            secondary={new Date(formData.dataInicio).toLocaleDateString('pt-BR')} 
+                          <ListItemText
+                            primary="Data de Início"
+                            secondary={new Date(
+                              formData.dataInicio
+                            ).toLocaleDateString("pt-BR")}
                           />
                         </ListItem>
                       </List>
@@ -1046,27 +1197,38 @@ const PagamentoAgendadoPage: React.FC = () => {
                 <Grid item xs={12} md={6}>
                   <Card variant="outlined">
                     <CardContent>
-                      <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight="bold"
+                        gutterBottom
+                      >
                         Resumo Financeiro
                       </Typography>
                       <List dense>
                         <ListItem>
-                          <ListItemText 
-                            primary="Descrição" 
-                            secondary={formData.descricao} 
+                          <ListItemText
+                            primary="Descrição"
+                            secondary={formData.descricao}
                           />
                         </ListItem>
                         <ListItem>
-                          <ListItemText 
-                            primary="Primeira Parcela" 
-                            secondary={formData.debitarPrimeiraParcela ? 'Debitar hoje' : 'Debitar na data de início'} 
+                          <ListItemText
+                            primary="Primeira Parcela"
+                            secondary={
+                              formData.debitarPrimeiraParcela
+                                ? "Debitar hoje"
+                                : "Debitar na data de início"
+                            }
                           />
                         </ListItem>
                         {valorImediato > 0 && (
                           <ListItem>
-                            <ListItemText 
-                              primary="Valor a Debitar Hoje" 
-                              secondary={`R$ ${valorImediato.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} 
+                            <ListItemText
+                              primary="Valor a Debitar Hoje"
+                              secondary={`R$ ${valorImediato.toLocaleString(
+                                "pt-BR",
+                                { minimumFractionDigits: 2 }
+                              )}`}
                             />
                           </ListItem>
                         )}
@@ -1078,7 +1240,10 @@ const PagamentoAgendadoPage: React.FC = () => {
 
               {valorImediato > 0 && (
                 <Alert severity="warning" sx={{ mt: 3 }}>
-                  <strong>Atenção:</strong> O valor de R$ {valorImediato.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} 
+                  <strong>Atenção:</strong> O valor de R${" "}
+                  {valorImediato.toLocaleString("pt-BR", {
+                    minimumFractionDigits: 2,
+                  })}
                   será debitado imediatamente da sua conta após a confirmação.
                 </Alert>
               )}
@@ -1087,30 +1252,24 @@ const PagamentoAgendadoPage: React.FC = () => {
         )}
 
         {/* Botões de Navegação */}
-        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between' }}>
+        <Box sx={{ mt: 4, display: "flex", justifyContent: "space-between" }}>
           <Button
             variant="outlined"
-            onClick={() => navigate('/operacoes')}
+            onClick={() => navigate("/operacoes")}
             startIcon={<ArrowBack />}
           >
             Cancelar
           </Button>
-          
-          <Box sx={{ display: 'flex', gap: 2 }}>
+
+          <Box sx={{ display: "flex", gap: 2 }}>
             {currentStep > 0 && (
-              <Button
-                variant="outlined"
-                onClick={passoAnterior}
-              >
+              <Button variant="outlined" onClick={passoAnterior}>
                 Voltar
               </Button>
             )}
-            
+
             {currentStep < steps.length - 1 ? (
-              <Button
-                variant="contained"
-                onClick={proximoPasso}
-              >
+              <Button variant="contained" onClick={proximoPasso}>
                 Próximo
               </Button>
             ) : (
@@ -1126,27 +1285,38 @@ const PagamentoAgendadoPage: React.FC = () => {
         </Box>
 
         {/* Dialog de Confirmação */}
-        <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)}>
-          <DialogTitle>
-            Confirmar Agendamento de Pagamento
-          </DialogTitle>
+        <Dialog
+          open={confirmDialogOpen}
+          onClose={() => setConfirmDialogOpen(false)}
+        >
+          <DialogTitle>Confirmar Agendamento de Pagamento</DialogTitle>
           <DialogContent>
             <Typography variant="body1" gutterBottom>
-              Deseja confirmar o agendamento do pagamento com os seguintes dados?
+              Deseja confirmar o agendamento do pagamento com os seguintes
+              dados?
             </Typography>
             <Box sx={{ mt: 2 }}>
               <Typography variant="body2">
                 <strong>Destinatário:</strong> {contaDestino?.titular}
               </Typography>
               <Typography variant="body2">
-                <strong>Valor Total:</strong> R$ {parseFloat(formData.valorTotal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                <strong>Valor Total:</strong> R${" "}
+                {parseFloat(formData.valorTotal).toLocaleString("pt-BR", {
+                  minimumFractionDigits: 2,
+                })}
               </Typography>
               <Typography variant="body2">
-                <strong>Parcelas:</strong> {formData.quantidadeParcelas}x de R$ {valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                <strong>Parcelas:</strong> {formData.quantidadeParcelas}x de R${" "}
+                {valorParcela.toLocaleString("pt-BR", {
+                  minimumFractionDigits: 2,
+                })}
               </Typography>
               {valorImediato > 0 && (
                 <Typography variant="body2" color="warning.main">
-                  <strong>Será debitado hoje:</strong> R$ {valorImediato.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  <strong>Será debitado hoje:</strong> R${" "}
+                  {valorImediato.toLocaleString("pt-BR", {
+                    minimumFractionDigits: 2,
+                  })}
                 </Typography>
               )}
             </Box>
@@ -1155,8 +1325,8 @@ const PagamentoAgendadoPage: React.FC = () => {
             <Button onClick={() => setConfirmDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button 
-              onClick={criarPagamentoAgendado} 
+            <Button
+              onClick={criarPagamentoAgendado}
               variant="contained"
               color="primary"
             >

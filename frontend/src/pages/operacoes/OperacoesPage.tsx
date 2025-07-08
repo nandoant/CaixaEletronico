@@ -83,25 +83,6 @@ const OperacoesPage: React.FC = () => {
             </Button>
           </Paper>
         </Grid>
-
-        <Grid item xs={12} md={3}>
-          <Paper sx={{ p: 3, textAlign: "center" }}>
-            <Typography variant="h6" gutterBottom>
-              Pagamento Agendado
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 2 }}>
-              Nova interface integrada ao backend
-            </Typography>
-            <Button
-              variant="contained"
-              fullWidth
-              color="secondary"
-              onClick={() => navigate("/operacoes/pagamento-agendado")}
-            >
-              Novo Agendamento
-            </Button>
-          </Paper>
-        </Grid>
       </Grid>
     </Box>
   );
