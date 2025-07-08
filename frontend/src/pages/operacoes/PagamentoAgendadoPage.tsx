@@ -84,6 +84,7 @@ const PagamentoAgendadoPage: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const [resultado, setResultado] = useState<AgendamentoResponse | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [apiStatus, setApiStatus] = useState<'unknown' | 'checking' | 'online' | 'offline'>('unknown');
 
   const steps = ['Conta de Destino', 'Configuração do Pagamento', 'Confirmação'];
 
@@ -206,9 +207,19 @@ const PagamentoAgendadoPage: React.FC = () => {
   const criarPagamentoAgendado = async () => {
     if (!user || !contaDestino) return;
 
+    // Validação extra: verificar se não está tentando agendar para a própria conta
+    if (user.contaId === contaDestino.contaId) {
+      console.error('❌ [UI] Tentativa de agendar pagamento para a própria conta!');
+      console.error('❌ [UI] Conta do usuário:', user.contaId, '-', user.numeroConta);
+      console.error('❌ [UI] Conta de destino:', contaDestino.contaId, '-', contaDestino.numeroConta);
+      setError('❌ ERRO: Você não pode agendar pagamento para sua própria conta!');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setConfirmDialogOpen(false);
+    setApiStatus('checking');
 
     try {
       const request: AgendamentoRequest = {
@@ -221,11 +232,94 @@ const PagamentoAgendadoPage: React.FC = () => {
         dataInicio: formData.dataInicio
       };
 
+      console.log('🚀 [UI] Iniciando criação de agendamento...');
+      console.log('👤 [UI] Usuário logado - Conta:', user.contaId, user.numeroConta);
+      console.log('🎯 [UI] Conta destino:', contaDestino.contaId, contaDestino.numeroConta);
+      console.log('📋 [UI] Request completo:', request);
+      
       const response = await operacoesService.criarAgendamento(request);
+      
+      console.log('✅ [UI] Agendamento criado com sucesso!');
       setResultado(response);
       setSuccess(true);
+      setApiStatus('online');
+      
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao criar pagamento agendado');
+      console.error('❌ [UI] Erro ao criar agendamento:', err);
+      setApiStatus('offline');
+      
+      let errorMessage = 'Erro ao criar pagamento agendado';
+      let errorDetails = '';
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+        
+        // Tentar extrair mais informações do erro
+        if (err.message.includes('HTTP 403')) {
+          errorDetails = '\n\n🔐 Erro de autorização detectado:\n';
+          errorDetails += '• Verifique se você tem permissão para criar agendamentos\n';
+          errorDetails += '• Verifique se sua conta está ativa\n';
+          errorDetails += '• Verifique se o token não expirou\n';
+          
+          // Verificar se há informações específicas no console
+          console.log('🔍 [UI] Erro 403 - Verificando logs do console para mais detalhes...');
+        } else if (err.message.includes('HTTP 400')) {
+          errorDetails = '\n\n📝 Erro de validação detectado:\n';
+          errorDetails += '• Verifique se todos os campos estão preenchidos corretamente\n';
+          errorDetails += '• Verifique se o valor é válido\n';
+          errorDetails += '• Verifique se a data é válida\n';
+        } else if (err.message.includes('rede') || err.message.includes('Network')) {
+          errorDetails = '\n\n🌐 Erro de conectividade detectado:\n';
+          errorDetails += '• Verifique se o backend está rodando\n';
+          errorDetails += '• Verifique sua conexão com a internet\n';
+          errorDetails += '• Tente novamente em alguns segundos\n';
+        }
+      }
+      
+      setError(`❌ ERRO: ${errorMessage}${errorDetails}`);
+      
+      // Se for erro 403, executar diagnóstico automático
+      if (errorMessage.includes('HTTP 403')) {
+        console.log('🔍 [UI] Erro 403 detectado - Executando diagnóstico automático...');
+        setTimeout(() => {
+          diagnosticoCompleto();
+        }, 1000);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Função para usar mock manualmente em caso de problemas
+  const usarMockManual = async () => {
+    if (!user || !contaDestino) return;
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const request: AgendamentoRequest = {
+        contaDestinoId: contaDestino.contaId,
+        valorTotal: parseFloat(formData.valorTotal),
+        quantidadeParcelas: formData.quantidadeParcelas,
+        periodicidadeDias: formData.periodicidadeDias,
+        debitarPrimeiraParcela: formData.debitarPrimeiraParcela,
+        descricao: formData.descricao,
+        dataInicio: formData.dataInicio
+      };
+
+      console.log('🔄 [UI] Usando mock manual...');
+      const response = await operacoesService.criarAgendamentoMock(request);
+      
+      setResultado(response);
+      setSuccess(true);
+      setApiStatus('offline');
+      
+      // Avisar que está usando mock
+      setError('⚠️ ATENÇÃO: Usando dados simulados (mock). Nenhum dado foi salvo no banco real.');
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao usar mock');
     } finally {
       setLoading(false);
     }
@@ -236,6 +330,7 @@ const PagamentoAgendadoPage: React.FC = () => {
     setResultado(null);
     setError('');
     setCurrentStep(0);
+    setApiStatus('unknown');
     setFormData({
       numeroContaDestino: '',
       valorTotal: '',
@@ -246,6 +341,104 @@ const PagamentoAgendadoPage: React.FC = () => {
       dataInicio: new Date().toISOString().split('T')[0]
     });
     setContaDestino(null);
+  };
+
+  // Função para testar conectividade com a API
+  const testarConectividade = async () => {
+    setApiStatus('checking');
+    try {
+      console.log('🔍 [CONECTIVIDADE] Testando conexão com API...');
+      
+      // Tentar buscar contas disponíveis como teste
+      await operacoesService.buscarContasDisponiveis();
+      
+      console.log('✅ [CONECTIVIDADE] API está online!');
+      setApiStatus('online');
+      setError('');
+    } catch (err) {
+      console.error('❌ [CONECTIVIDADE] API está offline:', err);
+      setApiStatus('offline');
+      setError(`Conectividade: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
+    }
+  };
+
+  // Função para testar permissões em vários endpoints
+  const testarPermissoes = async () => {
+    setApiStatus('checking');
+    try {
+      console.log('🔍 [PERMISSÕES] Iniciando teste de permissões...');
+      
+      const resultados = await operacoesService.testarPermissoes();
+      
+      const sucessos = Object.values(resultados).filter(Boolean).length;
+      const total = Object.keys(resultados).length;
+      
+      if (sucessos === total) {
+        setApiStatus('online');
+        setError('');
+      } else {
+        setApiStatus('offline');
+        setError(`Problemas de permissão encontrados. Verifique o console para detalhes. (${sucessos}/${total} endpoints funcionando)`);
+      }
+      
+    } catch (err) {
+      console.error('❌ [PERMISSÕES] Erro ao testar permissões:', err);
+      setApiStatus('offline');
+      setError(`Erro nos testes: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
+    }
+  };
+
+  // Função para fazer diagnóstico completo
+  const diagnosticoCompleto = async () => {
+    console.log('🔬 [DIAGNÓSTICO] Iniciando diagnóstico completo...');
+    console.log('👤 [DIAGNÓSTICO] Usuário logado:', user);
+    
+    if (user) {
+      console.log('📋 [DIAGNÓSTICO] Detalhes do usuário:');
+      console.log('   - ID:', user.id);
+      console.log('   - Login:', user.login);
+      console.log('   - Perfil:', user.perfil);
+      console.log('   - Conta ID:', user.contaId);
+      console.log('   - Número da Conta:', user.numeroConta);
+      console.log('   - Titular:', user.titular);
+    }
+    
+    console.log('📋 [DIAGNÓSTICO] Dados do formulário atual:');
+    console.log('   - Conta Destino:', contaDestino);
+    console.log('   - FormData:', formData);
+    
+    if (contaDestino && user) {
+      console.log('🔍 [DIAGNÓSTICO] Verificando contas:');
+      console.log('   - Conta Origem (usuário):', user.contaId, '-', user.numeroConta);
+      console.log('   - Conta Destino (selecionada):', contaDestino.contaId, '-', contaDestino.numeroConta);
+      console.log('   - São diferentes?', user.contaId !== contaDestino.contaId);
+      
+      if (user.contaId === contaDestino.contaId) {
+        console.warn('⚠️ [DIAGNÓSTICO] PROBLEMA: Tentando agendar para a própria conta!');
+        setError('Erro detectado: Você não pode agendar pagamento para sua própria conta');
+        return;
+      }
+    }
+    
+    // Testar endpoint de agendamento com dados reais
+    try {
+      setApiStatus('checking');
+      const sucesso = await operacoesService.testarAgendamentoMinimo();
+      
+      if (sucesso) {
+        console.log('✅ [DIAGNÓSTICO] Endpoint de agendamento funciona com dados mínimos');
+        setError('✅ Endpoint funciona! O problema pode estar nos seus dados específicos. Verifique se a conta de destino é diferente da sua.');
+        setApiStatus('online');
+      } else {
+        console.log('❌ [DIAGNÓSTICO] Endpoint de agendamento falha mesmo com dados mínimos');
+        setError('❌ Problema confirmado no endpoint. Verifique logs detalhados no console.');
+        setApiStatus('offline');
+      }
+    } catch (err) {
+      console.error('❌ [DIAGNÓSTICO] Erro no diagnóstico:', err);
+      setError(`Erro no diagnóstico: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
+      setApiStatus('offline');
+    }
   };
 
   // Gerar preview das próximas datas de pagamento
@@ -398,7 +591,24 @@ const PagamentoAgendadoPage: React.FC = () => {
 
           <Alert severity="success" sx={{ mt: 3 }}>
             {resultado.message}
+            {apiStatus === 'online' && (
+              <Typography variant="body2" sx={{ mt: 1, opacity: 0.8 }}>
+                ✅ Dados salvos no banco de dados via API
+              </Typography>
+            )}
           </Alert>
+
+          {/* Debug Info */}
+          {process.env.NODE_ENV === 'development' && (
+            <Alert severity="info" sx={{ mt: 2 }}>
+              <Typography variant="body2">
+                <strong>Debug Info:</strong><br/>
+                API Status: {apiStatus}<br/>
+                Agendamento ID: {resultado.dados.agendamento.id}<br/>
+                Timestamp: {resultado.timestamp}
+              </Typography>
+            </Alert>
+          )}
 
           <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'center' }}>
             <Button
@@ -439,6 +649,51 @@ const PagamentoAgendadoPage: React.FC = () => {
           <Typography variant="body1" color="text.secondary">
             Configure um pagamento automático com parcelas programadas
           </Typography>
+          
+          {/* Indicador de Status da API */}
+          <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="body2" color="text.secondary">
+              Status da API:
+            </Typography>
+            {apiStatus === 'checking' && (
+              <Chip size="small" label="Verificando..." color="warning" />
+            )}
+            {apiStatus === 'online' && (
+              <Chip size="small" label="✅ Online" color="success" />
+            )}
+            {apiStatus === 'offline' && (
+              <Chip size="small" label="❌ Offline" color="error" />
+            )}
+            {apiStatus === 'unknown' && (
+              <Chip size="small" label="⚪ Não testado" color="default" />
+            )}
+            <Button 
+              size="small" 
+              variant="outlined" 
+              onClick={testarConectividade}
+              disabled={apiStatus === 'checking'}
+            >
+              Testar API
+            </Button>
+            <Button 
+              size="small" 
+              variant="outlined" 
+              color="secondary"
+              onClick={testarPermissoes}
+              disabled={apiStatus === 'checking'}
+            >
+              Testar Permissões
+            </Button>
+            <Button 
+              size="small" 
+              variant="outlined" 
+              color="warning"
+              onClick={diagnosticoCompleto}
+              disabled={apiStatus === 'checking'}
+            >
+              Diagnóstico Completo
+            </Button>
+          </Box>
         </Box>
 
         <Stepper activeStep={currentStep} sx={{ mb: 4 }}>
@@ -450,7 +705,33 @@ const PagamentoAgendadoPage: React.FC = () => {
         </Stepper>
 
         {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
+          <Alert 
+            severity={error.includes('ATENÇÃO') ? 'warning' : 'error'} 
+            sx={{ mb: 3 }}
+            action={
+              error.includes('❌ ERRO') && apiStatus === 'offline' && (
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={testarConectividade}
+                    disabled={loading}
+                  >
+                    Tentar Novamente
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="warning"
+                    onClick={usarMockManual}
+                    disabled={loading}
+                  >
+                    Usar Mock
+                  </Button>
+                </Box>
+              )
+            }
+          >
             {error}
           </Alert>
         )}

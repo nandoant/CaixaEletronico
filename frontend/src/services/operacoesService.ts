@@ -316,17 +316,197 @@ class OperacoesService {
    * }
    */
   async criarAgendamento(request: AgendamentoRequest): Promise<AgendamentoResponse> {
+    console.log('🚀 [AGENDAMENTO] Iniciando criação de agendamento...');
+    console.log('📋 [AGENDAMENTO] Request data:', JSON.stringify(request, null, 2));
+    
+    // Verificar configuração da API
+    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+    console.log('🌐 [AGENDAMENTO] API Base URL:', apiUrl);
+    
+    // Verificar token de autenticação
+    const token = localStorage.getItem('authToken');
+    console.log('🔐 [AGENDAMENTO] Token presente:', !!token);
+    console.log('🔐 [AGENDAMENTO] Token preview:', token ? `${token.substring(0, 20)}...` : 'não encontrado');
+    console.log('🔐 [AGENDAMENTO] Token length:', token ? token.length : 0);
+    
+    // Tentar decodificar o token para ver as informações do usuário (se for JWT)
+    if (token) {
+      try {
+        console.log('🔍 [AGENDAMENTO] Iniciando decodificação do token...');
+        const tokenParts = token.split('.');
+        console.log('🔍 [AGENDAMENTO] Token parts count:', tokenParts.length);
+        
+        if (tokenParts.length === 3) {
+          console.log('🔍 [AGENDAMENTO] Token é JWT válido, decodificando payload...');
+          const payload = JSON.parse(atob(tokenParts[1]));
+          console.log('🔍 [AGENDAMENTO] Token payload completo:', payload);
+          console.log('🔍 [AGENDAMENTO] User ID:', payload.sub || payload.userId || payload.id || 'não encontrado');
+          console.log('🔍 [AGENDAMENTO] User login:', payload.login || payload.username || 'não encontrado');
+          console.log('🔍 [AGENDAMENTO] User perfil:', payload.perfil || payload.role || payload.authorities || 'não encontrado');
+          console.log('🔍 [AGENDAMENTO] Conta ID:', payload.contaId || 'não encontrado');
+          console.log('🔍 [AGENDAMENTO] Token expiry:', payload.exp ? new Date(payload.exp * 1000) : 'não encontrado');
+          console.log('🔍 [AGENDAMENTO] Token issued at:', payload.iat ? new Date(payload.iat * 1000) : 'não encontrado');
+          
+          // Verificar se o token está expirado
+          if (payload.exp && payload.exp * 1000 < Date.now()) {
+            console.error('⚠️ [AGENDAMENTO] TOKEN EXPIRADO!');
+            console.error('⚠️ [AGENDAMENTO] Expiry:', new Date(payload.exp * 1000));
+            console.error('⚠️ [AGENDAMENTO] Now:', new Date());
+            throw new Error('Token expirado. Faça login novamente.');
+          } else if (payload.exp) {
+            console.log('✅ [AGENDAMENTO] Token ainda válido até:', new Date(payload.exp * 1000));
+          }
+          
+          // Verificar se a conta no request coincide com a do usuário
+          const userContaId = payload.contaId;
+          if (userContaId) {
+            console.log('🔍 [AGENDAMENTO] Verificando propriedade da conta...');
+            console.log('🔍 [AGENDAMENTO] Conta do usuário no token:', userContaId);
+            console.log('🔍 [AGENDAMENTO] Conta de destino no request:', request.contaDestinoId);
+            
+            // Nota: A conta de origem não está no request, mas deveria ser a conta do usuário logado
+            console.log('💡 [AGENDAMENTO] A conta de origem será automaticamente a conta do usuário logado');
+          } else {
+            console.warn('⚠️ [AGENDAMENTO] Token não contém contaId - possível problema!');
+          }
+        } else {
+          console.warn('⚠️ [AGENDAMENTO] Token não é JWT válido (não tem 3 partes)');
+          console.log('🔍 [AGENDAMENTO] Token completo para análise:', token);
+        }
+      } catch (tokenError) {
+        console.error('⚠️ [AGENDAMENTO] ERRO ao decodificar token:', tokenError);
+        console.log('🔍 [AGENDAMENTO] Token que causou erro:', token);
+        console.log('⚠️ [AGENDAMENTO] Token pode estar malformado ou não ser JWT válido');
+        
+        // Tentar analisar o formato do token
+        if (token.startsWith('Bearer ')) {
+          console.log('💡 [AGENDAMENTO] Token começa com "Bearer " - pode estar com prefixo incorreto');
+        }
+        if (!token.includes('.')) {
+          console.log('💡 [AGENDAMENTO] Token não contém pontos - não é JWT');
+        }
+      }
+    } else {
+      console.error('🚫 [AGENDAMENTO] NENHUM TOKEN ENCONTRADO!');
+      throw new Error('Nenhum token de autenticação encontrado. Faça login novamente.');
+    }
+    
+    const fullUrl = `${apiUrl}/operacoes/agendamento`;
+    console.log('📡 [AGENDAMENTO] URL completa:', fullUrl);
+
     try {
-      console.log('🚀 Enviando request para /operacoes/agendamento:', request);
-      const response = await httpClient.post<AgendamentoResponse>('/operacoes/agendamento', request);
-      console.log('✅ Resposta recebida do backend:', response);
-      return response;
-    } catch (error: any) {
-      console.error('❌ Erro na API, tentando fallback para mock:', error);
+      console.log('⏳ [AGENDAMENTO] Enviando requisição para API real...');
       
-      // Se a API falhar, usar o método mock como fallback
-      console.log('🔄 Usando método mock como fallback...');
-      return await this.criarAgendamentoMock(request);
+      // Validar conta de destino antes de enviar
+      console.log('🔍 [AGENDAMENTO] Validando conta de destino...');
+      try {
+        const contasDisponiveis = await this.buscarContasDisponiveis();
+        const contaDestino = contasDisponiveis.dados.contas.find(c => c.contaId === request.contaDestinoId);
+        
+        if (!contaDestino) {
+          console.error('❌ [AGENDAMENTO] Conta de destino não encontrada na lista de contas disponíveis');
+          throw new Error(`Conta de destino ID ${request.contaDestinoId} não encontrada`);
+        }
+        
+        console.log('✅ [AGENDAMENTO] Conta de destino válida:', {
+          contaId: contaDestino.contaId,
+          numeroConta: contaDestino.numeroConta,
+          titular: contaDestino.titular
+        });
+      } catch (validationError: any) {
+        console.warn('⚠️ [AGENDAMENTO] Não foi possível validar conta de destino:', validationError.message);
+        console.log('🔄 [AGENDAMENTO] Prosseguindo com o request mesmo assim...');
+      }
+      
+      const response = await httpClient.post<AgendamentoResponse>('/pagamentos/agendar', request);
+      
+      console.log('✅ [AGENDAMENTO] Resposta recebida com sucesso!');
+      console.log('📦 [AGENDAMENTO] Response data:', JSON.stringify(response, null, 2));
+      
+      // Validar se a resposta tem estrutura esperada
+      if (!response.dados || !response.dados.agendamento) {
+        console.error('❌ [AGENDAMENTO] Resposta inválida - faltando dados.agendamento');
+        throw new Error('Resposta inválida da API - estrutura inesperada');
+      }
+      
+      // Verificar se é um ID real (não mock)
+      const agendamentoId = response.dados.agendamento.id;
+      console.log('🆔 [AGENDAMENTO] ID do agendamento criado:', agendamentoId);
+      
+      if (agendamentoId && agendamentoId > 1000) {
+        console.warn('⚠️ [AGENDAMENTO] ID suspeito (>1000) - pode ser mock');
+      }
+      
+      console.log('🎉 [AGENDAMENTO] Agendamento criado com sucesso na API!');
+      return response;
+      
+    } catch (error: any) {
+      console.error('❌ [AGENDAMENTO] Erro na requisição para API:');
+      console.error('📋 [AGENDAMENTO] Error details:', error);
+      console.error('🔍 [AGENDAMENTO] Error message:', error.message);
+      console.error('🔍 [AGENDAMENTO] Error stack:', error.stack);
+      
+      // Verificar tipo de erro
+      if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+        console.error('🚫 [AGENDAMENTO] Erro de autenticação - token inválido/expirado');
+        throw new Error('Sessão expirada. Faça login novamente.');
+      }
+      
+      if (error.message?.includes('403') || error.message?.includes('Forbidden')) {
+        console.error('🚫 [AGENDAMENTO] Erro de autorização - sem permissão');
+        console.error('� [AGENDAMENTO] Mensagem original do erro:', error.message);
+        console.error('�💡 [AGENDAMENTO] Possíveis causas para erro 403:');
+        console.error('   1. Token JWT malformado ou corrompido');
+        console.error('   2. Usuário não é proprietário da conta de origem');
+        console.error('   3. Conta de origem inválida ou inexistente');
+        console.error('   4. Regras de negócio específicas (ex: saldo insuficiente, limites)');
+        console.error('   5. Sessão expirada mas backend retorna 403 em vez de 401');
+        console.error('   6. Problemas de CORS ou configuração do servidor');
+        
+        // Extrair mensagem específica do backend removendo prefixos padrão
+        let mensagemBackend = error.message;
+        
+        // Remover prefixos comuns
+        const prefixosParaRemover = [
+          'Erro na requisição (HTTP 403)',
+          'HTTP 403:',
+          '(HTTP 403)',
+          'Forbidden:'
+        ];
+        
+        for (const prefixo of prefixosParaRemover) {
+          if (mensagemBackend.includes(prefixo)) {
+            mensagemBackend = mensagemBackend.replace(prefixo, '').trim();
+          }
+        }
+        
+        console.log('🔍 [AGENDAMENTO] Mensagem processada do backend:', mensagemBackend);
+        
+        // Se ainda temos uma mensagem válida do backend, usá-la
+        const mensagemFinal = mensagemBackend && mensagemBackend.length > 10 
+          ? `${mensagemBackend}`
+          : 'Acesso negado ao criar agendamento. Verifique se você é o proprietário da conta de origem.';
+          
+        throw new Error(mensagemFinal);
+      }
+      
+      if (error.message?.includes('404')) {
+        console.error('� [AGENDAMENTO] Endpoint não encontrado');
+        throw new Error('Serviço de agendamento não disponível. Contate o suporte.');
+      }
+      
+      if (error.message?.includes('500')) {
+        console.error('🚫 [AGENDAMENTO] Erro interno do servidor');
+        throw new Error('Erro interno do servidor. Tente novamente em alguns instantes.');
+      }
+      
+      if (error.message?.includes('fetch')) {
+        console.error('🚫 [AGENDAMENTO] Erro de conectividade/rede');
+        throw new Error('Erro de conectividade. Verifique sua conexão com a internet.');
+      }
+      
+      // Re-throw o erro original para não mascarar o problema
+      throw new Error(error.message || 'Erro inesperado ao criar agendamento. Verifique os logs do console.');
     }
   }
 
@@ -660,6 +840,126 @@ class OperacoesService {
       } else {
         throw new Error('Erro inesperado ao buscar contas disponíveis. Tente novamente.');
       }
+    }
+  }
+
+  /**
+   * Testa permissões em diferentes endpoints para diagnosticar problemas de autorização
+   */
+  async testarPermissoes(): Promise<{ [key: string]: boolean }> {
+    console.log('🔍 [PERMISSÕES] Testando permissões em diferentes endpoints...');
+    
+    const resultados: { [key: string]: boolean } = {};
+    
+    const endpoints = [
+      { nome: 'buscarContasDisponiveis', metodo: () => this.buscarContasDisponiveis() },
+      { nome: 'consultarSaldo', metodo: () => this.consultarSaldo(1) },
+      { nome: 'listarAgendamentos', metodo: () => this.listarAgendamentos() },
+      { 
+        nome: 'realizarTransferencia', 
+        metodo: () => this.realizarTransferencia({ contaOrigemId: 1, contaDestinoId: 2, valor: 0.01 }),
+        nota: 'Teste com valor mínimo - pode falhar por regras de negócio'
+      },
+    ];
+    
+    for (const endpoint of endpoints) {
+      try {
+        console.log(`🧪 [PERMISSÕES] Testando ${endpoint.nome}...`);
+        if (endpoint.nota) {
+          console.log(`💡 [PERMISSÕES] Nota: ${endpoint.nota}`);
+        }
+        
+        await endpoint.metodo();
+        resultados[endpoint.nome] = true;
+        console.log(`✅ [PERMISSÕES] ${endpoint.nome}: OK`);
+      } catch (error: any) {
+        resultados[endpoint.nome] = false;
+        console.log(`❌ [PERMISSÕES] ${endpoint.nome}: ${error.message}`);
+        
+        if (error.message?.includes('403')) {
+          console.log(`🚫 [PERMISSÕES] ${endpoint.nome} também retorna 403 - problema generalizado!`);
+        } else if (error.message?.includes('400')) {
+          console.log(`⚠️ [PERMISSÕES] ${endpoint.nome} retorna 400 - pode ser regra de negócio, não permissão`);
+        } else if (error.message?.includes('401')) {
+          console.log(`🔐 [PERMISSÕES] ${endpoint.nome} retorna 401 - problema de autenticação`);
+        }
+      }
+    }
+    
+    console.log('📊 [PERMISSÕES] Resumo dos testes:', resultados);
+    
+    // Análise dos resultados
+    const sucessos = Object.values(resultados).filter(Boolean).length;
+    const total = Object.keys(resultados).length;
+    
+    if (sucessos === 0) {
+      console.log('🚨 [PERMISSÕES] TODOS os endpoints falharam - problema geral de autenticação/autorização');
+    } else if (sucessos < total) {
+      console.log('⚠️ [PERMISSÕES] Alguns endpoints falharam - problema específico de certos recursos');
+    } else {
+      console.log('✅ [PERMISSÕES] Todos os endpoints funcionaram - problema específico do agendamento');
+    }
+    
+    return resultados;
+  }
+
+  /**
+   * Testa especificamente o endpoint de agendamento com dados mínimos válidos
+   */
+  async testarAgendamentoMinimo(): Promise<boolean> {
+    console.log('🧪 [TESTE-AGENDAMENTO] Testando agendamento com dados mínimos...');
+    
+    try {
+      // Buscar uma conta válida para usar como destino
+      const contasDisponiveis = await this.buscarContasDisponiveis();
+      if (contasDisponiveis.dados.contas.length < 2) {
+        throw new Error('Precisa de pelo menos 2 contas no sistema para testar agendamento');
+      }
+      
+      // Obter conta do usuário logado (primeira da lista ou pela busca específica)
+      const contaUsuario = contasDisponiveis.dados.contas[0];
+      const contaDestino = contasDisponiveis.dados.contas[1];
+      
+      const requestTeste: AgendamentoRequest = {
+        contaDestinoId: contaDestino.contaId,
+        valorTotal: 0.01, // Valor mínimo para teste
+        quantidadeParcelas: 1,
+        periodicidadeDias: 30,
+        debitarPrimeiraParcela: false, // Não debitar para não afetar saldo
+        descricao: 'TESTE - Agendamento de diagnóstico',
+        dataInicio: new Date().toISOString().split('T')[0]
+      };
+      
+      console.log('📋 [TESTE-AGENDAMENTO] Request de teste:', requestTeste);
+      console.log('📤 [TESTE-AGENDAMENTO] Conta origem para teste:', {
+        contaId: contaUsuario.contaId,
+        numeroConta: contaUsuario.numeroConta,
+        titular: contaUsuario.titular
+      });
+      console.log('🎯 [TESTE-AGENDAMENTO] Conta destino para teste:', {
+        contaId: contaDestino.contaId,
+        numeroConta: contaDestino.numeroConta,
+        titular: contaDestino.titular
+      });
+      
+      // Tentar criar o agendamento de teste
+      const response = await httpClient.post<AgendamentoResponse>('/pagamentos/agendar', requestTeste);
+      
+      console.log('✅ [TESTE-AGENDAMENTO] Agendamento de teste criado com sucesso!');
+      console.log('📦 [TESTE-AGENDAMENTO] Response:', response);
+      
+      // Se chegou até aqui, o endpoint funciona
+      return true;
+      
+    } catch (error: any) {
+      console.error('❌ [TESTE-AGENDAMENTO] Falha no teste de agendamento:', error);
+      console.error('🔍 [TESTE-AGENDAMENTO] Detalhes do erro:', error.message);
+      
+      if (error.message?.includes('403')) {
+        console.error('🚫 [TESTE-AGENDAMENTO] Confirmado: problema de autorização no endpoint de agendamento');
+      }
+      
+      return false;
     }
   }
 
