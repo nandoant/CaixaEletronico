@@ -367,3 +367,48 @@ export interface SaldoResponse {
   message: string;
   timestamp: string;
 }
+
+// Tipos específicos para o novo endpoint /contas/{id}/extrato
+export interface ExtratoFiltros {
+  dataInicio?: string;
+  dataFim?: string;
+  limite?: number;
+}
+
+export interface OperacaoExtrato {
+  id: number;
+  tipo: 'DEPOSITO' | 'SAQUE' | 'TRANSFERENCIA' | 'PAGAMENTO';
+  valor: number;
+  dataHora: string;
+  descricao: string;
+}
+
+export interface ExtratoNovoResponse {
+  contaId: number;
+  titular: string;
+  saldoAtual: number;
+  operacoes: OperacaoExtrato[];
+  totalOperacoes: number;
+}
+
+// Formato real retornado pelo backend para o extrato
+export interface ExtratoBackendResponse {
+  dados: {
+    periodo: {
+      dataInicio: string;
+      dataFim: string;
+    };
+    operacoes: OperacaoExtrato[];
+    totalOperacoes: number;
+  };
+  conta: {
+    contaId: number;
+    numeroConta: string;
+    titular: string;
+    usuarioProprietario: string;
+    usuarioProprietarioId: number;
+    saldo: number;
+  };
+  message: string;
+  timestamp: string;
+}

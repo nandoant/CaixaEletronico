@@ -1,75 +1,99 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, Alert } from '@mui/material';
-import ExtratoFiltros from '../../components/extrato/ExtratoFiltros';
-import ExtratoResumo from '../../components/extrato/ExtratoResumo';
-import ExtratoTabela from '../../components/extrato/ExtratoTabela';
-import { ExtratoRequest, ExtratoResponse } from '../../types/operacoes';
-import { operacoesService } from '../../services/operacoesService';
+import React, { useState, useEffect } from "react";
+import { Box, Typography, Alert } from "@mui/material";
+import ExtratoFiltros from "../../components/extrato/ExtratoFiltros";
+import ExtratoResumo from "../../components/extrato/ExtratoResumo";
+import ExtratoTabelaNova from "../../components/extrato/ExtratoTabelaNova";
+import {
+  ExtratoFiltros as ExtratoFiltrosType,
+  ExtratoNovoResponse,
+} from "../../types/operacoes";
+import { operacoesService } from "../../services/operacoesService";
+import { useConta } from "../../hooks/useConta";
 
 const ExtratoPage: React.FC = () => {
+  const { conta, isLoading: contaLoading } = useConta();
+
   // Estados para filtros
-  const [dataInicio, setDataInicio] = useState<string>('');
-  const [dataFim, setDataFim] = useState<string>('');
-  const [limite, setLimite] = useState<number>(50);
-  const [tipoOperacao, setTipoOperacao] = useState<'TODOS' | 'SAQUE' | 'DEPOSITO'>('TODOS');
-  
+  const [filtros, setFiltros] = useState<ExtratoFiltrosType>({
+    limite: 50,
+  });
+
   // Estados para dados
-  const [extratoData, setExtratoData] = useState<ExtratoResponse | null>(null);
+  const [extratoData, setExtratoData] = useState<ExtratoNovoResponse | null>(
+    null
+  );
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
-  const [extratoCarregado, setExtratoCarregado] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
   // Inicializar datas padrão (últimos 30 dias)
   useEffect(() => {
     const hoje = new Date();
     const trintaDiasAtras = new Date(hoje);
     trintaDiasAtras.setDate(hoje.getDate() - 30);
-    
-    setDataFim(hoje.toISOString().split('T')[0]);
-    setDataInicio(trintaDiasAtras.toISOString().split('T')[0]);
+
+    setFiltros((prev) => ({
+      ...prev,
+      dataFim: hoje.toISOString().split("T")[0],
+      dataInicio: trintaDiasAtras.toISOString().split("T")[0],
+    }));
   }, []);
 
   const formatarData = (data: Date): string => {
-    return data.toISOString().split('T')[0];
+    return data.toISOString().split("T")[0];
   };
 
   const definirPeriodoPreDefinido = (dias: number) => {
     const hoje = new Date();
     const dataPassada = new Date(hoje);
     dataPassada.setDate(hoje.getDate() - dias);
-    
-    setDataInicio(formatarData(dataPassada));
-    setDataFim(formatarData(hoje));
+
+    setFiltros((prev) => ({
+      ...prev,
+      dataInicio: formatarData(dataPassada),
+      dataFim: formatarData(hoje),
+    }));
   };
 
   const buscarExtrato = async () => {
-    if (!dataInicio || !dataFim) {
-      setError('Por favor, selecione as datas de início e fim.');
+    console.log("🔍 Iniciando busca do extrato...");
+    console.log("📊 Dados da conta:", conta);
+    console.log("🔧 Filtros:", filtros);
+
+    if (!conta?.contaId) {
+      console.error("❌ ContaId não disponível:", conta);
+      setError("Dados da conta não disponíveis.");
       return;
     }
 
-    if (new Date(dataInicio) > new Date(dataFim)) {
-      setError('A data de início deve ser anterior à data de fim.');
+    if (!filtros.dataInicio || !filtros.dataFim) {
+      setError("Por favor, selecione as datas de início e fim.");
+      return;
+    }
+
+    if (new Date(filtros.dataInicio) > new Date(filtros.dataFim)) {
+      setError("A data de início deve ser anterior à data de fim.");
       return;
     }
 
     try {
       setLoading(true);
-      setError('');
+      setError("");
 
-      const request: ExtratoRequest = {
-        id: 2, // ID do usuário logado (mockado)
-        dataInicio,
-        dataFim,
-        limite
-      };
-
-      const response = await operacoesService.obterExtrato(request);
+      console.log(
+        "📞 Chamando serviço com contaId:",
+        conta.contaId,
+        "e filtros:",
+        filtros
+      );
+      const response = await operacoesService.obterExtratoNovo(
+        conta.contaId,
+        filtros
+      );
+      console.log("✅ Resposta do extrato:", response);
       setExtratoData(response);
-      setExtratoCarregado(true);
     } catch (err) {
-      setError('Erro ao carregar extrato. Tente novamente.');
-      console.error('Erro ao buscar extrato:', err);
+      console.error("❌ Erro ao buscar extrato:", err);
+      setError("Erro ao carregar extrato. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -77,16 +101,24 @@ const ExtratoPage: React.FC = () => {
 
   // Carregar extrato automaticamente quando as datas estiverem definidas
   useEffect(() => {
-    if (dataInicio && dataFim && !extratoCarregado) {
+    console.log("🔄 UseEffect do extrato executado:");
+    console.log("  - dataInicio:", filtros.dataInicio);
+    console.log("  - dataFim:", filtros.dataFim);
+    console.log("  - contaId:", conta?.contaId);
+
+    if (filtros.dataInicio && filtros.dataFim && conta?.contaId) {
+      console.log("✅ Condições atendidas, buscando extrato...");
       buscarExtrato();
+    } else {
+      console.log("⚠️ Condições não atendidas para buscar extrato");
     }
-  }, [dataInicio, dataFim]);
+  }, [filtros.dataInicio, filtros.dataFim, conta?.contaId]);
 
   const calcularValorTotalMovimentado = (): number => {
-    if (!extratoData?.dados.operacoes) return 0;
-    
-    return extratoData.dados.operacoes.reduce((total, operacao) => {
-      return total + operacao.valor;
+    if (!extratoData?.operacoes) return 0;
+
+    return extratoData.operacoes.reduce((total: number, operacao) => {
+      return total + Math.abs(operacao.valor);
     }, 0);
   };
 
@@ -95,22 +127,31 @@ const ExtratoPage: React.FC = () => {
       <Typography variant="h4" gutterBottom>
         Extrato Bancário
       </Typography>
-      
-      <Typography variant="body1" color="text.secondary" gutterBottom sx={{ mb: 3 }}>
+
+      <Typography
+        variant="body1"
+        color="text.secondary"
+        gutterBottom
+        sx={{ mb: 3 }}
+      >
         Consulte o histórico de movimentações da sua conta
       </Typography>
 
       {/* Componente de Filtros */}
       <ExtratoFiltros
-        dataInicio={dataInicio}
-        dataFim={dataFim}
-        limite={limite}
-        tipoOperacao={tipoOperacao}
+        dataInicio={filtros.dataInicio || ""}
+        dataFim={filtros.dataFim || ""}
+        limite={filtros.limite || 50}
+        tipoOperacao="TODOS"
         loading={loading}
-        onDataInicioChange={setDataInicio}
-        onDataFimChange={setDataFim}
-        onLimiteChange={setLimite}
-        onTipoOperacaoChange={setTipoOperacao}
+        onDataInicioChange={(data) =>
+          setFiltros((prev) => ({ ...prev, dataInicio: data }))
+        }
+        onDataFimChange={(data) =>
+          setFiltros((prev) => ({ ...prev, dataFim: data }))
+        }
+        onLimiteChange={(limite) => setFiltros((prev) => ({ ...prev, limite }))}
+        onTipoOperacaoChange={() => {}} // Não usado no novo endpoint
         onBuscar={buscarExtrato}
         onPeriodoPreDefinido={definirPeriodoPreDefinido}
       />
@@ -125,22 +166,31 @@ const ExtratoPage: React.FC = () => {
       {/* Componente de Resumo */}
       {extratoData && !loading && (
         <ExtratoResumo
-          conta={extratoData.conta}
-          periodo={extratoData.dados.periodo}
-          totalOperacoes={extratoData.dados.totalOperacoes}
+          conta={{
+            contaId: extratoData.contaId,
+            numeroConta: conta?.numeroConta || "",
+            titular: extratoData.titular,
+            usuarioProprietario: conta?.usuarioProprietario || "",
+            usuarioProprietarioId: conta?.usuarioProprietarioId || 0,
+            saldo: extratoData.saldoAtual,
+          }}
+          periodo={{
+            dataInicio: filtros.dataInicio || "",
+            dataFim: filtros.dataFim || "",
+          }}
+          totalOperacoes={extratoData.totalOperacoes}
           valorTotalMovimentado={calcularValorTotalMovimentado()}
         />
       )}
 
       {/* Componente da Tabela */}
-      <ExtratoTabela
-        operacoes={extratoData?.dados.operacoes || []}
+      <ExtratoTabelaNova
+        operacoes={extratoData?.operacoes || []}
         loading={loading}
-        tipoFiltro={tipoOperacao}
-        contaId={extratoData?.conta.contaId || 1}
-        dataInicio={dataInicio}
-        dataFim={dataFim}
-        limite={limite}
+        contaId={extratoData?.contaId || conta?.contaId || 1}
+        dataInicio={filtros.dataInicio || ""}
+        dataFim={filtros.dataFim || ""}
+        limite={filtros.limite || 50}
       />
     </Box>
   );

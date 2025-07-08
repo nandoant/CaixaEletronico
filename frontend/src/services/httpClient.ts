@@ -21,7 +21,10 @@ export class HttpClient {
 
   async get<T>(endpoint: string): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    console.log('🌐 GET Request para:', url);
+    console.log('🌐 HttpClient GET Request:');
+    console.log('  - Endpoint:', endpoint);
+    console.log('  - URL completa:', url);
+    console.log('  - Base URL:', this.baseURL);
 
     const response = await fetch(url, {
       method: 'GET',

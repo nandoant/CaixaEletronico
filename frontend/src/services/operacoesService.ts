@@ -1,4 +1,4 @@
-import { DepositoRequest, DepositoResponse, SaqueRequest, SaqueOpcoesResponse, SaqueConfirmacaoRequest, SaqueResponse, ExtratoRequest, ExtratoResponse, ExtratoOperacao, EnviarExtratoEmailRequest, TransferenciaRequest, TransferenciaResponse, ContaInfo, ContasDisponiveisResponse, AgendamentoRequest, AgendamentoResponse, AgendamentoListItem, CancelamentoResponse, SaldoResponse } from '../types/operacoes';
+import { DepositoRequest, DepositoResponse, SaqueRequest, SaqueOpcoesResponse, SaqueConfirmacaoRequest, SaqueResponse, ExtratoRequest, ExtratoResponse, ExtratoOperacao, EnviarExtratoEmailRequest, TransferenciaRequest, TransferenciaResponse, ContaInfo, ContasDisponiveisResponse, AgendamentoRequest, AgendamentoResponse, AgendamentoListItem, CancelamentoResponse, SaldoResponse, ExtratoFiltros, ExtratoNovoResponse, ExtratoBackendResponse } from '../types/operacoes';
 import { httpClient } from './httpClient';
 
 /**
@@ -963,7 +963,62 @@ class OperacoesService {
     }
   }
 
+  /**
+   * Obtém extrato usando o novo endpoint /contas/{id}/extrato
+   * @param contaId ID da conta
+   * @param filtros Filtros opcionais (datas e limite)
+   * @returns Promise com o extrato
+   */
+  async obterExtratoNovo(contaId: number, filtros?: ExtratoFiltros): Promise<ExtratoNovoResponse> {
+    console.log('🚀 OperacoesService.obterExtratoNovo chamado com:');
+    console.log('  - contaId:', contaId);
+    console.log('  - filtros:', filtros);
 
+    try {
+      const params = new URLSearchParams();
+
+      if (filtros?.dataInicio) {
+        params.append('dataInicio', filtros.dataInicio);
+      }
+      if (filtros?.dataFim) {
+        params.append('dataFim', filtros.dataFim);
+      }
+      if (filtros?.limite) {
+        params.append('limite', filtros.limite.toString());
+      }
+
+      const url = `/contas/${contaId}/extrato${params.toString() ? `?${params.toString()}` : ''}`;
+      console.log('🌐 URL completa construída:', url);
+      console.log('🔗 Base URL do httpClient:', (httpClient as any).baseURL);
+
+      const backendResponse = await httpClient.get<ExtratoBackendResponse>(url);
+      console.log('✅ Resposta do backend recebida:', backendResponse);
+
+      // Mapear a resposta do backend para o formato esperado pelo frontend
+      const mappedResponse: ExtratoNovoResponse = {
+        contaId: backendResponse.conta.contaId,
+        titular: backendResponse.conta.titular,
+        saldoAtual: backendResponse.conta.saldo,
+        operacoes: backendResponse.dados.operacoes,
+        totalOperacoes: backendResponse.dados.totalOperacoes
+      };
+
+      console.log('🔄 Resposta mapeada para o frontend:', mappedResponse);
+      return mappedResponse;
+    } catch (error) {
+      console.error('❌ Erro detalhado ao obter extrato do backend:');
+      console.error('  - Erro:', error);
+      console.error('  - Tipo do erro:', typeof error);
+      console.error('  - Stack:', (error as any)?.stack);
+
+      // Tentar entender melhor o erro
+      if (error instanceof Error) {
+        console.error('  - Mensagem:', error.message);
+      }
+
+      throw new Error(`Erro ao carregar extrato: ${error instanceof Error ? error.message : 'Erro desconhecido'}. Verifique se o backend está rodando e o endpoint está implementado.`);
+    }
+  }
 
   private delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
