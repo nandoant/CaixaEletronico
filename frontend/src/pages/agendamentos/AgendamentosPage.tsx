@@ -257,7 +257,7 @@ const AgendamentosPage: React.FC = () => {
   }
 
   // Renderização dos cards de agendamento com UX aprimorado
-  function AgendamentoCard({ agendamento, tipo }: { agendamento: AgendamentoListItem, tipo: 'enviado' | 'recebido' }) {
+  function AgendamentoCard({ agendamento, tipo, onCancelar, cancelandoId }: { agendamento: AgendamentoListItem, tipo: 'enviado' | 'recebido', onCancelar?: (a: AgendamentoListItem) => void, cancelandoId?: number | null }) {
     const isRecebido = tipo === 'recebido';
     const isConcluido = agendamento.status === 'CONCLUIDO';
     const statusColor = agendamento.status === 'ATIVO' ? 'success' : agendamento.status === 'CONCLUIDO' ? 'primary' : 'error';
@@ -270,7 +270,7 @@ const AgendamentosPage: React.FC = () => {
           borderColor: statusColor + '.main',
           boxShadow: 3,
           background: isConcluido
-            ? 'linear-gradient(90deg, #e3f0fa 0%, #f5fafd 100%)' // azul claro para concluído
+            ? 'linear-gradient(90deg, #e3f0fa 0%, #f5fafd 100%)'
             : isRecebido
               ? 'linear-gradient(90deg, #e3f2fd 0%, #fff 100%)'
               : 'linear-gradient(90deg, #fff 0%, #f1f8e9 100%)',
@@ -340,6 +340,21 @@ const AgendamentosPage: React.FC = () => {
             <Alert severity="error" sx={{ mb: 1 }}>
               Agendamento cancelado
             </Alert>
+          )}
+          {/* Botão cancelar (apenas enviados e ativos) */}
+          {!isRecebido && agendamento.status === 'ATIVO' && onCancelar && (
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+              <Button
+                variant="outlined"
+                color="error"
+                size="small"
+                startIcon={<Cancel />}
+                onClick={() => onCancelar(agendamento)}
+                disabled={cancelandoId === agendamento.id}
+              >
+                {cancelandoId === agendamento.id ? 'Cancelando...' : 'Cancelar'}
+              </Button>
+            </Box>
           )}
         </CardContent>
       </Card>
@@ -486,7 +501,7 @@ const AgendamentosPage: React.FC = () => {
           <Grid container spacing={3}>
             {agendamentosFiltrados.map((agendamento) => (
               <Grid item xs={12} md={6} lg={4} key={agendamento.id}>
-                <AgendamentoCard agendamento={agendamento} tipo={agendamento.descricao.includes('(Recebido)') ? 'recebido' : 'enviado'} />
+                <AgendamentoCard agendamento={agendamento} tipo={agendamento.descricao.includes('(Recebido)') ? 'recebido' : 'enviado'} onCancelar={abrirCancelamento} cancelandoId={cancelando} />
               </Grid>
             ))}
           </Grid>
@@ -505,7 +520,7 @@ const AgendamentosPage: React.FC = () => {
           <Grid container spacing={3}>
             {agendamentosEnviados.map((agendamento) => (
               <Grid item xs={12} md={6} lg={4} key={agendamento.id}>
-                <AgendamentoCard agendamento={agendamento} tipo="enviado" />
+                <AgendamentoCard agendamento={agendamento} tipo="enviado" onCancelar={abrirCancelamento} cancelandoId={cancelando} />
               </Grid>
             ))}
           </Grid>
@@ -543,7 +558,7 @@ const AgendamentosPage: React.FC = () => {
           <Grid container spacing={3}>
             {agendamentos.filter(a => a.status === 'ATIVO').map((agendamento) => (
               <Grid item xs={12} md={6} lg={4} key={agendamento.id}>
-                <AgendamentoCard agendamento={agendamento} tipo={agendamento.descricao.includes('(Recebido)') ? 'recebido' : 'enviado'} />
+                <AgendamentoCard agendamento={agendamento} tipo={agendamento.descricao.includes('(Recebido)') ? 'recebido' : 'enviado'} onCancelar={abrirCancelamento} cancelandoId={cancelando} />
               </Grid>
             ))}
           </Grid>

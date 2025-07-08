@@ -740,32 +740,20 @@ class OperacoesService {
   }
 
   /**
-   * Cancela um agendamento (MOCK)
-   * 
-   * INTEGRAÇÃO BACKEND - INFORMAÇÕES PARA IMPLEMENTAÇÃO FUTURA:
-   * 
-   * Endpoint: DELETE /operacoes/agendamentos/{id}
-   * Headers: 
-   *   - Authorization: Bearer {token}
+   * Cancela um agendamento de pagamento usando o endpoint real
+   * @param id ID do agendamento
    */
   async cancelarAgendamento(id: number): Promise<CancelamentoResponse> {
-    // Simular delay de rede
-    await this.delay(1500);
-
-    // Simular 5% de chance de erro para teste
-    if (Math.random() < 0.05) {
-      throw new Error('Erro interno do servidor. Tente novamente.');
+    try {
+      const response = await httpClient.post<CancelamentoResponse>(`/pagamentos/${id}/cancelar`);
+      return response;
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
+      } else {
+        throw new Error('Erro ao cancelar agendamento.');
+      }
     }
-
-    // Simular resposta de sucesso
-    const response: CancelamentoResponse = {
-      id,
-      status: "CANCELADO",
-      message: "Agendamento cancelado com sucesso",
-      timestamp: new Date().toISOString()
-    };
-
-    return response;
   }
 
   /**
