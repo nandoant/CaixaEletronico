@@ -115,30 +115,3 @@ docker-compose -f docker-compose.dev.yml up
 docker-compose up --build
 ```
 
-## 📝 Notas de Desenvolvimento
-
-- O esqueleto está funcional mas sem integração real com APIs
-- Autenticação usa mock temporário
-- Todas as páginas retornam dados estáticos
-- Material-UI configurado com tema personalizado
-- Responsive design implementado
-- TypeScript configurado com strict mode
-
-## 🔧 Comandos Úteis
-
-```bash
-# Instalar nova dependência
-npm install <package>
-
-# Executar testes
-npm test
-
-# Verificar TypeScript
-npm run type-check
-
-# Executar linting
-npm run lint
-
-# Build para produção
-npm run build
-```
