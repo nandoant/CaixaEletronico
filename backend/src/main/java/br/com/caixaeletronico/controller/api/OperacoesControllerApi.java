@@ -1,5 +1,4 @@
 package br.com.caixaeletronico.controller.api;
-
 import br.com.caixaeletronico.controller.OperacoesController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,7 +12,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
 /**
  * Interface documentada para operações bancárias
  * 
@@ -23,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Operações Bancárias", description = "Operações de depósito e transferência")
 @SecurityRequirement(name = "Bearer Authentication")
 public interface OperacoesControllerApi {
-
     @Operation(
         summary = "Realizar depósito",
         description = "Realiza um depósito em dinheiro na conta especificada. " +
@@ -91,10 +88,8 @@ public interface OperacoesControllerApi {
                                  }
                                  """))
         @RequestBody OperacoesController.DepositoRequest request,
-        
         Authentication authentication
     );
-
     @Operation(
         summary = "Realizar transferência",
         description = "Realiza uma transferência entre duas contas. " +
@@ -159,7 +154,6 @@ public interface OperacoesControllerApi {
                                  }
                                  """))
         @RequestBody OperacoesController.TransferenciaRequest request,
-        
         Authentication authentication
     );
 }

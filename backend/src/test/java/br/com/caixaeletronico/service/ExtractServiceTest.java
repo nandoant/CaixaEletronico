@@ -1,5 +1,4 @@
 package br.com.caixaeletronico.service;
-
 import br.com.caixaeletronico.model.Conta;
 import br.com.caixaeletronico.model.Operacao;
 import br.com.caixaeletronico.model.TipoOperacao;
@@ -11,31 +10,23 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
-
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ExtractService Tests")
 class ExtractServiceTest {
-
     @Mock
     private OperacaoRepository operacaoRepository;
-
     @InjectMocks
     private ExtractService extractService;
-
     @Test
     @DisplayName("Deve obter extrato completo da conta")
     void deveObterExtratoCompletoDaConta() {
-        // Given
         Conta conta = TestDataBuilder.umaConta().build();
-        
         List<Operacao> operacoesEsperadas = Arrays.asList(
                 TestDataBuilder.umaOperacao()
                         .comTipo(TipoOperacao.DEPOSITO)
@@ -53,44 +44,29 @@ class ExtractServiceTest {
                         .comDataHora(LocalDateTime.now().minusDays(3))
                         .build()
         );
-
         when(operacaoRepository.findByContaOrderByDataHoraDesc(conta))
                 .thenReturn(operacoesEsperadas);
-
-        // When
         List<Operacao> resultado = extractService.obterExtrato(conta);
-
-        // Then
         assertThat(resultado).hasSize(3);
         assertThat(resultado).isEqualTo(operacoesEsperadas);
         verify(operacaoRepository).findByContaOrderByDataHoraDesc(conta);
     }
-
     @Test
     @DisplayName("Deve retornar lista vazia quando conta não tem operações")
     void deveRetornarListaVaziaQuandoContaNaoTemOperacoes() {
-        // Given
         Conta conta = TestDataBuilder.umaConta().build();
-
         when(operacaoRepository.findByContaOrderByDataHoraDesc(conta))
                 .thenReturn(Arrays.asList());
-
-        // When
         List<Operacao> resultado = extractService.obterExtrato(conta);
-
-        // Then
         assertThat(resultado).isEmpty();
         verify(operacaoRepository).findByContaOrderByDataHoraDesc(conta);
     }
-
     @Test
     @DisplayName("Deve obter extrato por período específico")
     void deveObterExtratoPorPeriodoEspecifico() {
-        // Given
         Conta conta = TestDataBuilder.umaConta().build();
         LocalDateTime dataInicio = LocalDateTime.now().minusDays(7);
         LocalDateTime dataFim = LocalDateTime.now();
-
         List<Operacao> operacoesPeriodo = Arrays.asList(
                 TestDataBuilder.umaOperacao()
                         .comTipo(TipoOperacao.DEPOSITO)
@@ -103,45 +79,30 @@ class ExtractServiceTest {
                         .comDataHora(LocalDateTime.now().minusDays(5))
                         .build()
         );
-
         when(operacaoRepository.findByContaAndDataHoraBetweenOrderByDataHoraDesc(conta, dataInicio, dataFim))
                 .thenReturn(operacoesPeriodo);
-
-        // When
         List<Operacao> resultado = extractService.obterExtratoPorPeriodo(conta, dataInicio, dataFim);
-
-        // Then
         assertThat(resultado).hasSize(2);
         assertThat(resultado).isEqualTo(operacoesPeriodo);
         verify(operacaoRepository).findByContaAndDataHoraBetweenOrderByDataHoraDesc(conta, dataInicio, dataFim);
     }
-
     @Test
     @DisplayName("Deve retornar lista vazia para período sem operações")
     void deveRetornarListaVaziaParaPeriodoSemOperacoes() {
-        // Given
         Conta conta = TestDataBuilder.umaConta().build();
         LocalDateTime dataInicio = LocalDateTime.now().minusDays(30);
         LocalDateTime dataFim = LocalDateTime.now().minusDays(25);
-
         when(operacaoRepository.findByContaAndDataHoraBetweenOrderByDataHoraDesc(conta, dataInicio, dataFim))
                 .thenReturn(Arrays.asList());
-
-        // When
         List<Operacao> resultado = extractService.obterExtratoPorPeriodo(conta, dataInicio, dataFim);
-
-        // Then
         assertThat(resultado).isEmpty();
         verify(operacaoRepository).findByContaAndDataHoraBetweenOrderByDataHoraDesc(conta, dataInicio, dataFim);
     }
-
     @Test
     @DisplayName("Deve obter últimas operações com limite menor que total")
     void deveObterUltimasOperacoesComLimiteMenorQueTotal() {
-        // Given
         Conta conta = TestDataBuilder.umaConta().build();
         int limite = 2;
-
         List<Operacao> todasOperacoes = Arrays.asList(
                 TestDataBuilder.umaOperacao()
                         .comTipo(TipoOperacao.DEPOSITO)
@@ -164,27 +125,19 @@ class ExtractServiceTest {
                         .comDataHora(LocalDateTime.now().minusHours(3))
                         .build()
         );
-
         when(operacaoRepository.findByContaOrderByDataHoraDesc(conta))
                 .thenReturn(todasOperacoes);
-
-        // When
         List<Operacao> resultado = extractService.obterUltimasOperacoes(conta, limite);
-
-        // Then
         assertThat(resultado).hasSize(2);
-        assertThat(resultado.get(0)).isEqualTo(todasOperacoes.get(0)); // Primeira operação (mais recente)
-        assertThat(resultado.get(1)).isEqualTo(todasOperacoes.get(1)); // Segunda operação
+        assertThat(resultado.get(0)).isEqualTo(todasOperacoes.get(0));
+        assertThat(resultado.get(1)).isEqualTo(todasOperacoes.get(1));
         verify(operacaoRepository).findByContaOrderByDataHoraDesc(conta);
     }
-
     @Test
     @DisplayName("Deve retornar todas as operações quando limite é maior que total")
     void deveRetornarTodasAsOperacoesQuandoLimiteEMaiorQueTotal() {
-        // Given
         Conta conta = TestDataBuilder.umaConta().build();
         int limite = 5;
-
         List<Operacao> todasOperacoes = Arrays.asList(
                 TestDataBuilder.umaOperacao()
                         .comTipo(TipoOperacao.DEPOSITO)
@@ -195,69 +148,46 @@ class ExtractServiceTest {
                         .comValor(new BigDecimal("50.00"))
                         .build()
         );
-
         when(operacaoRepository.findByContaOrderByDataHoraDesc(conta))
                 .thenReturn(todasOperacoes);
-
-        // When
         List<Operacao> resultado = extractService.obterUltimasOperacoes(conta, limite);
-
-        // Then
         assertThat(resultado).hasSize(2);
         assertThat(resultado).isEqualTo(todasOperacoes);
         verify(operacaoRepository).findByContaOrderByDataHoraDesc(conta);
     }
-
     @Test
     @DisplayName("Deve retornar todas as operações quando limite é igual ao total")
     void deveRetornarTodasAsOperacoesQuandoLimiteEIgualAoTotal() {
-        // Given
         Conta conta = TestDataBuilder.umaConta().build();
         int limite = 3;
-
         List<Operacao> todasOperacoes = Arrays.asList(
                 TestDataBuilder.umaOperacao().comTipo(TipoOperacao.DEPOSITO).build(),
                 TestDataBuilder.umaOperacao().comTipo(TipoOperacao.SAQUE).build(),
                 TestDataBuilder.umaOperacao().comTipo(TipoOperacao.TRANSFERENCIA).build()
         );
-
         when(operacaoRepository.findByContaOrderByDataHoraDesc(conta))
                 .thenReturn(todasOperacoes);
-
-        // When
         List<Operacao> resultado = extractService.obterUltimasOperacoes(conta, limite);
-
-        // Then
         assertThat(resultado).hasSize(3);
         assertThat(resultado).isEqualTo(todasOperacoes);
         verify(operacaoRepository).findByContaOrderByDataHoraDesc(conta);
     }
-
     @Test
     @DisplayName("Deve retornar lista vazia quando não há operações e limite é aplicado")
     void deveRetornarListaVaziaQuandoNaoHaOperacoesELimiteEAplicado() {
-        // Given
         Conta conta = TestDataBuilder.umaConta().build();
         int limite = 5;
-
         when(operacaoRepository.findByContaOrderByDataHoraDesc(conta))
                 .thenReturn(Arrays.asList());
-
-        // When
         List<Operacao> resultado = extractService.obterUltimasOperacoes(conta, limite);
-
-        // Then
         assertThat(resultado).isEmpty();
         verify(operacaoRepository).findByContaOrderByDataHoraDesc(conta);
     }
-
     @Test
     @DisplayName("Deve obter uma única operação quando limite é 1")
     void deveObterUmaUnicaOperacaoQuandoLimiteE1() {
-        // Given
         Conta conta = TestDataBuilder.umaConta().build();
         int limite = 1;
-
         List<Operacao> todasOperacoes = Arrays.asList(
                 TestDataBuilder.umaOperacao()
                         .comTipo(TipoOperacao.DEPOSITO)
@@ -268,14 +198,9 @@ class ExtractServiceTest {
                         .comValor(new BigDecimal("100.00"))
                         .build()
         );
-
         when(operacaoRepository.findByContaOrderByDataHoraDesc(conta))
                 .thenReturn(todasOperacoes);
-
-        // When
         List<Operacao> resultado = extractService.obterUltimasOperacoes(conta, limite);
-
-        // Then
         assertThat(resultado).hasSize(1);
         assertThat(resultado.get(0)).isEqualTo(todasOperacoes.get(0));
         assertThat(resultado.get(0).getTipo()).isEqualTo(TipoOperacao.DEPOSITO);

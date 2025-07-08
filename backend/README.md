@@ -1,6 +1,6 @@
 # Sistema de Caixa Eletrônico
 
-## 📋 Funcionalidades
+## Funcionalidades
 
 - **Autenticação e Autorização**
   - Registro e login de usuários
@@ -25,7 +25,7 @@
   - Extrato de operações
   - Agendamento de pagamentos
 
-## 🚀 Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
 - **Spring Boot 3.2.0**
 - **Spring Security** (JWT)
@@ -34,7 +34,7 @@
 - **FreeMarker** (templates de email)
 - **Jackson** (serialização JSON)
 
-## 📦 Estrutura do Projeto
+## Estrutura do Projeto
 
 ```
 src/main/java/br/com/caixaeletronico/
@@ -48,7 +48,7 @@ src/main/java/br/com/caixaeletronico/
 └── config/          # Configurações
 ```
 
-## 🔧 Configuração e Execução
+## Configuração e Execução
 
 ### Pré-requisitos
 - Java 17+
@@ -64,7 +64,7 @@ mvn spring-boot:run
 
 3. Acesse: http://localhost:8080
 
-## 📊 Dados de Teste
+## Dados de Teste
 
 O sistema cria automaticamente dados iniciais:
 
@@ -82,7 +82,7 @@ O sistema cria automaticamente dados iniciais:
 - Conta 1: João Silva (ID: 1) - R$ 5.000,00
 - Conta 2: Maria Santos (ID: 2) - R$ 3.000,00
 
-## 🛠️ API Endpoints
+## API Endpoints
 
 ### Autenticação
 ```
@@ -113,7 +113,7 @@ GET  /pagamentos/conta/{id}     # Listar pagamentos da conta
 POST /pagamentos/{id}/cancelar  # Cancelar pagamento
 ```
 
-## 🔐 Autenticação
+## Autenticação
 
 Todas as rotas (exceto `/auth/**`) requerem autenticação via JWT.
 
@@ -123,7 +123,7 @@ Authorization: Bearer <token>
 Content-Type: application/json
 ```
 
-## 💡 Alguns Padrões Implementados
+## Alguns Padrões Implementados
 
 ### Command Pattern
 - `DepositoCommand`
@@ -143,7 +143,7 @@ Content-Type: application/json
 ### Memento Pattern
 - `OperationMemento` - Para sistema de undo
 
-## 📧 Configuração de Email
+## Configuração de Email
 
 Para usar o sistema de notificações por email, configure as propriedades:
 
@@ -154,12 +154,12 @@ spring.mail.username=seu-email@gmail.com
 spring.mail.password=sua-senha-app
 ```
 
-## 🔄 Jobs Agendados
+## Jobs Agendados
 
 - **Processamento de Pagamentos**: Executa a cada hora
 - **Limpeza de Dados**: Executa diariamente às 01:00
 
-## 📝 Exemplos de Uso
+## Exemplos de Uso
 
 ### 1. Registro de Usuário
 ```json

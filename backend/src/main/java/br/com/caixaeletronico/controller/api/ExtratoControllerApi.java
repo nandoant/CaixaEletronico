@@ -1,5 +1,4 @@
 package br.com.caixaeletronico.controller.api;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -12,7 +11,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
 /**
  * Interface documentada para operações de extrato
  * 
@@ -22,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Extrato", description = "Consulta de extratos bancários")
 @SecurityRequirement(name = "Bearer Authentication")
 public interface ExtratoControllerApi {
-
     @Operation(
         summary = "Obter extrato da conta",
         description = "Retorna o extrato bancário de uma conta específica. " +
@@ -98,19 +95,14 @@ public interface ExtratoControllerApi {
     ResponseEntity<?> obterExtrato(
         @Parameter(description = "ID da conta para consulta do extrato", required = true)
         @PathVariable Long id,
-        
         @Parameter(description = "Data de início para filtro (formato: YYYY-MM-DD, YYYY-MM-DDTHH:mm:ss ou dd/MM/yyyy)")
         @RequestParam(required = false) String dataInicio,
-        
         @Parameter(description = "Data de fim para filtro (formato: YYYY-MM-DD, YYYY-MM-DDTHH:mm:ss ou dd/MM/yyyy)")
         @RequestParam(required = false) String dataFim,
-        
         @Parameter(description = "Número máximo de operações a retornar (padrão: 50)")
         @RequestParam(required = false, defaultValue = "50") int limite,
-        
         Authentication authentication
     );
-
     @Operation(
         summary = "Obter saldo da conta",
         description = "Retorna o saldo atual de uma conta específica. " +
@@ -169,10 +161,8 @@ public interface ExtratoControllerApi {
     ResponseEntity<?> obterSaldo(
         @Parameter(description = "ID da conta para consulta do saldo", required = true)
         @PathVariable Long id,
-        
         Authentication authentication
     );
-
     @Operation(
         summary = "Listar minhas contas",
         description = "Retorna todas as contas bancárias do usuário autenticado com seus respectivos saldos.",
@@ -223,7 +213,6 @@ public interface ExtratoControllerApi {
     })
     @GetMapping("/minhas-contas")
     ResponseEntity<?> listarMinhasContas(Authentication authentication);
-
     @Operation(
         summary = "Listar todas as contas (Admin)",
         description = "Retorna todas as contas bancárias do sistema. " +

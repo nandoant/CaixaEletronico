@@ -1,5 +1,4 @@
 package br.com.caixaeletronico.controller.api;
-
 import br.com.caixaeletronico.controller.PagamentoController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,7 +12,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
 /**
  * Interface documentada para operações de pagamento agendado
  * 
@@ -23,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Pagamentos", description = "Agendamento e controle de pagamentos parcelados")
 @SecurityRequirement(name = "Bearer Authentication")
 public interface PagamentoControllerApi {
-
     @Operation(
         summary = "Agendar transferência entre contas",
         description = "Agenda uma transferência parcelada entre contas que será executada automaticamente nas datas especificadas. " +
@@ -101,10 +98,8 @@ public interface PagamentoControllerApi {
                                  }
                                  """))
         @RequestBody PagamentoController.TransferenciaAgendadaRequest request,
-        
         Authentication authentication
     );
-
     @Operation(
         summary = "Obter detalhes de um pagamento",
         description = "Retorna os detalhes de um pagamento agendado específico, incluindo status e parcelas restantes.",
@@ -166,10 +161,8 @@ public interface PagamentoControllerApi {
     ResponseEntity<?> obterPagamento(
         @Parameter(description = "ID do pagamento", required = true)
         @PathVariable Long id,
-        
         Authentication authentication
     );
-
     @Operation(
         summary = "Listar pagamentos de uma conta",
         description = "Retorna todos os pagamentos agendados para uma conta específica.",
@@ -235,10 +228,8 @@ public interface PagamentoControllerApi {
     ResponseEntity<?> listarPagamentosPorConta(
         @Parameter(description = "ID da conta", required = true)
         @PathVariable Long contaId,
-        
         Authentication authentication
     );
-
     @Operation(
         summary = "Cancelar pagamento",
         description = "Cancela um pagamento agendado. As parcelas já pagas não são revertidas.",
@@ -293,10 +284,8 @@ public interface PagamentoControllerApi {
     ResponseEntity<?> cancelarPagamento(
         @Parameter(description = "ID do pagamento a ser cancelado", required = true)
         @PathVariable Long id,
-        
         Authentication authentication
     );
-    
     @Operation(
         summary = "Listar pagamentos recebidos",
         description = "Retorna todos os pagamentos agendados que uma conta específica está recebendo de outras contas.",
@@ -366,10 +355,8 @@ public interface PagamentoControllerApi {
     ResponseEntity<?> listarPagamentosRecebidos(
         @Parameter(description = "ID da conta", required = true)
         @PathVariable Long contaId,
-        
         Authentication authentication
     );
-    
     @Operation(
         summary = "Listar todos os pagamentos da conta",
         description = "Retorna todos os pagamentos agendados de uma conta específica, incluindo os enviados e recebidos.",
@@ -454,7 +441,6 @@ public interface PagamentoControllerApi {
     ResponseEntity<?> listarTodosPagamentosConta(
         @Parameter(description = "ID da conta", required = true)
         @PathVariable Long contaId,
-        
         Authentication authentication
     );
 }
