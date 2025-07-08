@@ -48,6 +48,47 @@ CaixaEletronico/
 | Swagger UI | http://localhost:8080/swagger-ui.html | Documentação da API |
 | Banco de Dados | localhost:5432 | PostgreSQL |
 
+## 📧 Configuração de Email
+
+O sistema envia notificações por email para operações realizadas. Para configurar:
+
+### 1. Configure o arquivo `.env`
+
+```bash
+# Copie o arquivo de exemplo
+cp .env.example .env
+```
+
+### 2. Edite o arquivo `.env` com suas credenciais
+
+```env
+# Email Configuration
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=seu-email@gmail.com
+MAIL_PASSWORD=sua-senha-app-do-gmail
+```
+
+### 3. Para Gmail (Recomendado)
+
+1. **Ative a autenticação de 2 fatores** na sua conta Google
+2. **Gere uma senha de app**:
+   - Acesse: https://myaccount.google.com/apppasswords
+   - Selecione "App" → "Outro" → Digite "Caixa Eletrônico"
+   - Use a senha gerada no `MAIL_PASSWORD`
+
+### 4. Outros Provedores Suportados
+
+| Provedor | Host | Porta |
+|----------|------|-------|
+| Gmail | smtp.gmail.com | 587 |
+| Outlook | smtp-mail.outlook.com | 587 |
+| Yahoo | smtp.mail.yahoo.com | 587 |
+
+### 5. Validação
+
+O sistema validará automaticamente as configurações na inicialização e exibirá logs informativos.
+
 ## 🐳 Docker
 
 ### Variáveis de Ambiente
