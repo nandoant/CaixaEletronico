@@ -1,6 +1,9 @@
 # 🏦 Sistema Caixa Eletrônico - Full Stack
 
-Sistema completo de caixa eletrônico com backend Spring Boot e frontend React.
+Sistema completo de caixa eletrônico com backend Spring Boot e frontend React.<br><br>
+**Alunos**
+- Fernando Antonio
+- Michely Serras
 
 ## 📁 Estrutura do Projeto
 
@@ -20,35 +23,6 @@ CaixaEletronico/
 └── start.bat             # Script Windows
 ```
 
-## 🚀 Execução Rápida
-
-### Windows
-```bash
-# Aplicação completa
-start.bat full
-
-# Apenas frontend (desenvolvimento)
-start.bat dev
-
-# Apenas frontend (produção)
-start.bat prod
-```
-
-### Linux/Mac
-```bash
-# Dar permissão ao script
-chmod +x start.sh
-
-# Aplicação completa
-./start.sh full
-
-# Apenas frontend (desenvolvimento)
-./start.sh dev
-
-# Apenas frontend (produção)
-./start.sh prod
-```
-
 ## 🛠️ Stack Tecnológica
 
 ### Backend
@@ -64,30 +38,7 @@ chmod +x start.sh
 - **React Router** para navegação
 - **React Query** para gerenciamento de estado
 - **Axios** para requisições HTTP
-
-## 📊 Funcionalidades
-
-### ✅ Backend (Implementado)
-- [x] Autenticação JWT
-- [x] CRUD de usuários e contas
-- [x] Operações financeiras (saque, depósito, transferência)
-- [x] Consulta de extrato e saldo
-- [x] Agendamento de pagamentos
-- [x] Estratégias de distribuição de cédulas
-- [x] Desfazer operações
-- [x] Área administrativa
-- [x] Notificações por email
-
-### 🔄 Frontend (Esqueleto Criado)
-- [x] Estrutura base com rotas
-- [x] Autenticação (mock)
-- [x] Layout responsivo
-- [x] Páginas para todas as funcionalidades
-- [ ] Integração real com APIs
-- [ ] Formulários funcionais
-- [ ] Gerenciamento de estado
-- [ ] Tratamento de erros
-
+  
 ## 🌐 URLs de Acesso
 
 | Serviço | URL | Descrição |
@@ -96,84 +47,6 @@ chmod +x start.sh
 | Backend API | http://localhost:8080 | API REST |
 | Swagger UI | http://localhost:8080/swagger-ui.html | Documentação da API |
 | Banco de Dados | localhost:5432 | PostgreSQL |
-
-## 🔧 Desenvolvimento
-
-### Pré-requisitos
-- **Docker** e **Docker Compose**
-- **Git**
-
-### Primeira Execução
-```bash
-# Clonar o repositório
-git clone <repository-url>
-cd CaixaEletronico
-
-# Executar aplicação completa
-# Windows:
-start.bat full
-
-# Linux/Mac:
-chmod +x start.sh
-./start.sh full
-```
-
-### Comandos Docker Manuais
-
-```bash
-# Desenvolvimento (hot reload)
-docker-compose -f docker-compose.dev.yml up
-
-# Produção
-docker-compose up
-
-# Rebuild forçado
-docker-compose up --build
-
-# Apenas banco de dados
-docker-compose up postgres
-
-# Apenas backend
-docker-compose up backend
-
-# Apenas frontend
-docker-compose up frontend
-```
-
-## 📝 Status do Projeto
-
-### ✅ Concluído
-- [x] Backend completamente funcional
-- [x] Estrutura do frontend
-- [x] Configuração Docker
-- [x] Scripts de inicialização
-
-### 🔄 Em Desenvolvimento
-- [ ] Integração frontend-backend
-- [ ] Implementação dos formulários
-- [ ] Validações do frontend
-- [ ] Testes automatizados
-
-### 📋 Próximos Passos
-1. **Conectar frontend com backend**
-   - Implementar serviços de API
-   - Configurar interceptors do Axios
-   - Gerenciar tokens JWT
-
-2. **Implementar funcionalidades**
-   - Formulários de operações
-   - Consultas em tempo real
-   - Notificações
-
-3. **Melhorias de UX**
-   - Loading states
-   - Error handling
-   - Confirmações de ações
-
-4. **Testes e qualidade**
-   - Testes unitários
-   - Testes de integração
-   - Linting e formatação
 
 ## 🐳 Docker
 

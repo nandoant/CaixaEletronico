@@ -1,7 +1,5 @@
 # Sistema de Caixa Eletrônico
 
-Sistema completo de caixa eletrônico desenvolvido em Spring Boot, implementando os padrões de projeto Model/Repository/Service, Command, Strategy e Observer.
-
 ## 📋 Funcionalidades
 
 - **Autenticação e Autorização**
@@ -32,7 +30,6 @@ Sistema completo de caixa eletrônico desenvolvido em Spring Boot, implementando
 - **Spring Boot 3.2.0**
 - **Spring Security** (JWT)
 - **Spring Data JPA**
-- **H2 Database** (desenvolvimento)
 - **Maven**
 - **FreeMarker** (templates de email)
 - **Jackson** (serialização JSON)
@@ -66,12 +63,6 @@ mvn spring-boot:run
 ```
 
 3. Acesse: http://localhost:8080
-
-### Console H2 (desenvolvimento)
-- URL: http://localhost:8080/h2-console
-- JDBC URL: jdbc:h2:mem:caixaeletronico
-- User: sa
-- Password: password
 
 ## 📊 Dados de Teste
 
@@ -132,7 +123,7 @@ Authorization: Bearer <token>
 Content-Type: application/json
 ```
 
-## 💡 Padrões Implementados
+## 💡 Alguns Padrões Implementados
 
 ### Command Pattern
 - `DepositoCommand`
@@ -217,27 +208,3 @@ POST /operacoes/deposito
     }
 }
 ```
-
-## 🧪 Testes
-
-Execute os testes com:
-```bash
-mvn test
-```
-
-## 🚀 Produção
-
-Para deploy em produção:
-
-1. Configure banco de dados PostgreSQL
-2. Atualize as propriedades de email
-3. Configure chave JWT segura
-4. Use profile de produção
-
-## 📄 Licença
-
-Este projeto está sob a licença MIT.
-
----
-
-**Desenvolvido seguindo as melhores práticas de desenvolvimento com Spring Boot e Design Patterns.**
