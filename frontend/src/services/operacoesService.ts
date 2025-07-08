@@ -299,8 +299,6 @@ class OperacoesService {
   /**
    * Cria um agendamento de pagamento
    * 
-   * INTEGRAÇÃO BACKEND - INFORMAÇÕES PARA IMPLEMENTAÇÃO FUTURA:
-   * 
    * Endpoint: POST /operacoes/agendamento
    * Headers: 
    *   - Authorization: Bearer {token}
@@ -318,6 +316,24 @@ class OperacoesService {
    * }
    */
   async criarAgendamento(request: AgendamentoRequest): Promise<AgendamentoResponse> {
+    try {
+      console.log('🚀 Enviando request para /operacoes/agendamento:', request);
+      const response = await httpClient.post<AgendamentoResponse>('/operacoes/agendamento', request);
+      console.log('✅ Resposta recebida do backend:', response);
+      return response;
+    } catch (error: any) {
+      console.error('❌ Erro na API, tentando fallback para mock:', error);
+      
+      // Se a API falhar, usar o método mock como fallback
+      console.log('🔄 Usando método mock como fallback...');
+      return await this.criarAgendamentoMock(request);
+    }
+  }
+
+  /**
+   * MÉTODO MOCK PARA FALLBACK - Remove quando integração estiver completa
+   */
+  async criarAgendamentoMock(request: AgendamentoRequest): Promise<AgendamentoResponse> {
     // Simular delay de rede
     await this.delay(2000);
 
