@@ -1,5 +1,5 @@
 # Dockerfile multi-estágio para otimização
-FROM openjdk:17-jdk-slim as builder
+FROM openjdk:17-jdk-slim AS builder
 
 # Instalar Maven
 RUN apt-get update && apt-get install -y maven
