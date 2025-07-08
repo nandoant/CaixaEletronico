@@ -53,6 +53,27 @@ import { httpClient } from './httpClient';
  * Request: { "contaId": 1, "valor": 250, "idOpcao": "uuid" }
  */
 
+// Tipos para integração de pagamentos agendados
+export interface PagamentoAgendado {
+  id: number;
+  contaOrigemId: number;
+  contaDestinoId: number;
+  valorTotal: number;
+  valorParcela: number;
+  quantidadeParcelas: number;
+  parcelasRestantes: number;
+  periodicidadeDias: number;
+  dataProximaExecucao: string;
+  status: 'CONCLUIDO' | 'ATIVO' | 'CANCELADO';
+  descricao: string;
+}
+
+export interface PagamentosAgendadosResponse {
+  pagamentosRecebidos: PagamentoAgendado[];
+  contaId: number;
+  pagamentosEnviados: PagamentoAgendado[];
+}
+
 class OperacoesService {
   /**
    * Realiza um depósito
@@ -963,7 +984,23 @@ class OperacoesService {
     }
   }
 
-
+  /**
+   * Busca pagamentos agendados (enviados e recebidos) para uma conta
+   * @param contaId ID da conta do usuário
+   * @returns Promise com os pagamentos recebidos e enviados
+   */
+  async listarPagamentosAgendados(contaId: number): Promise<PagamentosAgendadosResponse> {
+    try {
+      const response = await httpClient.get<PagamentosAgendadosResponse>(`/pagamentos/conta/${contaId}/todos`);
+      return response;
+    } catch (error: any) {
+      if (error.message) {
+        throw new Error(error.message);
+      } else {
+        throw new Error('Erro ao buscar pagamentos agendados.');
+      }
+    }
+  }
 
   private delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));

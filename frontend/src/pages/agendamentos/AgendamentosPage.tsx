@@ -43,6 +43,8 @@ import { useNavigate } from 'react-router-dom';
 import { operacoesService } from '../../services/operacoesService';
 import { AgendamentoListItem, AgendamentosStats, PERIODICIDADE_OPTIONS } from '../../types/operacoes';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { useAccount } from '../../contexts/AccountContext';
+import { PagamentosAgendadosResponse, PagamentoAgendado } from '../../services/operacoesService';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -58,9 +60,33 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => {
   );
 };
 
+// Converte PagamentoAgendado para AgendamentoListItem
+function converterPagamentoParaAgendamentoListItem(p: PagamentoAgendado, tipo: 'enviado' | 'recebido'): AgendamentoListItem {
+  return {
+    id: p.id,
+    descricao: p.descricao + (tipo === 'recebido' ? ' (Recebido)' : ''),
+    contaDestino: {
+      numeroConta: tipo === 'enviado' ? String(p.contaDestinoId) : String(p.contaOrigemId),
+      titular: tipo === 'enviado' ? 'Destinatário' : 'Remetente', // Pode ser melhorado se tiver nome
+    },
+    valorTotal: p.valorTotal,
+    valorParcela: p.valorParcela,
+    quantidadeParcelas: p.quantidadeParcelas,
+    parcelasRestantes: p.parcelasRestantes,
+    periodicidadeDias: p.periodicidadeDias,
+    dataProximaExecucao: p.dataProximaExecucao,
+    dataCriacao: '', // Não vem do backend, pode ser ajustado
+    status: p.status,
+    primeiraParcelaDebitada: p.parcelasRestantes !== p.quantidadeParcelas,
+  };
+}
+
 const AgendamentosPage: React.FC = () => {
   const navigate = useNavigate();
+  const { accountData } = useAccount();
   const [agendamentos, setAgendamentos] = useState<AgendamentoListItem[]>([]);
+  const [pagamentosRecebidos, setPagamentosRecebidos] = useState<PagamentoAgendado[]>([]);
+  const [pagamentosEnviados, setPagamentosEnviados] = useState<PagamentoAgendado[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelando, setCancelando] = useState<number | null>(null);
   const [selectedTab, setSelectedTab] = useState(0);
@@ -69,23 +95,39 @@ const AgendamentosPage: React.FC = () => {
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [agendamentoParaCancelar, setAgendamentoParaCancelar] = useState<AgendamentoListItem | null>(null);
 
-  // Carregar agendamentos
-  const carregarAgendamentos = async () => {
+  // Buscar pagamentos agendados do backend
+  const carregarPagamentosAgendados = async () => {
+    if (!accountData?.contaId) {
+      setError('Conta do usuário não encontrada.');
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError('');
     try {
-      const dados = await operacoesService.listarAgendamentos();
-      setAgendamentos(dados);
+      const dados: PagamentosAgendadosResponse = await operacoesService.listarPagamentosAgendados(accountData.contaId);
+      setPagamentosRecebidos(dados.pagamentosRecebidos);
+      setPagamentosEnviados(dados.pagamentosEnviados);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao carregar agendamentos');
+      setError(err instanceof Error ? err.message : 'Erro ao buscar pagamentos agendados');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    carregarAgendamentos();
-  }, []);
+    carregarPagamentosAgendados();
+  }, [accountData?.contaId]);
+
+  // Atualizar agendamentos reais ao receber dados do backend
+  useEffect(() => {
+    // Junta enviados e recebidos, marcando o tipo
+    const ags: AgendamentoListItem[] = [
+      ...pagamentosEnviados.map(p => converterPagamentoParaAgendamentoListItem(p, 'enviado')),
+      ...pagamentosRecebidos.map(p => converterPagamentoParaAgendamentoListItem(p, 'recebido')),
+    ];
+    setAgendamentos(ags);
+  }, [pagamentosEnviados, pagamentosRecebidos]);
 
   // Filtrar agendamentos por status
   const agendamentosFiltrados = useMemo(() => {
@@ -192,7 +234,7 @@ const AgendamentosPage: React.FC = () => {
         </Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Tooltip title="Atualizar lista">
-            <IconButton onClick={carregarAgendamentos} disabled={loading}>
+            <IconButton onClick={carregarPagamentosAgendados} disabled={loading}>
               <Refresh />
             </IconButton>
           </Tooltip>
