@@ -1,5 +1,4 @@
 package br.com.caixaeletronico.controller.api;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -9,7 +8,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
-
 /**
  * Interface documentada para operações de consulta do estoque global
  * 
@@ -19,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 @Tag(name = "Estoque Global", description = "Consulta do estoque global de cédulas")
 @SecurityRequirement(name = "Bearer Authentication")
 public interface EstoqueGlobalControllerApi {
-
     @Operation(
         summary = "Consultar estoque global de cédulas",
         description = "Retorna o estoque atual de todas as cédulas disponíveis no caixa eletrônico. " +

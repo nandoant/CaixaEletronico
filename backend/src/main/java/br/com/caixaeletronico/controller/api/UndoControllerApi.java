@@ -1,5 +1,4 @@
 package br.com.caixaeletronico.controller.api;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -12,7 +11,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
 /**
  * Interface documentada para operações de desfazer (undo)
  * 
@@ -22,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Desfazer Operações", description = "Operações para desfazer transações bancárias específicas (apenas ADMIN)")
 @SecurityRequirement(name = "Bearer Authentication")
 public interface UndoControllerApi {
-
     @Operation(
         summary = "Desfazer operação específica",
         description = "Desfaz uma operação bancária específica através do ID da operação e ID do usuário. " +
@@ -99,7 +96,6 @@ public interface UndoControllerApi {
             @Parameter(description = "ID do usuário proprietário da operação", required = true)
             @PathVariable Long usuarioId,
             Authentication authentication);
-
     @Operation(
         summary = "Listar operações de um usuário",
         description = "Lista todas as operações de um usuário específico. " +

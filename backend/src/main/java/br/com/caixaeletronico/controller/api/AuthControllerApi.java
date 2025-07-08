@@ -1,5 +1,4 @@
 package br.com.caixaeletronico.controller.api;
-
 import br.com.caixaeletronico.controller.AuthController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,7 +11,6 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 /**
  * Interface documentada para operações de autenticação
  * 
@@ -21,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
  */
 @Tag(name = "Autenticação", description = "Operações de autenticação e autorização")
 public interface AuthControllerApi {
-
     @Operation(
         summary = "Registrar novo usuário",
         description = "Registra um novo usuário no sistema com login, email e senha. " +
@@ -68,7 +65,6 @@ public interface AuthControllerApi {
         @Parameter(description = "Dados para registro do usuário", required = true)
         @Valid @RequestBody AuthController.RegistroRequest request
     );
-
     @Operation(
         summary = "Realizar login",
         description = "Autentica um usuário com login e senha, retornando um token JWT válido.",
@@ -115,7 +111,6 @@ public interface AuthControllerApi {
         @Parameter(description = "Credenciais de login", required = true)
         @Valid @RequestBody AuthController.LoginRequest request
     );
-
     @Operation(
         summary = "Obter dados do usuário logado",
         description = "Retorna os dados do usuário autenticado com base no token JWT fornecido.",

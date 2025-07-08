@@ -1,5 +1,4 @@
 package br.com.caixaeletronico.config;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,17 +15,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
 import java.util.Arrays;
-
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-    
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
-    
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
@@ -40,13 +35,9 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        
-        // Para permitir H2 Console
         http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()));
-        
         return http.build();
     }
-    
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -55,17 +46,14 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
         configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
-        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-    
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();

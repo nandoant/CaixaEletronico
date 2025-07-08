@@ -1,5 +1,4 @@
 package br.com.caixaeletronico.model;
-
 public enum TipoOperacao {
     DEPOSITO,
     SAQUE,

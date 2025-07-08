@@ -1,5 +1,4 @@
 package br.com.caixaeletronico.controller.api;
-
 import br.com.caixaeletronico.controller.SaqueController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,7 +12,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
 /**
  * Interface documentada para operações de saque
  * 
@@ -23,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Saque", description = "Operações de saque de dinheiro")
 @SecurityRequirement(name = "Bearer Authentication")
 public interface SaqueControllerApi {
-
     @Operation(
         summary = "Obter opções de saque",
         description = "Retorna as combinações de cédulas disponíveis para realizar um saque no valor especificado. " +
@@ -96,13 +93,10 @@ public interface SaqueControllerApi {
     ResponseEntity<?> obterOpcoesSaque(
         @Parameter(description = "ID da conta para saque", required = true)
         @RequestParam Long contaId,
-        
         @Parameter(description = "Valor do saque (deve ser múltiplo de 10)", required = true)
         @RequestParam int valor,
-        
         Authentication authentication
     );
-
     @Operation(
         summary = "Confirmar saque",
         description = "Confirma a operação de saque com a combinação de cédulas selecionada. " +
@@ -160,7 +154,6 @@ public interface SaqueControllerApi {
     ResponseEntity<?> confirmarSaque(
         @Parameter(description = "Dados do saque a ser confirmado", required = true)
         @RequestBody SaqueController.SaqueRequest request,
-        
         Authentication authentication
     );
 }

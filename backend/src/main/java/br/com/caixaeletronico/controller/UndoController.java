@@ -1,5 +1,4 @@
 package br.com.caixaeletronico.controller;
-
 import br.com.caixaeletronico.config.CustomUserDetailsService;
 import br.com.caixaeletronico.controller.api.UndoControllerApi;
 import br.com.caixaeletronico.model.Operacao;
@@ -11,18 +10,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 @RestController
 @RequestMapping("/operacoes/desfazer")
 public class UndoController implements UndoControllerApi {
-    
     @Autowired
     private CommandManagerService commandManagerService;
-    
     @PostMapping("/{operacaoId}/usuario/{usuarioId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> desfazerOperacaoEspecifica(
@@ -33,9 +28,7 @@ public class UndoController implements UndoControllerApi {
             CustomUserDetailsService.CustomUserPrincipal principal = 
                 (CustomUserDetailsService.CustomUserPrincipal) authentication.getPrincipal();
             Usuario admin = principal.getUsuario();
-            
             commandManagerService.desfazerOperacaoEspecifica(operacaoId, usuarioId, admin);
-            
             Map<String, Object> dadosEstorno = new HashMap<>();
             dadosEstorno.put("operacaoEstornada", Map.of(
                 "id", operacaoId,
@@ -45,19 +38,15 @@ public class UndoController implements UndoControllerApi {
             ));
             dadosEstorno.put("adminResponsavel", admin.getLogin());
             dadosEstorno.put("motivoEstorno", "Solicitação de estorno por administrador");
-            
             Map<String, Object> response = ResponseUtil.criarRespostaPadraoSimples(
                 "Operação desfeita com sucesso", dadosEstorno);
-            
             return ResponseEntity.ok(response);
-            
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
             return ResponseEntity.badRequest().body(error);
         }
     }
-    
     @GetMapping("/usuario/{usuarioId}/operacoes")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> listarOperacoesUsuario(
@@ -67,10 +56,7 @@ public class UndoController implements UndoControllerApi {
             CustomUserDetailsService.CustomUserPrincipal principal = 
                 (CustomUserDetailsService.CustomUserPrincipal) authentication.getPrincipal();
             Usuario admin = principal.getUsuario();
-            
             List<Operacao> operacoes = commandManagerService.listarOperacoesUsuario(usuarioId, admin);
-            
-            // Converte operações para DTOs para evitar problemas de serialização
             List<Map<String, Object>> operacoesDto = operacoes.stream()
                 .map(op -> {
                     Map<String, Object> dto = new HashMap<>();
@@ -80,8 +66,6 @@ public class UndoController implements UndoControllerApi {
                     dto.put("valor", op.getValor());
                     dto.put("usuarioResponsavel", op.getUsuarioResponsavel());
                     dto.put("desfeita", op.getDesfeita());
-                    
-                    // Informações das contas (sem lazy loading)
                     if (op.getContaOrigem() != null) {
                         dto.put("contaOrigem", Map.of(
                             "id", op.getContaOrigem().getId(),
@@ -94,24 +78,18 @@ public class UndoController implements UndoControllerApi {
                             "numeroConta", op.getContaDestino().getNumeroConta()
                         ));
                     }
-                    
                     dto.put("podeDesfazer", !Boolean.TRUE.equals(op.getDesfeita()) && op.getMementoJson() != null);
-                    
                     return dto;
                 })
                 .collect(java.util.stream.Collectors.toList());
-            
             Map<String, Object> dadosOperacoes = new HashMap<>();
             dadosOperacoes.put("usuarioConsultado", usuarioId);
             dadosOperacoes.put("adminSolicitante", admin.getLogin());
             dadosOperacoes.put("operacoes", operacoesDto);
             dadosOperacoes.put("totalOperacoes", operacoesDto.size());
-            
             Map<String, Object> response = ResponseUtil.criarRespostaPadraoSimples(
                 "Operações do usuário listadas com sucesso", dadosOperacoes);
-            
             return ResponseEntity.ok(response);
-            
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
