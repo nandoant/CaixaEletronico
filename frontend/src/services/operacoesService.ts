@@ -210,7 +210,7 @@ class OperacoesService {
   async criarAgendamento(request: AgendamentoRequest): Promise<AgendamentoResponse> {
     const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080';
     const token = localStorage.getItem('authToken');
-    
+
     if (!token) {
       throw new Error('Nenhum token de autenticação encontrado. Faça login novamente.');
     }

@@ -2,6 +2,7 @@
 
 Sistema completo de caixa eletrônico com backend Spring Boot e frontend React.<br><br>
 **Alunos**
+
 - Fernando Antonio
 - Michely Serras
 
@@ -24,6 +25,7 @@ CaixaEletronico/
 ## Stack Tecnológica
 
 ### Backend
+
 - **Java 17** + **Spring Boot 3**
 - **PostgreSQL** como banco de dados
 - **JWT** para autenticação
@@ -31,36 +33,40 @@ CaixaEletronico/
 - **Swagger** para documentação da API
 
 ### Frontend
+
 - **React 18** + **TypeScript**
 - **Material-UI** para interface
 - **React Router** para navegação
 - **React Query** para gerenciamento de estado
 - **Axios** para requisições HTTP
-  
+
 ## URLs de Acesso
 
-| Serviço | URL | Descrição |
-|---------|-----|-----------|
-| Frontend | http://localhost:3000 | Interface do usuário |
-| Backend API | http://localhost:8080 | API REST |
-| Swagger UI | http://localhost:8080/swagger-ui.html | Documentação da API |
-| Banco de Dados | localhost:5432 | PostgreSQL |
+| Serviço        | URL                                   | Descrição            |
+| -------------- | ------------------------------------- | -------------------- |
+| Frontend       | http://localhost:3000                 | Interface do usuário |
+| Backend API    | http://localhost:8080                 | API REST             |
+| Swagger UI     | http://localhost:8080/swagger-ui.html | Documentação da API  |
+| Banco de Dados | localhost:5432                        | PostgreSQL           |
 
 ## Docker
 
 ### Variáveis de Ambiente
 
 #### Backend
+
 - `SPRING_PROFILES_ACTIVE=docker`
 - `DB_USERNAME=caixaeletronico`
 - `DB_PASSWORD=caixaeletronico123`
 - `JWT_SECRET=sua-chave-secreta`
 
 #### Frontend
+
 - `REACT_APP_API_URL=http://localhost:8080`
 - `REACT_APP_ENV=development`
 
 ### Volumes
+
 - `postgres_data`: Dados persistentes do PostgreSQL
 - Hot reload para desenvolvimento
 

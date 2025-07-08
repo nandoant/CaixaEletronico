@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -27,14 +27,20 @@ import {
   List,
   ListItem,
   ListItemText,
-  ListItemIcon
-} from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { operacoesService } from '../../services/operacoesService';
-import { AgendamentoRequest, AgendamentoResponse, ContaInfo, PERIODICIDADE_OPTIONS, ParcelaCalculada } from '../../types/operacoes';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
-import { CalendarToday, Schedule, Payment } from '@mui/icons-material';
+  ListItemIcon,
+} from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import { operacoesService } from "../../services/operacoesService";
+import {
+  AgendamentoRequest,
+  AgendamentoResponse,
+  ContaInfo,
+  PERIODICIDADE_OPTIONS,
+  ParcelaCalculada,
+} from "../../types/operacoes";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
+import { CalendarToday, Schedule, Payment } from "@mui/icons-material";
 
 interface FormData {
   numeroContaDestino: string;
@@ -51,70 +57,72 @@ const AgendamentoPage: React.FC = () => {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<FormData>({
-    numeroContaDestino: '',
-    valorTotal: '',
+    numeroContaDestino: "",
+    valorTotal: "",
     quantidadeParcelas: 1,
     periodicidadeDias: 30,
     debitarPrimeiraParcela: true,
-    descricao: '',
-    dataInicio: new Date().toISOString().split('T')[0]
+    descricao: "",
+    dataInicio: new Date().toISOString().split("T")[0],
   });
   const [contaDestino, setContaDestino] = useState<ContaInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [buscandoConta, setBuscandoConta] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [resultado, setResultado] = useState<AgendamentoResponse | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
-  const steps = ['Conta de Destino', 'Configuração', 'Confirmação'];
+  const steps = ["Conta de Destino", "Configuração", "Confirmação"];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
-    
+
     // Limpar conta destino se o número mudou
-    if (name === 'numeroContaDestino' && contaDestino) {
+    if (name === "numeroContaDestino" && contaDestino) {
       setContaDestino(null);
     }
-    
+
     // Limpar erros
-    setError('');
+    setError("");
   };
 
   const handleSelectChange = (name: string, value: any) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-    setError('');
+    setError("");
   };
 
   const buscarContaDestino = async () => {
     if (!formData.numeroContaDestino.trim()) {
-      setError('Digite o número da conta de destino');
+      setError("Digite o número da conta de destino");
       return;
     }
 
     setBuscandoConta(true);
-    setError('');
+    setError("");
 
     try {
-      const conta = await operacoesService.buscarContaPorNumero(formData.numeroContaDestino);
-      
+      const conta = await operacoesService.buscarContaPorNumero(
+        formData.numeroContaDestino
+      );
+
       // Verificar se não é a própria conta
       if (user && conta.usuarioProprietarioId === user.id) {
-        setError('Você não pode agendar pagamento para sua própria conta');
+        setError("Você não pode agendar pagamento para sua própria conta");
         setContaDestino(null);
         return;
       }
-      
+
       setContaDestino(conta);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao buscar conta');
+      setError(err instanceof Error ? err.message : "Erro ao buscar conta");
       setContaDestino(null);
     } finally {
       setBuscandoConta(false);
@@ -129,28 +137,28 @@ const AgendamentoPage: React.FC = () => {
 
     for (let i = 0; i < formData.quantidadeParcelas; i++) {
       const dataVencimento = new Date(dataInicio);
-      
+
       if (i === 0 && formData.debitarPrimeiraParcela) {
         // Primeira parcela é hoje se marcado para debitar
         dataVencimento.setDate(dataInicio.getDate());
       } else {
         // Outras parcelas respeitam a periodicidade
-        const diasAdicionar = formData.debitarPrimeiraParcela ? 
-          i * formData.periodicidadeDias : 
-          (i + 1) * formData.periodicidadeDias;
+        const diasAdicionar = formData.debitarPrimeiraParcela
+          ? i * formData.periodicidadeDias
+          : (i + 1) * formData.periodicidadeDias;
         dataVencimento.setDate(dataInicio.getDate() + diasAdicionar);
       }
 
-      let status: 'PENDENTE' | 'PAGO' | 'A_PAGAR_HOJE' = 'PENDENTE';
+      let status: "PENDENTE" | "PAGO" | "A_PAGAR_HOJE" = "PENDENTE";
       if (i === 0 && formData.debitarPrimeiraParcela) {
-        status = 'A_PAGAR_HOJE';
+        status = "A_PAGAR_HOJE";
       }
 
       parcelas.push({
         numero: i + 1,
         valor: Number(valorParcela.toFixed(2)),
-        dataVencimento: dataVencimento.toISOString().split('T')[0],
-        status
+        dataVencimento: dataVencimento.toISOString().split("T")[0],
+        status,
       });
     }
 
@@ -161,26 +169,29 @@ const AgendamentoPage: React.FC = () => {
     switch (etapa) {
       case 0:
         if (!contaDestino) {
-          setError('Busque e confirme a conta de destino primeiro');
+          setError("Busque e confirme a conta de destino primeiro");
           return false;
         }
         break;
       case 1:
         const valor = parseFloat(formData.valorTotal);
         if (isNaN(valor) || valor <= 0) {
-          setError('Digite um valor válido');
+          setError("Digite um valor válido");
           return false;
         }
-        if (formData.quantidadeParcelas < 1 || formData.quantidadeParcelas > 12) {
-          setError('Quantidade de parcelas deve ser entre 1 e 12');
+        if (
+          formData.quantidadeParcelas < 1 ||
+          formData.quantidadeParcelas > 12
+        ) {
+          setError("Quantidade de parcelas deve ser entre 1 e 12");
           return false;
         }
         if (!formData.descricao.trim()) {
-          setError('Digite uma descrição para o agendamento');
+          setError("Digite uma descrição para o agendamento");
           return false;
         }
         if (!formData.dataInicio) {
-          setError('Selecione a data de início');
+          setError("Selecione a data de início");
           return false;
         }
         break;
@@ -190,12 +201,12 @@ const AgendamentoPage: React.FC = () => {
 
   const proximaEtapa = () => {
     if (validarEtapa(currentStep)) {
-      setCurrentStep(prev => Math.min(prev + 1, steps.length - 1));
+      setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
     }
   };
 
   const etapaAnterior = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 0));
+    setCurrentStep((prev) => Math.max(prev - 1, 0));
   };
 
   const handleConfirmarAgendamento = () => {
@@ -208,7 +219,7 @@ const AgendamentoPage: React.FC = () => {
     if (!user || !contaDestino) return;
 
     setLoading(true);
-    setError('');
+    setError("");
     setConfirmDialogOpen(false);
 
     try {
@@ -219,27 +230,29 @@ const AgendamentoPage: React.FC = () => {
         periodicidadeDias: formData.periodicidadeDias,
         debitarPrimeiraParcela: formData.debitarPrimeiraParcela,
         descricao: formData.descricao,
-        dataInicio: formData.dataInicio
+        dataInicio: formData.dataInicio,
       };
 
       const response = await operacoesService.criarAgendamento(request);
       setResultado(response);
       setSuccess(true);
-      
+
       // Reset form
       setFormData({
-        numeroContaDestino: '',
-        valorTotal: '',
+        numeroContaDestino: "",
+        valorTotal: "",
         quantidadeParcelas: 1,
         periodicidadeDias: 30,
         debitarPrimeiraParcela: true,
-        descricao: '',
-        dataInicio: new Date().toISOString().split('T')[0]
+        descricao: "",
+        dataInicio: new Date().toISOString().split("T")[0],
       });
       setContaDestino(null);
       setCurrentStep(0);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao criar agendamento');
+      setError(
+        err instanceof Error ? err.message : "Erro ao criar agendamento"
+      );
     } finally {
       setLoading(false);
     }
@@ -248,7 +261,7 @@ const AgendamentoPage: React.FC = () => {
   const novoAgendamento = () => {
     setSuccess(false);
     setResultado(null);
-    setError('');
+    setError("");
   };
 
   if (loading) {
@@ -258,12 +271,16 @@ const AgendamentoPage: React.FC = () => {
   if (success && resultado) {
     return (
       <Box sx={{ p: 3 }}>
-        <Paper sx={{ p: 4, maxWidth: 700, mx: 'auto' }}>
-          <Box sx={{ textAlign: 'center', mb: 3 }}>
+        <Paper sx={{ p: 4, maxWidth: 700, mx: "auto" }}>
+          <Box sx={{ textAlign: "center", mb: 3 }}>
             <Typography variant="h4" gutterBottom color="success.main">
               ✓ Agendamento Criado
             </Typography>
-            <Chip label={resultado.dados.agendamento.status} color="success" sx={{ mb: 2 }} />
+            <Chip
+              label={resultado.dados.agendamento.status}
+              color="success"
+              sx={{ mb: 2 }}
+            />
           </Box>
 
           <Card sx={{ mb: 3 }}>
@@ -285,7 +302,11 @@ const AgendamentoPage: React.FC = () => {
                     Valor Total
                   </Typography>
                   <Typography variant="h6">
-                    R$ {resultado.dados.agendamento.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    R${" "}
+                    {resultado.dados.agendamento.valorTotal.toLocaleString(
+                      "pt-BR",
+                      { minimumFractionDigits: 2 }
+                    )}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -293,7 +314,11 @@ const AgendamentoPage: React.FC = () => {
                     Parcelas
                   </Typography>
                   <Typography variant="body1">
-                    {resultado.dados.agendamento.quantidadeParcelas}x de R$ {resultado.dados.agendamento.valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    {resultado.dados.agendamento.quantidadeParcelas}x de R${" "}
+                    {resultado.dados.agendamento.valorParcela.toLocaleString(
+                      "pt-BR",
+                      { minimumFractionDigits: 2 }
+                    )}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -301,14 +326,19 @@ const AgendamentoPage: React.FC = () => {
                     Próxima Execução
                   </Typography>
                   <Typography variant="body1">
-                    {new Date(resultado.dados.agendamento.dataProximaExecucao).toLocaleDateString('pt-BR')}
+                    {new Date(
+                      resultado.dados.agendamento.dataProximaExecucao
+                    ).toLocaleDateString("pt-BR")}
                   </Typography>
                 </Grid>
               </Grid>
-              
+
               {resultado.dados.valorDebitadoAgora > 0 && (
                 <Alert severity="info" sx={{ mt: 2 }}>
-                  Valor debitado hoje: R$ {resultado.dados.valorDebitadoAgora.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  Valor debitado hoje: R${" "}
+                  {resultado.dados.valorDebitadoAgora.toLocaleString("pt-BR", {
+                    minimumFractionDigits: 2,
+                  })}
                 </Alert>
               )}
             </CardContent>
@@ -318,7 +348,11 @@ const AgendamentoPage: React.FC = () => {
             <Grid item xs={12} md={6}>
               <Card>
                 <CardContent>
-                  <Typography variant="subtitle1" gutterBottom color="error.main">
+                  <Typography
+                    variant="subtitle1"
+                    gutterBottom
+                    color="error.main"
+                  >
                     Conta de Origem
                   </Typography>
                   <Typography variant="body2">
@@ -333,7 +367,11 @@ const AgendamentoPage: React.FC = () => {
             <Grid item xs={12} md={6}>
               <Card>
                 <CardContent>
-                  <Typography variant="subtitle1" gutterBottom color="success.main">
+                  <Typography
+                    variant="subtitle1"
+                    gutterBottom
+                    color="success.main"
+                  >
                     Conta de Destino
                   </Typography>
                   <Typography variant="body2">
@@ -347,23 +385,19 @@ const AgendamentoPage: React.FC = () => {
             </Grid>
           </Grid>
 
-          <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'center' }}>
-            <Button
-              variant="contained"
-              onClick={novoAgendamento}
-            >
+          <Box
+            sx={{ mt: 3, display: "flex", gap: 2, justifyContent: "center" }}
+          >
+            <Button variant="contained" onClick={novoAgendamento}>
               Novo Agendamento
             </Button>
             <Button
               variant="outlined"
-              onClick={() => navigate('/agendamentos')}
+              onClick={() => navigate("/agendamentos")}
             >
               Ver Agendamentos
             </Button>
-            <Button
-              variant="outlined"
-              onClick={() => navigate('/operacoes')}
-            >
+            <Button variant="outlined" onClick={() => navigate("/operacoes")}>
               Voltar às Operações
             </Button>
           </Box>
@@ -374,12 +408,13 @@ const AgendamentoPage: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Paper sx={{ p: 4, maxWidth: 800, mx: 'auto' }}>
+      <Paper sx={{ p: 4, maxWidth: 800, mx: "auto" }}>
         <Typography variant="h4" gutterBottom>
           Agendamento de Pagamento
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-          Agende pagamentos únicos ou parcelados para serem executados automaticamente
+          Agende pagamentos únicos ou parcelados para serem executados
+          automaticamente
         </Typography>
 
         {error && (
@@ -402,7 +437,7 @@ const AgendamentoPage: React.FC = () => {
             <Typography variant="h6" gutterBottom>
               1. Conta de Destino
             </Typography>
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'start', mb: 3 }}>
+            <Box sx={{ display: "flex", gap: 2, alignItems: "start", mb: 3 }}>
               <TextField
                 name="numeroContaDestino"
                 label="Número da Conta"
@@ -418,12 +453,18 @@ const AgendamentoPage: React.FC = () => {
                 disabled={buscandoConta || !formData.numeroContaDestino.trim()}
                 sx={{ minWidth: 120, height: 56 }}
               >
-                {buscandoConta ? 'Buscando...' : 'Buscar'}
+                {buscandoConta ? "Buscando..." : "Buscar"}
               </Button>
             </Box>
 
             {contaDestino && (
-              <Card sx={{ backgroundColor: 'success.light', color: 'success.contrastText', mb: 3 }}>
+              <Card
+                sx={{
+                  backgroundColor: "success.light",
+                  color: "success.contrastText",
+                  mb: 3,
+                }}
+              >
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
                     ✓ Conta Encontrada
@@ -446,7 +487,7 @@ const AgendamentoPage: React.FC = () => {
             <Typography variant="h6" gutterBottom>
               2. Configuração do Pagamento
             </Typography>
-            
+
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <TextField
@@ -458,15 +499,17 @@ const AgendamentoPage: React.FC = () => {
                   placeholder="0,00"
                   fullWidth
                   InputProps={{
-                    startAdornment: <InputAdornment position="start">R$</InputAdornment>,
+                    startAdornment: (
+                      <InputAdornment position="start">R$</InputAdornment>
+                    ),
                   }}
                   inputProps={{
                     min: 0.01,
-                    step: 0.01
+                    step: 0.01,
                   }}
                 />
               </Grid>
-              
+
               <Grid item xs={12} md={6}>
                 <TextField
                   name="quantidadeParcelas"
@@ -477,7 +520,7 @@ const AgendamentoPage: React.FC = () => {
                   fullWidth
                   inputProps={{
                     min: 1,
-                    max: 12
+                    max: 12,
                   }}
                 />
               </Grid>
@@ -488,7 +531,9 @@ const AgendamentoPage: React.FC = () => {
                   <Select
                     value={formData.periodicidadeDias}
                     label="Periodicidade"
-                    onChange={(e) => handleSelectChange('periodicidadeDias', e.target.value)}
+                    onChange={(e) =>
+                      handleSelectChange("periodicidadeDias", e.target.value)
+                    }
                   >
                     {PERIODICIDADE_OPTIONS.map((option) => (
                       <MenuItem key={option.value} value={option.value}>
@@ -511,7 +556,7 @@ const AgendamentoPage: React.FC = () => {
                     shrink: true,
                   }}
                   inputProps={{
-                    min: new Date().toISOString().split('T')[0]
+                    min: new Date().toISOString().split("T")[0],
                   }}
                 />
               </Grid>
@@ -554,15 +599,24 @@ const AgendamentoPage: React.FC = () => {
                     {calcularParcelas().map((parcela) => (
                       <ListItem key={parcela.numero}>
                         <ListItemIcon>
-                          {parcela.status === 'A_PAGAR_HOJE' ? (
+                          {parcela.status === "A_PAGAR_HOJE" ? (
                             <Payment color="primary" />
                           ) : (
                             <Schedule color="action" />
                           )}
                         </ListItemIcon>
                         <ListItemText
-                          primary={`${parcela.numero}ª Parcela - R$ ${parcela.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-                          secondary={`${new Date(parcela.dataVencimento).toLocaleDateString('pt-BR')} ${parcela.status === 'A_PAGAR_HOJE' ? '(Hoje)' : ''}`}
+                          primary={`${
+                            parcela.numero
+                          }ª Parcela - R$ ${parcela.valor.toLocaleString(
+                            "pt-BR",
+                            { minimumFractionDigits: 2 }
+                          )}`}
+                          secondary={`${new Date(
+                            parcela.dataVencimento
+                          ).toLocaleDateString("pt-BR")} ${
+                            parcela.status === "A_PAGAR_HOJE" ? "(Hoje)" : ""
+                          }`}
                         />
                       </ListItem>
                     ))}
@@ -579,7 +633,7 @@ const AgendamentoPage: React.FC = () => {
             <Typography variant="h6" gutterBottom>
               3. Confirmação
             </Typography>
-            
+
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <Card>
@@ -594,10 +648,19 @@ const AgendamentoPage: React.FC = () => {
                       <strong>Conta:</strong> {contaDestino?.numeroConta}
                     </Typography>
                     <Typography variant="body2">
-                      <strong>Valor Total:</strong> R$ {parseFloat(formData.valorTotal || '0').toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      <strong>Valor Total:</strong> R${" "}
+                      {parseFloat(formData.valorTotal || "0").toLocaleString(
+                        "pt-BR",
+                        { minimumFractionDigits: 2 }
+                      )}
                     </Typography>
                     <Typography variant="body2">
-                      <strong>Parcelas:</strong> {formData.quantidadeParcelas}x de R$ {(parseFloat(formData.valorTotal || '0') / formData.quantidadeParcelas).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      <strong>Parcelas:</strong> {formData.quantidadeParcelas}x
+                      de R${" "}
+                      {(
+                        parseFloat(formData.valorTotal || "0") /
+                        formData.quantidadeParcelas
+                      ).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </Typography>
                     <Typography variant="body2">
                       <strong>Descrição:</strong> {formData.descricao}
@@ -605,7 +668,7 @@ const AgendamentoPage: React.FC = () => {
                   </CardContent>
                 </Card>
               </Grid>
-              
+
               <Grid item xs={12} md={6}>
                 <Card>
                   <CardContent>
@@ -613,17 +676,35 @@ const AgendamentoPage: React.FC = () => {
                       Cronograma
                     </Typography>
                     <Typography variant="body2">
-                      <strong>Data de Início:</strong> {new Date(formData.dataInicio).toLocaleDateString('pt-BR')}
+                      <strong>Data de Início:</strong>{" "}
+                      {new Date(formData.dataInicio).toLocaleDateString(
+                        "pt-BR"
+                      )}
                     </Typography>
                     <Typography variant="body2">
-                      <strong>Periodicidade:</strong> {PERIODICIDADE_OPTIONS.find(p => p.value === formData.periodicidadeDias)?.label}
+                      <strong>Periodicidade:</strong>{" "}
+                      {
+                        PERIODICIDADE_OPTIONS.find(
+                          (p) => p.value === formData.periodicidadeDias
+                        )?.label
+                      }
                     </Typography>
                     <Typography variant="body2">
-                      <strong>Primeira parcela:</strong> {formData.debitarPrimeiraParcela ? 'Será debitada hoje' : 'Não será debitada hoje'}
+                      <strong>Primeira parcela:</strong>{" "}
+                      {formData.debitarPrimeiraParcela
+                        ? "Será debitada hoje"
+                        : "Não será debitada hoje"}
                     </Typography>
                     {formData.debitarPrimeiraParcela && (
                       <Alert severity="warning" sx={{ mt: 1 }}>
-                        R$ {(parseFloat(formData.valorTotal || '0') / formData.quantidadeParcelas).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} será debitado imediatamente
+                        R${" "}
+                        {(
+                          parseFloat(formData.valorTotal || "0") /
+                          formData.quantidadeParcelas
+                        ).toLocaleString("pt-BR", {
+                          minimumFractionDigits: 2,
+                        })}{" "}
+                        será debitado imediatamente
                       </Alert>
                     )}
                   </CardContent>
@@ -634,14 +715,23 @@ const AgendamentoPage: React.FC = () => {
         )}
 
         {/* Botões de navegação */}
-        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'space-between', mt: 4 }}>
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            justifyContent: "space-between",
+            mt: 4,
+          }}
+        >
           <Button
             variant="outlined"
-            onClick={() => currentStep === 0 ? navigate('/operacoes') : etapaAnterior()}
+            onClick={() =>
+              currentStep === 0 ? navigate("/operacoes") : etapaAnterior()
+            }
           >
-            {currentStep === 0 ? 'Cancelar' : 'Anterior'}
+            {currentStep === 0 ? "Cancelar" : "Anterior"}
           </Button>
-          
+
           {currentStep < steps.length - 1 ? (
             <Button
               variant="contained"
@@ -654,7 +744,9 @@ const AgendamentoPage: React.FC = () => {
             <Button
               variant="contained"
               onClick={handleConfirmarAgendamento}
-              disabled={!contaDestino || !formData.valorTotal || !formData.descricao}
+              disabled={
+                !contaDestino || !formData.valorTotal || !formData.descricao
+              }
             >
               Criar Agendamento
             </Button>
@@ -663,7 +755,11 @@ const AgendamentoPage: React.FC = () => {
       </Paper>
 
       {/* Dialog de confirmação */}
-      <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)} maxWidth="md">
+      <Dialog
+        open={confirmDialogOpen}
+        onClose={() => setConfirmDialogOpen(false)}
+        maxWidth="md"
+      >
         <DialogTitle>Confirmar Agendamento</DialogTitle>
         <DialogContent>
           <Typography gutterBottom>
@@ -680,7 +776,11 @@ const AgendamentoPage: React.FC = () => {
             </Grid>
             <Grid item xs={6}>
               <Typography variant="body2">
-                <strong>Valor Total:</strong> R$ {parseFloat(formData.valorTotal || '0').toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                <strong>Valor Total:</strong> R${" "}
+                {parseFloat(formData.valorTotal || "0").toLocaleString(
+                  "pt-BR",
+                  { minimumFractionDigits: 2 }
+                )}
               </Typography>
               <Typography variant="body2">
                 <strong>Parcelas:</strong> {formData.quantidadeParcelas}x
@@ -689,14 +789,17 @@ const AgendamentoPage: React.FC = () => {
           </Grid>
           {formData.debitarPrimeiraParcela && (
             <Alert severity="warning" sx={{ mt: 2 }}>
-              A primeira parcela de R$ {(parseFloat(formData.valorTotal || '0') / formData.quantidadeParcelas).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} será debitada imediatamente!
+              A primeira parcela de R${" "}
+              {(
+                parseFloat(formData.valorTotal || "0") /
+                formData.quantidadeParcelas
+              ).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}{" "}
+              será debitada imediatamente!
             </Alert>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmDialogOpen(false)}>
-            Cancelar
-          </Button>
+          <Button onClick={() => setConfirmDialogOpen(false)}>Cancelar</Button>
           <Button onClick={criarAgendamento} variant="contained">
             Confirmar Agendamento
           </Button>

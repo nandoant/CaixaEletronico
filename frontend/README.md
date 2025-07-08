@@ -35,11 +35,13 @@ src/
 ### Com Docker (Recomendado)
 
 1. **Desenvolvimento** (com hot reload):
+
 ```bash
 docker-compose -f docker-compose.dev.yml up frontend
 ```
 
 2. **Produção**:
+
 ```bash
 docker-compose up frontend
 ```
@@ -47,17 +49,20 @@ docker-compose up frontend
 ### Sem Docker
 
 1. **Instalar dependências**:
+
 ```bash
 cd frontend
 npm install
 ```
 
 2. **Executar em desenvolvimento**:
+
 ```bash
 npm start
 ```
 
 3. **Build para produção**:
+
 ```bash
 npm run build
 ```
@@ -101,6 +106,7 @@ O frontend está preparado para consumir os seguintes endpoints:
 ## Docker
 
 ### Desenvolvimento
+
 ```bash
 # Executar apenas o frontend
 docker-compose -f docker-compose.dev.yml up frontend
@@ -110,8 +116,8 @@ docker-compose -f docker-compose.dev.yml up
 ```
 
 ### Produção
+
 ```bash
 # Build e execução
 docker-compose up --build
 ```
-

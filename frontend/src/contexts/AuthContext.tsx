@@ -1,5 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { authService, LoginRequest, RegisterRequest, LoginResponse, RegisterResponse, MeResponse } from "../services/authService";
+import {
+  authService,
+  LoginRequest,
+  RegisterRequest,
+  LoginResponse,
+  RegisterResponse,
+  MeResponse,
+} from "../services/authService";
 
 interface User {
   id: number;
@@ -50,7 +57,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setToken(savedToken);
         try {
           const response = await authService.me();
-          
+
           const userData: User = {
             id: response.dados.usuario.userId,
             login: response.dados.usuario.login,
@@ -60,7 +67,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             numeroConta: response.dados.conta?.numeroConta || "",
             titular: response.dados.conta?.titular || "",
           };
-          
+
           setUser(userData);
         } catch (error) {
           authService.removeToken();
@@ -79,7 +86,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
     try {
       const response = await authService.login(loginData);
-      
+
       // Mapear dados da resposta para o formato do contexto
       const userData: User = {
         id: response.dados.usuario.userId,
@@ -90,14 +97,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         numeroConta: response.dados.conta.numeroConta,
         titular: response.dados.conta.titular,
       };
-      
+
       setUser(userData);
       setToken(response.dados.autenticacao.token);
       authService.saveToken(response.dados.autenticacao.token);
-      
+
       return response;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Erro no login";
+      const errorMessage =
+        error instanceof Error ? error.message : "Erro no login";
       setError(errorMessage);
       throw error;
     } finally {
@@ -105,14 +113,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const register = async (registerData: RegisterRequest): Promise<RegisterResponse> => {
+  const register = async (
+    registerData: RegisterRequest
+  ): Promise<RegisterResponse> => {
     setIsLoading(true);
     setError(null);
     try {
       const response = await authService.register(registerData);
       return response;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Erro no registro";
+      const errorMessage =
+        error instanceof Error ? error.message : "Erro no registro";
       setError(errorMessage);
       throw error;
     } finally {

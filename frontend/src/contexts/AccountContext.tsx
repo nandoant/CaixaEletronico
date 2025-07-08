@@ -77,7 +77,7 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({
       const errorMessage =
         err instanceof Error ? err.message : "Erro ao carregar dados da conta";
       setError(errorMessage);
-      
+
       if (user?.contaId) {
         const basicAccountData: AccountData = {
           contaId: user.contaId,
@@ -162,7 +162,7 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({
   };
 
   // Debug: Expor no window para debug
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     (window as any).debugAccount = {
       accountData,
       isLoading,

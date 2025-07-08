@@ -212,9 +212,7 @@ const PagamentoAgendadoPage: React.FC = () => {
     if (!user || !contaDestino) return;
 
     if (user.contaId === contaDestino.contaId) {
-      setError(
-        "ERRO: Você não pode agendar pagamento para sua própria conta!"
-      );
+      setError("ERRO: Você não pode agendar pagamento para sua própria conta!");
       return;
     }
 
@@ -354,10 +352,8 @@ const PagamentoAgendadoPage: React.FC = () => {
   const testarPermissoes = async () => {
     setApiStatus("checking");
     try {
-
       setApiStatus("online");
       setError("");
-      
     } catch (err) {
       setApiStatus("offline");
       setError("Função de teste removida");
