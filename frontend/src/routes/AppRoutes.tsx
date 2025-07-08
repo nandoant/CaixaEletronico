@@ -61,13 +61,13 @@ const AppRoutes: React.FC = () => {
         <Route path="agendamentos" element={<AgendamentosPage />} />
 
         {/* Rota admin - apenas para admins */}
-        <Route 
-          path="admin" 
+        <Route
+          path="admin"
           element={
             <ProtectedRoute requiredRole="ADMIN">
               <AdminPage />
             </ProtectedRoute>
-          } 
+          }
         />
       </Route>
 
