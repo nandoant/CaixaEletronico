@@ -45,6 +45,7 @@ import { AgendamentoListItem, AgendamentosStats, PERIODICIDADE_OPTIONS } from '.
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useAccount } from '../../contexts/AccountContext';
 import { PagamentosAgendadosResponse, PagamentoAgendado } from '../../services/operacoesService';
+import { ContasDisponiveisResponse } from '../../types/operacoes';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -60,27 +61,6 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => {
   );
 };
 
-// Converte PagamentoAgendado para AgendamentoListItem
-function converterPagamentoParaAgendamentoListItem(p: PagamentoAgendado, tipo: 'enviado' | 'recebido'): AgendamentoListItem {
-  return {
-    id: p.id,
-    descricao: p.descricao + (tipo === 'recebido' ? ' (Recebido)' : ''),
-    contaDestino: {
-      numeroConta: tipo === 'enviado' ? String(p.contaDestinoId) : String(p.contaOrigemId),
-      titular: tipo === 'enviado' ? 'Destinatário' : 'Remetente', // Pode ser melhorado se tiver nome
-    },
-    valorTotal: p.valorTotal,
-    valorParcela: p.valorParcela,
-    quantidadeParcelas: p.quantidadeParcelas,
-    parcelasRestantes: p.parcelasRestantes,
-    periodicidadeDias: p.periodicidadeDias,
-    dataProximaExecucao: p.dataProximaExecucao,
-    dataCriacao: '', // Não vem do backend, pode ser ajustado
-    status: p.status,
-    primeiraParcelaDebitada: p.parcelasRestantes !== p.quantidadeParcelas,
-  };
-}
-
 const AgendamentosPage: React.FC = () => {
   const navigate = useNavigate();
   const { accountData } = useAccount();
@@ -94,6 +74,7 @@ const AgendamentosPage: React.FC = () => {
   const [success, setSuccess] = useState('');
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [agendamentoParaCancelar, setAgendamentoParaCancelar] = useState<AgendamentoListItem | null>(null);
+  const [contasMap, setContasMap] = useState<Record<number, { numeroConta: string; titular: string }>>({});
 
   // Buscar pagamentos agendados do backend
   const carregarPagamentosAgendados = async () => {
@@ -115,9 +96,49 @@ const AgendamentosPage: React.FC = () => {
     }
   };
 
+  // Buscar contas disponíveis ao carregar
+  useEffect(() => {
+    const fetchContas = async () => {
+      try {
+        const resp: ContasDisponiveisResponse = await operacoesService.buscarContasDisponiveis();
+        const map: Record<number, { numeroConta: string; titular: string }> = {};
+        resp.dados.contas.forEach(c => {
+          map[c.contaId] = { numeroConta: c.numeroConta, titular: c.titular };
+        });
+        setContasMap(map);
+      } catch (e) {
+        // Não bloqueia a tela se falhar
+      }
+    };
+    fetchContas();
+  }, []);
+
   useEffect(() => {
     carregarPagamentosAgendados();
   }, [accountData?.contaId]);
+
+  // Converte PagamentoAgendado para AgendamentoListItem usando nomes reais
+  function converterPagamentoParaAgendamentoListItem(p: PagamentoAgendado, tipo: 'enviado' | 'recebido'): AgendamentoListItem {
+    let contaId = tipo === 'enviado' ? p.contaDestinoId : p.contaOrigemId;
+    const conta = contasMap[contaId];
+    return {
+      id: p.id,
+      descricao: p.descricao + (tipo === 'recebido' ? ' (Recebido)' : ''),
+      contaDestino: {
+        numeroConta: conta ? conta.numeroConta : String(contaId),
+        titular: conta ? conta.titular : (tipo === 'enviado' ? 'Destinatário' : 'Remetente'),
+      },
+      valorTotal: p.valorTotal,
+      valorParcela: p.valorParcela,
+      quantidadeParcelas: p.quantidadeParcelas,
+      parcelasRestantes: p.parcelasRestantes,
+      periodicidadeDias: p.periodicidadeDias,
+      dataProximaExecucao: p.dataProximaExecucao,
+      dataCriacao: '', // Não vem do backend, pode ser ajustado
+      status: p.status,
+      primeiraParcelaDebitada: p.parcelasRestantes !== p.quantidadeParcelas,
+    };
+  }
 
   // Atualizar agendamentos reais ao receber dados do backend
   useEffect(() => {
@@ -233,6 +254,96 @@ const AgendamentosPage: React.FC = () => {
 
   if (loading) {
     return <LoadingSpinner message="Carregando agendamentos..." />;
+  }
+
+  // Renderização dos cards de agendamento com UX aprimorado
+  function AgendamentoCard({ agendamento, tipo }: { agendamento: AgendamentoListItem, tipo: 'enviado' | 'recebido' }) {
+    const isRecebido = tipo === 'recebido';
+    const isConcluido = agendamento.status === 'CONCLUIDO';
+    const statusColor = agendamento.status === 'ATIVO' ? 'success' : agendamento.status === 'CONCLUIDO' ? 'primary' : 'error';
+    const statusIcon = agendamento.status === 'ATIVO' ? <Schedule /> : agendamento.status === 'CONCLUIDO' ? <CheckCircle /> : <Cancel />;
+    return (
+      <Card
+        sx={{
+          height: '100%',
+          border: `2px solid`,
+          borderColor: statusColor + '.main',
+          boxShadow: 3,
+          background: isConcluido
+            ? 'linear-gradient(90deg, #e3f0fa 0%, #f5fafd 100%)' // azul claro para concluído
+            : isRecebido
+              ? 'linear-gradient(90deg, #e3f2fd 0%, #fff 100%)'
+              : 'linear-gradient(90deg, #fff 0%, #f1f8e9 100%)',
+          opacity: agendamento.status === 'CANCELADO' ? 0.7 : 1,
+          position: 'relative',
+        }}
+      >
+        <CardContent>
+          {/* Tipo badge */}
+          <Box sx={{ position: 'absolute', top: 12, right: 12 }}>
+            <Chip
+              label={isRecebido ? 'Recebido' : 'Enviado'}
+              color={isRecebido ? 'info' : 'default'}
+              size="small"
+              icon={isRecebido ? <TrendingUp /> : <Payment />}
+              sx={{ fontWeight: 700 }}
+            />
+          </Box>
+          {/* Status */}
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <Chip
+              icon={statusIcon}
+              label={agendamento.status}
+              color={statusColor as any}
+              size="small"
+              sx={{ fontWeight: 700, mr: 1 }}
+            />
+          </Box>
+          {/* Descrição */}
+          <Typography variant="h6" gutterBottom sx={{ textDecoration: agendamento.status === 'CANCELADO' ? 'line-through' : 'none' }}>
+            {agendamento.descricao.replace(' (Recebido)', '')}
+          </Typography>
+          {/* Conta */}
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <PersonOutline sx={{ mr: 1, fontSize: 18, color: 'text.secondary' }} />
+            <Typography variant="body2" color="text.secondary">
+              {isRecebido ? 'De:' : 'Para:'} {agendamento.contaDestino.titular}
+            </Typography>
+          </Box>
+          <Divider sx={{ my: 2 }} />
+          {/* Valores */}
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 2 }}>
+            <Typography variant="body1" sx={{ fontWeight: 700 }}>
+              {agendamento.quantidadeParcelas}x de R$ {agendamento.valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Total: R$ {agendamento.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </Typography>
+          </Box>
+          {/* Próxima execução e parcelas */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+            <DateRange sx={{ fontSize: 18, color: 'text.secondary' }} />
+            <Typography variant="body2">
+              Próxima: {new Date(agendamento.dataProximaExecucao).toLocaleDateString('pt-BR')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • {agendamento.parcelasRestantes} restantes
+            </Typography>
+          </Box>
+          {/* Status extra */}
+          {agendamento.status === 'CONCLUIDO' && (
+            <Alert severity="success" sx={{ mb: 1 }}>
+              Agendamento concluído
+            </Alert>
+          )}
+          {agendamento.status === 'CANCELADO' && (
+            <Alert severity="error" sx={{ mb: 1 }}>
+              Agendamento cancelado
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -375,111 +486,7 @@ const AgendamentosPage: React.FC = () => {
           <Grid container spacing={3}>
             {agendamentosFiltrados.map((agendamento) => (
               <Grid item xs={12} md={6} lg={4} key={agendamento.id}>
-                <Card 
-                  sx={{ 
-                    height: '100%',
-                    opacity: agendamento.status === 'CANCELADO' ? 0.7 : 1,
-                    border: `2px solid`,
-                    borderColor: agendamento.status === 'ATIVO' ? 'success.main' : 
-                                agendamento.status === 'CONCLUIDO' ? 'primary.main' : 'error.main'
-                  }}
-                >
-                  <CardContent>
-                    {/* Header do card */}
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                      <Chip
-                        icon={getStatusIcon(agendamento.status)}
-                        label={agendamento.status}
-                        color={getStatusColor(agendamento.status) as any}
-                        size="small"
-                      />
-                      {agendamento.status === 'ATIVO' && (
-                        <Tooltip title="Cancelar agendamento">
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => abrirCancelamento(agendamento)}
-                            disabled={cancelando === agendamento.id}
-                          >
-                            {cancelando === agendamento.id ? <Refresh /> : <Delete />}
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                    </Box>
-
-                    {/* Descrição */}
-                    <Typography variant="h6" gutterBottom sx={{ 
-                      textDecoration: agendamento.status === 'CANCELADO' ? 'line-through' : 'none' 
-                    }}>
-                      {agendamento.descricao}
-                    </Typography>
-
-                    {/* Destinatário */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <PersonOutline sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />
-                      <Typography variant="body2" color="text.secondary">
-                        Para: {agendamento.contaDestino.titular} ({agendamento.contaDestino.numeroConta})
-                      </Typography>
-                    </Box>
-
-                    <Divider sx={{ my: 2 }} />
-
-                    {/* Informações financeiras */}
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="body1" gutterBottom>
-                        <strong>
-                          {agendamento.quantidadeParcelas}x de R$ {agendamento.valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                        </strong>
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Total: R$ {agendamento.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </Typography>
-                    </Box>
-
-                    {/* Informações de data */}
-                    {agendamento.status === 'ATIVO' && (
-                      <Box sx={{ mb: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                          <DateRange sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />
-                          <Typography variant="body2">
-                            Próximo: {new Date(agendamento.dataProximaExecucao).toLocaleDateString('pt-BR')}
-                          </Typography>
-                        </Box>
-                        <Typography variant="body2" color="text.secondary">
-                          {formatarPeriodicidade(agendamento.periodicidadeDias)} • {agendamento.parcelasRestantes} parcelas restantes
-                        </Typography>
-                      </Box>
-                    )}
-
-                    {agendamento.status === 'CONCLUIDO' && (
-                      <Alert severity="success" sx={{ mb: 2 }}>
-                        Agendamento concluído com sucesso
-                      </Alert>
-                    )}
-
-                    {agendamento.status === 'CANCELADO' && (
-                      <Alert severity="error" sx={{ mb: 2 }}>
-                        Agendamento cancelado
-                      </Alert>
-                    )}
-
-                    {/* Ações */}
-                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                      {agendamento.status === 'ATIVO' && (
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          size="small"
-                          startIcon={<Cancel />}
-                          onClick={() => abrirCancelamento(agendamento)}
-                          disabled={cancelando === agendamento.id}
-                        >
-                          {cancelando === agendamento.id ? 'Cancelando...' : 'Cancelar'}
-                        </Button>
-                      )}
-                    </Box>
-                  </CardContent>
-                </Card>
+                <AgendamentoCard agendamento={agendamento} tipo={agendamento.descricao.includes('(Recebido)') ? 'recebido' : 'enviado'} />
               </Grid>
             ))}
           </Grid>
@@ -498,111 +505,7 @@ const AgendamentosPage: React.FC = () => {
           <Grid container spacing={3}>
             {agendamentosEnviados.map((agendamento) => (
               <Grid item xs={12} md={6} lg={4} key={agendamento.id}>
-                <Card 
-                  sx={{ 
-                    height: '100%',
-                    opacity: agendamento.status === 'CANCELADO' ? 0.7 : 1,
-                    border: `2px solid`,
-                    borderColor: agendamento.status === 'ATIVO' ? 'success.main' : 
-                                agendamento.status === 'CONCLUIDO' ? 'primary.main' : 'error.main'
-                  }}
-                >
-                  <CardContent>
-                    {/* Header do card */}
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                      <Chip
-                        icon={getStatusIcon(agendamento.status)}
-                        label={agendamento.status}
-                        color={getStatusColor(agendamento.status) as any}
-                        size="small"
-                      />
-                      {agendamento.status === 'ATIVO' && (
-                        <Tooltip title="Cancelar agendamento">
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => abrirCancelamento(agendamento)}
-                            disabled={cancelando === agendamento.id}
-                          >
-                            {cancelando === agendamento.id ? <Refresh /> : <Delete />}
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                    </Box>
-
-                    {/* Descrição */}
-                    <Typography variant="h6" gutterBottom sx={{ 
-                      textDecoration: agendamento.status === 'CANCELADO' ? 'line-through' : 'none' 
-                    }}>
-                      {agendamento.descricao}
-                    </Typography>
-
-                    {/* Destinatário */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <PersonOutline sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />
-                      <Typography variant="body2" color="text.secondary">
-                        Para: {agendamento.contaDestino.titular} ({agendamento.contaDestino.numeroConta})
-                      </Typography>
-                    </Box>
-
-                    <Divider sx={{ my: 2 }} />
-
-                    {/* Informações financeiras */}
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="body1" gutterBottom>
-                        <strong>
-                          {agendamento.quantidadeParcelas}x de R$ {agendamento.valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                        </strong>
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Total: R$ {agendamento.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </Typography>
-                    </Box>
-
-                    {/* Informações de data */}
-                    {agendamento.status === 'ATIVO' && (
-                      <Box sx={{ mb: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                          <DateRange sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />
-                          <Typography variant="body2">
-                            Próximo: {new Date(agendamento.dataProximaExecucao).toLocaleDateString('pt-BR')}
-                          </Typography>
-                        </Box>
-                        <Typography variant="body2" color="text.secondary">
-                          {formatarPeriodicidade(agendamento.periodicidadeDias)} • {agendamento.parcelasRestantes} parcelas restantes
-                        </Typography>
-                      </Box>
-                    )}
-
-                    {agendamento.status === 'CONCLUIDO' && (
-                      <Alert severity="success" sx={{ mb: 2 }}>
-                        Agendamento concluído com sucesso
-                      </Alert>
-                    )}
-
-                    {agendamento.status === 'CANCELADO' && (
-                      <Alert severity="error" sx={{ mb: 2 }}>
-                        Agendamento cancelado
-                      </Alert>
-                    )}
-
-                    {/* Ações */}
-                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                      {agendamento.status === 'ATIVO' && (
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          size="small"
-                          startIcon={<Cancel />}
-                          onClick={() => abrirCancelamento(agendamento)}
-                          disabled={cancelando === agendamento.id}
-                        >
-                          {cancelando === agendamento.id ? 'Cancelando...' : 'Cancelar'}
-                        </Button>
-                      )}
-                    </Box>
-                  </CardContent>
-                </Card>
+                <AgendamentoCard agendamento={agendamento} tipo="enviado" />
               </Grid>
             ))}
           </Grid>
@@ -621,117 +524,12 @@ const AgendamentosPage: React.FC = () => {
           <Grid container spacing={3}>
             {agendamentosRecebidos.map((agendamento) => (
               <Grid item xs={12} md={6} lg={4} key={agendamento.id}>
-                <Card 
-                  sx={{ 
-                    height: '100%',
-                    opacity: agendamento.status === 'CANCELADO' ? 0.7 : 1,
-                    border: `2px solid`,
-                    borderColor: agendamento.status === 'ATIVO' ? 'success.main' : 
-                                agendamento.status === 'CONCLUIDO' ? 'primary.main' : 'error.main'
-                  }}
-                >
-                  <CardContent>
-                    {/* Header do card */}
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                      <Chip
-                        icon={getStatusIcon(agendamento.status)}
-                        label={agendamento.status}
-                        color={getStatusColor(agendamento.status) as any}
-                        size="small"
-                      />
-                      {agendamento.status === 'ATIVO' && (
-                        <Tooltip title="Cancelar agendamento">
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => abrirCancelamento(agendamento)}
-                            disabled={cancelando === agendamento.id}
-                          >
-                            {cancelando === agendamento.id ? <Refresh /> : <Delete />}
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                    </Box>
-
-                    {/* Descrição */}
-                    <Typography variant="h6" gutterBottom sx={{ 
-                      textDecoration: agendamento.status === 'CANCELADO' ? 'line-through' : 'none' 
-                    }}>
-                      {agendamento.descricao}
-                    </Typography>
-
-                    {/* Destinatário */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <PersonOutline sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />
-                      <Typography variant="body2" color="text.secondary">
-                        Para: {agendamento.contaDestino.titular} ({agendamento.contaDestino.numeroConta})
-                      </Typography>
-                    </Box>
-
-                    <Divider sx={{ my: 2 }} />
-
-                    {/* Informações financeiras */}
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="body1" gutterBottom>
-                        <strong>
-                          {agendamento.quantidadeParcelas}x de R$ {agendamento.valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                        </strong>
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Total: R$ {agendamento.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </Typography>
-                    </Box>
-
-                    {/* Informações de data */}
-                    {agendamento.status === 'ATIVO' && (
-                      <Box sx={{ mb: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                          <DateRange sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />
-                          <Typography variant="body2">
-                            Próximo: {new Date(agendamento.dataProximaExecucao).toLocaleDateString('pt-BR')}
-                          </Typography>
-                        </Box>
-                        <Typography variant="body2" color="text.secondary">
-                          {formatarPeriodicidade(agendamento.periodicidadeDias)} • {agendamento.parcelasRestantes} parcelas restantes
-                        </Typography>
-                      </Box>
-                    )}
-
-                    {agendamento.status === 'CONCLUIDO' && (
-                      <Alert severity="success" sx={{ mb: 2 }}>
-                        Agendamento concluído com sucesso
-                      </Alert>
-                    )}
-
-                    {agendamento.status === 'CANCELADO' && (
-                      <Alert severity="error" sx={{ mb: 2 }}>
-                        Agendamento cancelado
-                      </Alert>
-                    )}
-
-                    {/* Ações */}
-                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                      {agendamento.status === 'ATIVO' && (
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          size="small"
-                          startIcon={<Cancel />}
-                          onClick={() => abrirCancelamento(agendamento)}
-                          disabled={cancelando === agendamento.id}
-                        >
-                          {cancelando === agendamento.id ? 'Cancelando...' : 'Cancelar'}
-                        </Button>
-                      )}
-                    </Box>
-                  </CardContent>
-                </Card>
+                <AgendamentoCard agendamento={agendamento} tipo="recebido" />
               </Grid>
             ))}
           </Grid>
         )}
       </TabPanel>
-      {/* As demais abas (Ativos, Concluídos, Cancelados) mudam de index: 3, 4, 5 */}
       <TabPanel value={selectedTab} index={3}>
         {/* Ativos */}
         {agendamentos.filter(a => a.status === 'ATIVO').length === 0 ? (
@@ -745,111 +543,7 @@ const AgendamentosPage: React.FC = () => {
           <Grid container spacing={3}>
             {agendamentos.filter(a => a.status === 'ATIVO').map((agendamento) => (
               <Grid item xs={12} md={6} lg={4} key={agendamento.id}>
-                <Card 
-                  sx={{ 
-                    height: '100%',
-                    opacity: agendamento.status === 'CANCELADO' ? 0.7 : 1,
-                    border: `2px solid`,
-                    borderColor: agendamento.status === 'ATIVO' ? 'success.main' : 
-                                agendamento.status === 'CONCLUIDO' ? 'primary.main' : 'error.main'
-                  }}
-                >
-                  <CardContent>
-                    {/* Header do card */}
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                      <Chip
-                        icon={getStatusIcon(agendamento.status)}
-                        label={agendamento.status}
-                        color={getStatusColor(agendamento.status) as any}
-                        size="small"
-                      />
-                      {agendamento.status === 'ATIVO' && (
-                        <Tooltip title="Cancelar agendamento">
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => abrirCancelamento(agendamento)}
-                            disabled={cancelando === agendamento.id}
-                          >
-                            {cancelando === agendamento.id ? <Refresh /> : <Delete />}
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                    </Box>
-
-                    {/* Descrição */}
-                    <Typography variant="h6" gutterBottom sx={{ 
-                      textDecoration: agendamento.status === 'CANCELADO' ? 'line-through' : 'none' 
-                    }}>
-                      {agendamento.descricao}
-                    </Typography>
-
-                    {/* Destinatário */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <PersonOutline sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />
-                      <Typography variant="body2" color="text.secondary">
-                        Para: {agendamento.contaDestino.titular} ({agendamento.contaDestino.numeroConta})
-                      </Typography>
-                    </Box>
-
-                    <Divider sx={{ my: 2 }} />
-
-                    {/* Informações financeiras */}
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="body1" gutterBottom>
-                        <strong>
-                          {agendamento.quantidadeParcelas}x de R$ {agendamento.valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                        </strong>
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Total: R$ {agendamento.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </Typography>
-                    </Box>
-
-                    {/* Informações de data */}
-                    {agendamento.status === 'ATIVO' && (
-                      <Box sx={{ mb: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                          <DateRange sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />
-                          <Typography variant="body2">
-                            Próximo: {new Date(agendamento.dataProximaExecucao).toLocaleDateString('pt-BR')}
-                          </Typography>
-                        </Box>
-                        <Typography variant="body2" color="text.secondary">
-                          {formatarPeriodicidade(agendamento.periodicidadeDias)} • {agendamento.parcelasRestantes} parcelas restantes
-                        </Typography>
-                      </Box>
-                    )}
-
-                    {agendamento.status === 'CONCLUIDO' && (
-                      <Alert severity="success" sx={{ mb: 2 }}>
-                        Agendamento concluído com sucesso
-                      </Alert>
-                    )}
-
-                    {agendamento.status === 'CANCELADO' && (
-                      <Alert severity="error" sx={{ mb: 2 }}>
-                        Agendamento cancelado
-                      </Alert>
-                    )}
-
-                    {/* Ações */}
-                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                      {agendamento.status === 'ATIVO' && (
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          size="small"
-                          startIcon={<Cancel />}
-                          onClick={() => abrirCancelamento(agendamento)}
-                          disabled={cancelando === agendamento.id}
-                        >
-                          {cancelando === agendamento.id ? 'Cancelando...' : 'Cancelar'}
-                        </Button>
-                      )}
-                    </Box>
-                  </CardContent>
-                </Card>
+                <AgendamentoCard agendamento={agendamento} tipo={agendamento.descricao.includes('(Recebido)') ? 'recebido' : 'enviado'} />
               </Grid>
             ))}
           </Grid>
@@ -868,111 +562,7 @@ const AgendamentosPage: React.FC = () => {
           <Grid container spacing={3}>
             {agendamentos.filter(a => a.status === 'CONCLUIDO').map((agendamento) => (
               <Grid item xs={12} md={6} lg={4} key={agendamento.id}>
-                <Card 
-                  sx={{ 
-                    height: '100%',
-                    opacity: agendamento.status === 'CANCELADO' ? 0.7 : 1,
-                    border: `2px solid`,
-                    borderColor: agendamento.status === 'ATIVO' ? 'success.main' : 
-                                agendamento.status === 'CONCLUIDO' ? 'primary.main' : 'error.main'
-                  }}
-                >
-                  <CardContent>
-                    {/* Header do card */}
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                      <Chip
-                        icon={getStatusIcon(agendamento.status)}
-                        label={agendamento.status}
-                        color={getStatusColor(agendamento.status) as any}
-                        size="small"
-                      />
-                      {agendamento.status === 'ATIVO' && (
-                        <Tooltip title="Cancelar agendamento">
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => abrirCancelamento(agendamento)}
-                            disabled={cancelando === agendamento.id}
-                          >
-                            {cancelando === agendamento.id ? <Refresh /> : <Delete />}
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                    </Box>
-
-                    {/* Descrição */}
-                    <Typography variant="h6" gutterBottom sx={{ 
-                      textDecoration: agendamento.status === 'CANCELADO' ? 'line-through' : 'none' 
-                    }}>
-                      {agendamento.descricao}
-                    </Typography>
-
-                    {/* Destinatário */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <PersonOutline sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />
-                      <Typography variant="body2" color="text.secondary">
-                        Para: {agendamento.contaDestino.titular} ({agendamento.contaDestino.numeroConta})
-                      </Typography>
-                    </Box>
-
-                    <Divider sx={{ my: 2 }} />
-
-                    {/* Informações financeiras */}
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="body1" gutterBottom>
-                        <strong>
-                          {agendamento.quantidadeParcelas}x de R$ {agendamento.valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                        </strong>
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Total: R$ {agendamento.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </Typography>
-                    </Box>
-
-                    {/* Informações de data */}
-                    {agendamento.status === 'ATIVO' && (
-                      <Box sx={{ mb: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                          <DateRange sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />
-                          <Typography variant="body2">
-                            Próximo: {new Date(agendamento.dataProximaExecucao).toLocaleDateString('pt-BR')}
-                          </Typography>
-                        </Box>
-                        <Typography variant="body2" color="text.secondary">
-                          {formatarPeriodicidade(agendamento.periodicidadeDias)} • {agendamento.parcelasRestantes} parcelas restantes
-                        </Typography>
-                      </Box>
-                    )}
-
-                    {agendamento.status === 'CONCLUIDO' && (
-                      <Alert severity="success" sx={{ mb: 2 }}>
-                        Agendamento concluído com sucesso
-                      </Alert>
-                    )}
-
-                    {agendamento.status === 'CANCELADO' && (
-                      <Alert severity="error" sx={{ mb: 2 }}>
-                        Agendamento cancelado
-                      </Alert>
-                    )}
-
-                    {/* Ações */}
-                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                      {agendamento.status === 'ATIVO' && (
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          size="small"
-                          startIcon={<Cancel />}
-                          onClick={() => abrirCancelamento(agendamento)}
-                          disabled={cancelando === agendamento.id}
-                        >
-                          {cancelando === agendamento.id ? 'Cancelando...' : 'Cancelar'}
-                        </Button>
-                      )}
-                    </Box>
-                  </CardContent>
-                </Card>
+                <AgendamentoCard agendamento={agendamento} tipo={agendamento.descricao.includes('(Recebido)') ? 'recebido' : 'enviado'} />
               </Grid>
             ))}
           </Grid>
@@ -991,111 +581,7 @@ const AgendamentosPage: React.FC = () => {
           <Grid container spacing={3}>
             {agendamentos.filter(a => a.status === 'CANCELADO').map((agendamento) => (
               <Grid item xs={12} md={6} lg={4} key={agendamento.id}>
-                <Card 
-                  sx={{ 
-                    height: '100%',
-                    opacity: agendamento.status === 'CANCELADO' ? 0.7 : 1,
-                    border: `2px solid`,
-                    borderColor: agendamento.status === 'ATIVO' ? 'success.main' : 
-                                agendamento.status === 'CONCLUIDO' ? 'primary.main' : 'error.main'
-                  }}
-                >
-                  <CardContent>
-                    {/* Header do card */}
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                      <Chip
-                        icon={getStatusIcon(agendamento.status)}
-                        label={agendamento.status}
-                        color={getStatusColor(agendamento.status) as any}
-                        size="small"
-                      />
-                      {agendamento.status === 'ATIVO' && (
-                        <Tooltip title="Cancelar agendamento">
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => abrirCancelamento(agendamento)}
-                            disabled={cancelando === agendamento.id}
-                          >
-                            {cancelando === agendamento.id ? <Refresh /> : <Delete />}
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                    </Box>
-
-                    {/* Descrição */}
-                    <Typography variant="h6" gutterBottom sx={{ 
-                      textDecoration: agendamento.status === 'CANCELADO' ? 'line-through' : 'none' 
-                    }}>
-                      {agendamento.descricao}
-                    </Typography>
-
-                    {/* Destinatário */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <PersonOutline sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />
-                      <Typography variant="body2" color="text.secondary">
-                        Para: {agendamento.contaDestino.titular} ({agendamento.contaDestino.numeroConta})
-                      </Typography>
-                    </Box>
-
-                    <Divider sx={{ my: 2 }} />
-
-                    {/* Informações financeiras */}
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="body1" gutterBottom>
-                        <strong>
-                          {agendamento.quantidadeParcelas}x de R$ {agendamento.valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                        </strong>
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Total: R$ {agendamento.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </Typography>
-                    </Box>
-
-                    {/* Informações de data */}
-                    {agendamento.status === 'ATIVO' && (
-                      <Box sx={{ mb: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                          <DateRange sx={{ mr: 1, fontSize: 16, color: 'text.secondary' }} />
-                          <Typography variant="body2">
-                            Próximo: {new Date(agendamento.dataProximaExecucao).toLocaleDateString('pt-BR')}
-                          </Typography>
-                        </Box>
-                        <Typography variant="body2" color="text.secondary">
-                          {formatarPeriodicidade(agendamento.periodicidadeDias)} • {agendamento.parcelasRestantes} parcelas restantes
-                        </Typography>
-                      </Box>
-                    )}
-
-                    {agendamento.status === 'CONCLUIDO' && (
-                      <Alert severity="success" sx={{ mb: 2 }}>
-                        Agendamento concluído com sucesso
-                      </Alert>
-                    )}
-
-                    {agendamento.status === 'CANCELADO' && (
-                      <Alert severity="error" sx={{ mb: 2 }}>
-                        Agendamento cancelado
-                      </Alert>
-                    )}
-
-                    {/* Ações */}
-                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                      {agendamento.status === 'ATIVO' && (
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          size="small"
-                          startIcon={<Cancel />}
-                          onClick={() => abrirCancelamento(agendamento)}
-                          disabled={cancelando === agendamento.id}
-                        >
-                          {cancelando === agendamento.id ? 'Cancelando...' : 'Cancelar'}
-                        </Button>
-                      )}
-                    </Box>
-                  </CardContent>
-                </Card>
+                <AgendamentoCard agendamento={agendamento} tipo={agendamento.descricao.includes('(Recebido)') ? 'recebido' : 'enviado'} />
               </Grid>
             ))}
           </Grid>
