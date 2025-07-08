@@ -59,6 +59,18 @@ export interface ApiError {
   details?: string;
 }
 
+export interface MeResponse {
+  dados: {
+    usuario: Usuario;
+    conta?: Conta;
+    sessao: {
+      ultimaAtividade: string;
+    };
+  };
+  message: string;
+  timestamp: string;
+}
+
 // Auth Service
 class AuthService {
   async login(loginData: LoginRequest): Promise<LoginResponse> {
@@ -80,6 +92,17 @@ class AuthService {
         throw error;
       }
       throw new Error('Erro de conexão com o servidor');
+    }
+  }
+
+  async me(): Promise<MeResponse> {
+    try {
+      return await httpClient.get<MeResponse>('/auth/me');
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Erro ao buscar dados do usuário');
     }
   }
 

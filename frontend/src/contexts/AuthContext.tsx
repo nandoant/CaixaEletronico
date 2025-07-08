@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { authService, LoginRequest, RegisterRequest, LoginResponse, RegisterResponse } from "../services/authService";
+import { authService, LoginRequest, RegisterRequest, LoginResponse, RegisterResponse, MeResponse } from "../services/authService";
 
 interface User {
   id: number;
@@ -44,13 +44,42 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Carregar token do localStorage na inicialização
   useEffect(() => {
-    const savedToken = authService.getToken();
-    if (savedToken && authService.isTokenValid(savedToken)) {
-      setToken(savedToken);
-      // TODO: Implementar busca de dados do usuário com o token
-      // Por enquanto, mantém mock para não quebrar
-    }
-    setIsLoading(false);
+    const initializeAuth = async () => {
+      const savedToken = authService.getToken();
+      if (savedToken && authService.isTokenValid(savedToken)) {
+        setToken(savedToken);
+        try {
+          // Buscar dados do usuário usando o token
+          console.log("🔍 Buscando dados do usuário com token...");
+          const response = await authService.me();
+          console.log("✅ Resposta completa do /auth/me:", JSON.stringify(response, null, 2));
+          
+          // Mapear dados da resposta para o formato do contexto
+          const userData: User = {
+            id: response.dados.usuario.userId,
+            login: response.dados.usuario.login,
+            email: response.dados.usuario.email,
+            perfil: response.dados.usuario.perfil as "CLIENTE" | "ADMIN",
+            contaId: response.dados.conta?.contaId || 0,
+            numeroConta: response.dados.conta?.numeroConta || "",
+            titular: response.dados.conta?.titular || "",
+          };
+          
+          console.log("👤 Dados do usuário mapeados:", userData);
+          setUser(userData);
+          console.log("🔄 Dados do usuário restaurados após F5:", userData);
+        } catch (error) {
+          console.error("❌ Erro ao restaurar dados do usuário:", error);
+          // Token inválido ou erro no servidor, limpar dados
+          authService.removeToken();
+          setToken(null);
+          setUser(null);
+        }
+      }
+      setIsLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (loginData: LoginRequest): Promise<LoginResponse> => {
