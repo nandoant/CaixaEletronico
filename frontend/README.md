@@ -74,26 +74,6 @@ npm run build
 - `.env.development` - Variáveis para desenvolvimento
 - `.env.production` - Variáveis para produção
 
-## 📱 Funcionalidades Implementadas (Esqueleto)
-
-### ✅ Estrutura Base
-- [x] Configuração inicial do React
-- [x] Material-UI setup
-- [x] Sistema de rotas
-- [x] Context de autenticação
-- [x] Layout responsivo com Navbar e Sidebar
-- [x] Páginas base para todas as funcionalidades
-
-### 🔄 Próximos Passos
-- [ ] Implementar serviços de API
-- [ ] Conectar com endpoints do backend
-- [ ] Implementar formulários funcionais
-- [ ] Adicionar validações
-- [ ] Implementar estado global
-- [ ] Adicionar tratamento de erros
-- [ ] Implementar notificações
-- [ ] Testes unitários
-
 ## 🎯 Páginas Disponíveis
 
 1. **Login/Registro** (`/login`, `/register`)
@@ -102,7 +82,6 @@ npm run build
 4. **Extrato** (`/extrato`) - Histórico de operações
 5. **Saldo** (`/saldo`) - Consulta de saldo
 6. **Agendamentos** (`/agendamentos`) - Pagamentos agendados
-7. **Admin** (`/admin`) - Área administrativa (apenas admins)
 
 ## 🔗 Integração com Backend
 
