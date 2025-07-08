@@ -19,8 +19,6 @@ CaixaEletronico/
 │   └── README.md          # Documentação do frontend
 ├── docker-compose.yml     # Produção
 ├── docker-compose.dev.yml # Desenvolvimento
-├── start.sh              # Script Linux/Mac
-└── start.bat             # Script Windows
 ```
 
 ## 🛠️ Stack Tecnológica
